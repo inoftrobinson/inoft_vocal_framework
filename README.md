@@ -36,7 +36,6 @@ class YesHandler(InoftRequestHandler):
         if INTERACTION_TYPE_WELCOME in last_played_interactions_types:
             output_response.outputSpeech.set_text("You just said Yes after me welcoming you. You put yourself in deep troubles... I'm closing now.")
             output_response.shouldEndSession = True
-            return output_response.to_platform_dict()
         else:
             output_response.outputSpeech.set_text("From where are you coming ? There is no other interactions !")
 
