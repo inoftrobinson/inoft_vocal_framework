@@ -1,4 +1,4 @@
-# Inoft Vocal Framerwork
+# Inoft Vocal Framework
  ## Create Alexa Skills and Google Actions with the same codebase. In Python !
  
  
