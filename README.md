@@ -21,4 +21,4 @@
  - Basic response (speech, ssml, card) (01/29/2020)
  - Processing and manipulating of a request (01/31/2020)
  - Identify the intent/request type (like launch, end, and any intent) (02/01/2020)
- - HandlerInput object to manipulate everything without needing 42 imports in each file (02/01/2020)
+ - HandlerInput object to have access to all the features without needing 42 imports in each file (02/01/2020)
