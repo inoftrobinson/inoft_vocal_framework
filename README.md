@@ -1,5 +1,5 @@
 # Inoft Vocal Framerwork
- ## Create Alexa Skills and Google Action with the same codebase. In Python !
+ ## Create Alexa Skills and Google Actions with the same codebase. In Python !
  
  
  This repo is still under developpement, not everything is implemented. Yet you can see for the dates of releases, it will be soon.
@@ -12,6 +12,7 @@
  - Implement all the available features of Alexa and Google Assistant
  - Allow to have platform specific features in the codebase. For example, in Google Assistant you can have a caroussel, there is no such equivalent in Alexa.
  - Allow to create +90% of the skill code (Python code of course) with a cartographic (MindMap) tool like the Alexa SkillFlowBuilder.
+ - Create a CLI that will automaticly create a AWS lambda, an Alexa Skill, a Google Action, an API Gateway, and link everything together in a few seconds.
  
  ### Already available (the date are the releases date) :
  - Message, and speechs objects helpers (pick according to probability, remember automaticly the last interactions of the user, etc) (a long time ago)
