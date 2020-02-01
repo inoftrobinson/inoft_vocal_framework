@@ -17,7 +17,7 @@
 
     def handle(self, handler_input: HandlerInput):
         output_response = response_factory.Response()
-        output_response.outputSpeech.set_ssml(MSGS_FIRST_USE_WELCOME.pick(handler_input))
+        output_response.outputSpeech.set_ssml(MSGS_WELCOME.pick(handler_input))
         return output_response.to_platform_dict()
         
 skill_builder = InoftSkill()
@@ -27,9 +27,16 @@ def lambda_handler(event, context):
     return handle_any_platform(event=event, context=context, skill_builder=skill_builder)
 ```
  #### What this code is doing :
- - Create an Handler for the launch of the skill/action.
- - Defince under which conditions this should be the handler to be used (with the can_handle function)
+ - Create a skill_builder objet with InoftSkill()
+ - Create an Handler for the launch of the skill/action then add it to the skill_builder object.
+ - Define under which conditions this should be the handler to be used (with the can_handle function)
  - Processing an Alexa or a Google Assistant request (and finding out who is calling it)
+ - Calling the handler function of the LaunchRequestHandler (if the app just launched)
+ - Creating a new response.
+ - Pick a welcome message based on différents probabilities assigned to the message (the message is an audio file).
+ - Registering the last interaction that the user had (this is done when using .pick() and is the reason for the KEY_REQUEST_INTERACTION_TYPE variable)
+ - Transforming the response to the platform that called the app (Alexa or Google Assistant)
+ - Returning the platform specific response to an AWS lambda (optionnaly to an a Lambda then an API for Google Assistant)
  
  
  ### Roadmap :
