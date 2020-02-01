@@ -1,0 +1,23 @@
+{
+  "expectUserResponse": true,
+  "expectedInputs": [
+    {
+      "possibleIntents": [
+        {
+          "intent": "actions.intent.TEXT"
+        }
+      ],
+      "inputPrompt": {
+        "richInitialPrompt": {
+          "items": [
+            {
+              "simpleResponse": {
+                "textToSpeech": "You are using the Actions SDK. Do you want to hear more about it?"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
