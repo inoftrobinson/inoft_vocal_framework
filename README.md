@@ -20,6 +20,31 @@
         output_response.outputSpeech.set_ssml(MSGS_WELCOME.pick(handler_input))
         return output_response.to_platform_dict()
         
+class YesHandler(InoftRequestHandler):
+    DEFAULT_YES_INTENT_NAME = "AMAZON.YesIntent"
+    CUSTOM_OK_INTENT_NAME = "OkConfirmation"
+    KEY_INTERACTION_YES_WANT_A_GUIDED_VISIT = "yes_want-a-guided-visit"
+    KEY_INTERACTION_YES_START_AND_EXPLANATIONS_GUIDED_VISIT = "yes_start-and-explanations-guided-visit"
+    KEY_INTERACTION_YES_VALIDATION_EXPLANATIONS_GUIDED_VISIT = "yes_validation-explanations-guided-visit"
+
+    def can_handle(self, handler_input):
+        return handler_input.is_in_intent_names([self.DEFAULT_YES_INTENT_NAME, self.CUSTOM_OK_INTENT_NAME])
+
+    def handle(self, handler_input):
+        played_categories_types_history = PlayedCategoriesTypesHistory(handler_input)
+        last_played_interactions_types = played_categories_types_history.get_last()
+    
+        output_response = response_factory.Response()
+    
+        if INTERACTION_TYPE_WELCOME in last_played_interactions_types:
+            output_response.outputSpeech.set_text("You just said Yes after me welcoming you. You put yourself in deep troubles... I'm closing now.")
+            output_response.shouldEndSession = True
+            return output_response.to_platform_dict()
+        else:
+            output_response.outputSpeech.set_text("From where are you coming ? There is no other interactions !")
+
+        return output_response.to_platform_dict()
+        
 skill_builder = InoftSkill()
 skill_builder.add_request_handler(LaunchRequestHandler())
 
