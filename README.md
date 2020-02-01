@@ -23,9 +23,6 @@
 class YesHandler(InoftRequestHandler):
     DEFAULT_YES_INTENT_NAME = "AMAZON.YesIntent"
     CUSTOM_OK_INTENT_NAME = "OkConfirmation"
-    KEY_INTERACTION_YES_WANT_A_GUIDED_VISIT = "yes_want-a-guided-visit"
-    KEY_INTERACTION_YES_START_AND_EXPLANATIONS_GUIDED_VISIT = "yes_start-and-explanations-guided-visit"
-    KEY_INTERACTION_YES_VALIDATION_EXPLANATIONS_GUIDED_VISIT = "yes_validation-explanations-guided-visit"
 
     def can_handle(self, handler_input):
         return handler_input.is_in_intent_names([self.DEFAULT_YES_INTENT_NAME, self.CUSTOM_OK_INTENT_NAME])
@@ -47,6 +44,7 @@ class YesHandler(InoftRequestHandler):
         
 skill_builder = InoftSkill()
 skill_builder.add_request_handler(LaunchRequestHandler())
+skill_builder.add_request_handler(YesHandler())
 
 def lambda_handler(event, context):
     return handle_any_platform(event=event, context=context, skill_builder=skill_builder)
