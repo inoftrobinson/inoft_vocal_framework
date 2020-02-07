@@ -45,13 +45,14 @@ def lambda_handler(event, context):
 ```
  
  ### Roadmap :
- - Saving and access of user data/interactions in the session and accross sessions
+ - Finish the saving of data accross sessions, and make it work when the code is deployed to the cloud (it works in local dev)
  - Implement all the available features of Alexa and Google Assistant
  - Allow to have platform specific features in the codebase. For example, in Google Assistant you can have a caroussel, there is no such equivalent in Alexa.
  - Allow to create +90% of the skill code (Python code of course) with a cartographic (MindMap) tool like the Alexa SkillFlowBuilder.
  - Create a CLI that will automaticly create a AWS lambda, an Alexa Skill, a Google Action, an API Gateway, and link everything together in a few seconds.
  - Create a Content Management/Creation System
  - Make the simulator better and more useful than just sending dumb requests to the code
+ - Generate the skill/actions schema right from the code
  
  ### Already available (the date are the releases date) :
  - Message, and speechs objects helpers (pick according to probability, remember automaticly the last interactions of the user, etc) (a long time ago)
@@ -62,6 +63,7 @@ def lambda_handler(event, context):
  - Micro request simulator (02/01/2020)
  - Identify the intent/request type (like launch, end, and any intent) (02/01/2020)
  - HandlerInput object to have access to all the features without needing 42 imports in each file (02/01/2020)
+ - Saving and access of user data/interactions in the session and accross sessions (02/07/2020)
  
  #### Credits :
  - The Amazon Alexa Python SDK. If you look at the class and variables that will be interacted with, i have use the same type of logic than the SDK (like a skill_builder, the requests and intents handlers, the handler_input, etc). I did not use their code, but written everything from scratch, unfortunatly ;) https://github.com/alexa/alexa-skills-kit-sdk-for-python
