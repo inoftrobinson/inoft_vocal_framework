@@ -10,36 +10,31 @@
  
  ```
  class LaunchRequestHandler(InoftRequestHandler):
-    KEY_REQUEST_INTERACTION_TYPE = "LaunchRequest"
+    def can_handle(self):
+        return self.is_launch_request()
 
-    def can_handle(self, handler_input: HandlerInput):
-        return handler_input.is_launch_request()
-
-    def handle(self, handler_input: HandlerInput):
-        output_response = response_factory.Response()
-        output_response.outputSpeech.set_ssml(MSGS_WELCOME.pick(handler_input))
-        return output_response.to_platform_dict()
+    def handle(self):
+        self.persistent_memorize("has_launched_at_least_once", True)
+        self.session_memorize("count_interactions_in_session", 1)
+        
+        self.say("Readme, readme, readme... README !")
+        return self.to_platform_dict()
         
 class YesHandler(InoftRequestHandler):
     DEFAULT_YES_INTENT_NAME = "AMAZON.YesIntent"
     CUSTOM_OK_INTENT_NAME = "OkConfirmation"
 
-    def can_handle(self, handler_input):
-        return handler_input.is_in_intent_names([self.DEFAULT_YES_INTENT_NAME, self.CUSTOM_OK_INTENT_NAME])
+    def can_handle(self):
+        return self.is_in_intent_names([self.DEFAULT_YES_INTENT_NAME, self.CUSTOM_OK_INTENT_NAME])
 
-    def handle(self, handler_input):
-        played_categories_types_history = PlayedCategoriesTypesHistory(handler_input)
-        last_played_interactions_types = played_categories_types_history.get_last()
-    
-        output_response = response_factory.Response()
-    
-        if INTERACTION_TYPE_WELCOME in last_played_interactions_types:
-            output_response.outputSpeech.set_text("You just said Yes after me welcoming you. You put yourself in deep troubles... I'm closing now.")
-            output_response.shouldEndSession = True
-        else:
-            output_response.outputSpeech.set_text("From where are you coming ? There is no other interactions !")
+    def handle(self):
+        self.say("Im currently implementing the system to handle easily the previous interactions."
+                 "Yet we can at least manipulate some informations !")
+                 
+        self.session_memorize("count_interactions_in_session",
+                              self.session_remember("count_interactions_in_session", int) + 1)
 
-        return output_response.to_platform_dict()
+        return self.to_platform_dict()
         
 skill_builder = InoftSkill()
 skill_builder.add_request_handler(LaunchRequestHandler())
