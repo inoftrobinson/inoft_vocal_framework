@@ -1,0 +1,23 @@
+{
+  "responseId": "3fdf61c0-4fdd-4960-a065-ae2049d38033-426bc00a",
+  "queryResult": {
+    "queryText": "Ok",
+    "parameters": {},
+    "allRequiredParamsPresent": true,
+    "fulfillmentMessages": [
+      {
+        "text": {
+          "text": [
+            ""
+          ]
+        }
+      }
+    ],
+    "intent": {
+      "name": "projects/cite-des-sciences/agent/intents/fe7d4cfc-e0df-4d13-94ef-af38b066157e",
+      "displayName": "OkConfirmation"
+    },
+    "intentDetectionConfidence": 1,
+    "languageCode": "fr"
+  }
+}

@@ -2,14 +2,11 @@ from abc import abstractmethod
 
 from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
 from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
-from inoft_vocal_framework.safe_dict import SafeDict
 
-class InoftRequestHandler:
+class InoftRequestHandler(HandlerInput):
     @abstractmethod
-    def can_handle(self, handler_input) -> bool:
+    def can_handle(self) -> bool:
         """ Returns true if Request Handler can handle the Request inside Handler Input.
-
-        :param handler_input: Handler Input instance with Request Envelope containing Request.
         :return: Boolean value that tells the dispatcher if the current request can be handled by this handler.
         :rtype: bool
         """
@@ -17,11 +14,8 @@ class InoftRequestHandler:
         raise NotImplementedError
 
     @abstractmethod
-    def handle(self, handler_input):
-        ##  type: (HandlerInput) -> Union[None, Response]
+    def handle(self):
         """Handles the Request inside handler input and provides a Response for dispatcher to return.
-
-        :param handler_input: Handler Input instance with <Request Envelope containing Request.
         :return: Response for the dispatcher to return or None
         :rtype: Union[Response, None]
         """
@@ -44,19 +38,21 @@ class InoftSkill:
 
             handler_bases_parent_classes_names = list()
             for handler_base_parent_class in handler_bases_parent_classes:
-                handler_bases_parent_classes_names.insert(0, handler_base_parent_class.__name__)
+                handler_bases_parent_classes_names.append(handler_base_parent_class.__name__)
 
             if InoftRequestHandler.__name__ in handler_bases_parent_classes_names:
-                self.request_handlers_chain.insert(0, request_handler_instance)
+                self.request_handlers_chain.append(request_handler_instance)
             return None
 
         raise Exception(f"The following request handler is not a valid handler or do not have {InoftRequestHandler.__name__} as its MetaClass : {request_handler_instance}")
 
-    def process_request(self, handler_input: HandlerInput):
-        print(f"handler_input in process request = {handler_input}")
+    def process_request(self):
         for handler in self.request_handlers_chain:
-            if handler.can_handle(handler_input) is True:
-                output_event = handler.handle(handler_input)
+            if handler.can_handle() is True:
+                print(f"Handled by : {handler.__class__}")
+                output_event = handler.handle()
                 wrapped_output_event = LambdaResponseWrapper(response_dict=output_event).get_wrapped()
-                return wrapped_output_event 
+                return wrapped_output_event
+            else:
+                print(f"Not handled by : {handler.__class__}")
         return None

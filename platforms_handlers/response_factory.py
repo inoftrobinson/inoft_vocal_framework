@@ -1,7 +1,4 @@
-from json import dumps as json_dumps
-
-from inoft_vocal_framework.platforms_handlers.current_platform_static_data import CurrentPlatformData, RefsAvailablePlatforms
-from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
+from inoft_vocal_framework.platforms_handlers.current_platform_static_data import CurrentPlatformData, SessionInfo
 
 
 class Card:
@@ -110,7 +107,9 @@ class Response:
         self._shouldEndSession = should_end_session
 
     def to_platform_dict(self) -> dict:
-        if CurrentPlatformData.used_platform_id == RefsAvailablePlatforms.REF_PLATFORM_ALEXA_V1:
+        from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
+
+        if CurrentPlatformData.is_alexa_v1 is True:
             from inoft_vocal_framework.platforms_handlers.alexa_v1 import response
             output_response = response.Response()
 
@@ -123,21 +122,29 @@ class Response:
 
             output_response.shouldEndSession = self.shouldEndSession
 
+
             platform_adapted_response_dict = output_response.to_dict()
             print(f"Final platform adapted on Alexa-v1 : {platform_adapted_response_dict}")
             return platform_adapted_response_dict
 
-        elif CurrentPlatformData.used_platform_id == RefsAvailablePlatforms.REF_PLATFORM_GOOGLE_ASSISTANT_V1:
-            from inoft_vocal_framework.platforms_handlers.dialogflow_v1.factories import response
-            output_response = response.Payload()
+        elif CurrentPlatformData.is_dialogflow_v1 is True:
+            from inoft_vocal_framework.platforms_handlers.dialogflow_v1 import response
+            output_response = HandlerInput.handler_input.response
 
-            response_item = response.SimpleResponse()
+
+            """response_item = response.SimpleResponse()
             response_item.textToSpeech = self.outputSpeech.get_value_to_use_based_on_set_type()
             response_item.displayText = "Yaaaaaazaaaa !!!!!!!"
-            print(f"the dddddidiidct = {response_item.to_json_dict()}")
-            output_response.google.richResponse.add_response_item(response_item)
+            output_response.payload.google.richResponse.add_response_item(response_item)"""
 
-            output_response.google.expectUserResponse = True if not self.shouldEndSession else False
+            output_response.payload.google.expectUserResponse = True if not self.shouldEndSession else False
+
+            output_response.payload.google.userStorage = str(HandlerInput.persistent_user_data.to_dict())
+
+            session_user_data_context_item = response.OutputContextItem()
+            for key_item_saved_data, value_item_saved_data in HandlerInput.session_user_data.to_dict().items():
+                session_user_data_context_item.add_set_session_attribute(key_item_saved_data, value_item_saved_data)
+            output_response.add_output_context_item(session_user_data_context_item)
 
             platform_adapted_response_dict = output_response.to_dict()
             print(f"Final platform adapted on Google-Assistant-v1 : {platform_adapted_response_dict}")

@@ -1,7 +1,6 @@
 from json import dumps as json_dumps
 
-from inoft_vocal_framework.platforms_handlers.current_platform_static_data import CurrentPlatformData, \
-    RefsAvailablePlatforms
+from inoft_vocal_framework.platforms_handlers.current_platform_static_data import CurrentPlatformData
 
 
 class LambdaResponseWrapper:
@@ -12,10 +11,10 @@ class LambdaResponseWrapper:
         self._response_dict = response_dict
 
     def get_wrapped(self) -> dict:
-        if CurrentPlatformData.used_platform_id == RefsAvailablePlatforms.REF_PLATFORM_ALEXA_V1:
+        if CurrentPlatformData.is_alexa_v1 is True:
             return self._response_dict
 
-        elif CurrentPlatformData.used_platform_id == RefsAvailablePlatforms.REF_PLATFORM_GOOGLE_ASSISTANT_V1:
+        elif CurrentPlatformData.is_dialogflow_v1 is True:
             return {
                 "isBase64Encoded": False,
                 "statusCode": 200,

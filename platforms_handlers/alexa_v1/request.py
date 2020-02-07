@@ -44,9 +44,22 @@ class Request:
         self._intent = Intent()
 
     def process_and_set_json_request_to_object(self, stringed_request_json_dict: str):
-        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self, request_json_dict_or_stringed_dict=stringed_request_json_dict)
+        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self,
+                                                                  request_json_dict_or_stringed_dict=stringed_request_json_dict)
 
-    def is_not_usable(self):
+    def is_launch_request(self) -> bool:
+        if self.type == self.LaunchRequestKeyName:
+            return True
+        else:
+            return False
+
+    def is_in_intent_names(self, intent_names_list: list):
+        if self.type == self.IntentRequestKeyName:
+            if self.intent.name in intent_names_list:
+                return True
+        return False
+
+    def is_not_usable(self) -> bool:
         if self.type is not None and self.type not in [self.LaunchRequestKeyName, self.IntentRequestKeyName, self.SessionEndedRequestKeyName]:
             raise Exception(f"The request type '{self.type}' is not None or any of the supported types.")
 

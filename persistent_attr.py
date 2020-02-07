@@ -1,5 +1,3 @@
-from ask_sdk_core.handler_input import HandlerInput
-
 from inoft_vocal_framework.safe_dict import SafeDict
 
 

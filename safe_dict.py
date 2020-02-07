@@ -62,13 +62,10 @@ class SafeDict:
             return navigated_dict_values
 
     def get(self, dict_key: str):
-        print(f"Before navigated_dict when accessing with key {dict_key} : {self.navigated_dict}")
         if isinstance(self.navigated_dict, dict) and dict_key in self.navigated_dict.keys():
             self.navigated_dict = self.navigated_dict[dict_key]
         else:
             self.navigated_dict = None
-
-        print(f"New navigated_dict when accessing with key {dict_key} : {self.navigated_dict}")
         return self
 
     def get_set(self, dict_key: str, value_to_set_if_missing={}):
@@ -81,10 +78,8 @@ class SafeDict:
 
     def put(self, dict_key, value_to_put):
         if isinstance(self.navigated_dict, dict) and dict_key is not None:
-            print(f"value_to_put before = {value_to_put}")
             if value_to_put is None:
                 value_to_put = ""
-            print(f"value_to_put after = {value_to_put} & dict_key = {dict_key}")
             self.navigated_dict[dict_key] = value_to_put
         else:
             print(f"Warning ! Tried to put a value into a dict of a SafeDict, but the current navigated dict was not pointing to a dict object !")

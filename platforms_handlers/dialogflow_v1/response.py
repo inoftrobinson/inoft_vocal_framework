@@ -1,5 +1,6 @@
 from json import dumps as json_dumps
 
+from inoft_vocal_framework.platforms_handlers.current_platform_static_data import SessionInfo
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from messages import *
 
@@ -71,6 +72,7 @@ class GoogleInPayload:
     def __init__(self):
         self._expectUserResponse = True
         self.richResponse = RichResponseInPayload()
+        self._userStorage = str()
 
     @property
     def expectUserResponse(self):
@@ -83,6 +85,16 @@ class GoogleInPayload:
         else:
             raise Exception(f"expectUserResponse can only receive a True or False value, it received the following : {expectUserResponse}")
 
+    @property
+    def userStorage(self) -> str:
+        return self._userStorage
+
+    @userStorage.setter
+    def userStorage(self, userStorage: str) -> None:
+        if not isinstance(userStorage, str):
+            raise Exception(f"userStorage was type {type(userStorage)} which is not valid value for his parameter.")
+        self._userStorage = userStorage
+
 class Payload:
     json_key = "payload"
 
@@ -92,6 +104,63 @@ class Payload:
     def to_dict(self) -> dict:
         return NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,
                                                               key_names_identifier_objects_to_go_into=["json_key"])
+
+class OutputContextItem:
+    json_key = "outputContextItem"
+
+    def __init__(self):
+        self.name = f"{SessionInfo.session_id}/contexts/test"
+        self.lifespanCount = int()
+        self._parameters = dict()
+
+    def return_transformations(self) -> None:
+        self._parameters = self._parameters  # json.dumps()
+
+    def add_set_parameter(self, parameter_key: str, parameter_value=None):
+        """
+        :param parameter_key: str key for the parameters dict object, should not be an empty str
+        :param parameter_value: any object, cannot be None
+        :return: self
+        """
+        if parameter_value is not None and isinstance(parameter_key, str) and parameter_key != "":
+            self._parameters[parameter_key] = parameter_value
+        return self
+
+    def add_set_session_attribute(self, parameter_key: str, parameter_value=None):
+        if "data" not in self.parameters.keys():
+            self.parameters["data"] = dict()
+
+        if parameter_value is not None and isinstance(parameter_key, str) and parameter_key != "":
+            self._parameters["data"][parameter_key] = parameter_value
+        return self
+
+    @property
+    def parameters(self) -> dict:
+        return self._parameters
+
+    @parameters.setter
+    def parameters(self, parameters: dict) -> None:
+        if not isinstance(parameters, dict):
+            raise Exception(f"parameters was type {type(parameters)} which is not valid value for his parameter.")
+        self._parameters = parameters
+
+class Response:
+    json_key = "response"
+
+    def __init__(self):
+        self.payload = Payload()
+        self.outputContexts = list()
+
+    def add_output_context_item(self, output_context_item: OutputContextItem) -> None:
+        if isinstance(output_context_item, OutputContextItem):
+            self.outputContexts.append(output_context_item)
+        else:
+            raise Exception(f"The output context item needed to be of instance {OutputContextItem} but was : {output_context_item}")
+
+    def to_dict(self) -> dict:
+        return NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,
+                                                              key_names_identifier_objects_to_go_into=["json_key"])[self.json_key]
+
 
 if __name__ == "__main__":
     NestedObjectToDict.get_dict_from_nested_object(Payload(), ["json_key"])
