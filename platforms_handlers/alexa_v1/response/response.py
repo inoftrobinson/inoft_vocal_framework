@@ -10,9 +10,8 @@ class Card:
         self._title = str()
         self._content = str()
 
-    def is_not_usable(self):
-        if ((self._type is None)
-        or (self._title == str() and self._content == str())):
+    def do_not_include(self):
+        if (self._type is None) or (self._title == "" and self._content == ""):
             return True
         else:
             return False
@@ -51,6 +50,14 @@ class OutputSpeech:
         self._text = str()
         self._ssml = str()
 
+    def is_speech_empty(self):
+        if self._type == self.TYPE_KEY_TEXT:
+            return True if self._text.replace(" ", "") == "" else False
+        elif self._type == self.TYPE_KEY_SSML:
+            return True if self._text.replace(" ", "") == "" else False
+        else:
+            return True
+
     def set_text(self, text: str):
         if not isinstance(text, str):
             raise Exception(f"The following text is not a str object : {text}")
@@ -79,6 +86,9 @@ class Reprompt:
 
     def __init__(self):
         self.outputSpeech = OutputSpeech()
+
+    def do_not_include(self):
+        return self.outputSpeech.is_speech_empty()
 
 class Response:
     json_key = "response"

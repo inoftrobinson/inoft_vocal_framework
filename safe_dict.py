@@ -85,10 +85,16 @@ class SafeDict:
             print(f"Warning ! Tried to put a value into a dict of a SafeDict, but the current navigated dict was not pointing to a dict object !")
         return self
 
+    def pop(self, dict_key: str):
+        if isinstance(self.navigated_dict, dict) and isinstance(dict_key, str):
+            self.navigated_dict.pop(dict_key)
+        else:
+            print(f"Warning ! Tried to pop a key of a dict of a SafeDict, but the current navigated dict was not pointing to a dict object !")
+        return self
+
+
     def to_str(self, default="", reset_navigated_dict=True) -> str:
         navigated_dict_values = self.retrieve_navigated_dict_values(reset_navigated_dict=reset_navigated_dict)
-        print(f"to_str = {navigated_dict_values}")
-
         if isinstance(navigated_dict_values, str):
             return navigated_dict_values
         else:

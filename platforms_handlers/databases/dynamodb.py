@@ -1,13 +1,9 @@
-from collections import Callable
-
 import boto3
-import typing
-
 from ask_sdk_core.exceptions import PersistenceException
 from ask_sdk_dynamodb.partition_keygen import user_id_partition_keygen
-from ask_sdk_model import RequestEnvelope
-from boto3.resources.base import ServiceResource
-from boto3.session import ResourceNotExistsError
+from boto3.session import Session, ResourceNotExistsError
+
+from inoft_vocal_framework.utils.static_logger import logger
 
 
 class DynamoDbAdapter:
@@ -20,9 +16,9 @@ class DynamoDbAdapter:
 
     :param table_name: Name of the table to be created or used
     :type table_name: str
-    :param partition_key_name: Partition key name to be used.
+    :param primary_key_name: Partition key name to be used.
         Defaulted to 'id'
-    :type partition_key_name: str
+    :type primary_key_name: str
     :param attribute_name: Attribute name for storing and
         retrieving attributes from dynamodb.
         Defaulted to 'attributes'
@@ -34,14 +30,10 @@ class DynamoDbAdapter:
         request envelope and provides a unique partition key value.
         Defaulted to user id keygen function
     :type partition_keygen: Callable[[RequestEnvelope], str]
-    :param dynamodb_resource: Resource to be used, to perform
-        dynamo operations. Defaulted to resource generated from
-        boto3
-    :type dynamodb_resource: boto3.resources.base.ServiceResource
     """
 
-    def __init__(self, table_name, partition_key_name="id", attribute_name="attributes", create_table=True,
-                 partition_keygen=user_id_partition_keygen, dynamodb_resource=boto3.resource("dynamodb")):
+    def __init__(self, table_name: str, region_name: str, primary_key_name="id", attribute_name="attributes",
+                 create_table=True, partition_keygen=user_id_partition_keygen):
         """Persistence Adapter implementation using Amazon DynamoDb.
 
         Amazon DynamoDb based persistence adapter implementation. This
@@ -51,27 +43,35 @@ class DynamoDbAdapter:
 
         :param table_name: Name of the table to be created or used
         :type table_name: str
-        :param partition_key_name: Partition key name to be used. Defaulted to 'id'
-        :type partition_key_name: str
+        :param primary_key_name: Partition key name to be used. Defaulted to 'id'
+        :type primary_key_name: str
         :param attribute_name: Attribute name for storing and retrieving attributes from dynamodb. Defaulted to 'attributes'
         :type attribute_name: str
         :param create_table: Should the adapter try to create the table if it doesn't exist. Defaulted to False
         :type create_table: bool
         :param partition_keygen: Callable function that takes a request envelope and provides a unique partition key value. Defaulted to user id keygen function
         :type partition_keygen: Callable[[RequestEnvelope], str]
-        :param dynamodb_resource: Resource to be used, to perform dynamo operations. Defaulted to resource generated from boto3
-        :type dynamodb_resource: boto3.resources.base.ServiceResource
         """
+        print(f"Initializing the {self}. For local development, make sure that you are connected to internet."
+              f"Otherwise the framework will get stuck at initializing the {self}")
 
         self._user_id = None
-
         self.table_name = table_name
-        self.partition_key_name = partition_key_name
+        self.primary_key_name = primary_key_name
         self.attribute_name = attribute_name
         self.create_table = create_table
         self.partition_keygen = partition_keygen
-        self.dynamodb = dynamodb_resource
+
+        dynamodb_regions = Session().get_available_regions("dynamodb")
+        if region_name in dynamodb_regions:
+            self.dynamodb = boto3.resource("dynamodb", region_name=region_name)
+        else:
+            self.dynamodb = boto3.resource("dynamodb")
+            logger.debug(f"Warning ! The specified dynamodb region_name {region_name} is not a valid region_name."
+                         f"The dynamodb client has been initialized without specifying the region.")
+
         self.__create_table_if_not_exists()
+        print(f"Initialization of {self} completed successfully !")
 
     @property
     def user_id(self) -> str:
@@ -85,23 +85,10 @@ class DynamoDbAdapter:
             raise Exception(f"user_id was of type {type(user_id)} but cannot be empty and was : '{user_id}'")
         self._user_id = user_id
 
-
-    """
-    def _set_user_id_if_missing(self):
-        if not isinstance(self.user_id, str) or self.user_id.replace(" ", "") == "":
-            if isinstance(HandlerInput.persistent_user_id, str) and HandlerInput.persistent_user_id.replace(" ", "") != "":
-                self._user_id = HandlerInput.persistent_user_id
-            else:
-                retrieved_user_id = HandlerInput.get_user_id()
-                if not isinstance(retrieved_user_id, str) or retrieved_user_id.replace(" ", "") == "":
-                    raise Exception(f"Retrieved user id is not a valid value (must be a non-empty string)")
-                else:
-                    HandlerInput.persistent_user_id = retrieved_user_id
-                    self._user_id = HandlerInput.persistent_user_id
-    """
-
     # todo: create an option of bandwith optimization by loading the
     #  persistent attributes in the session attributes at the start of the session
+
+    # todo: make work the retrieving/saving of attributes when deployed to the cloud (currently work in local but not in the cloud)
     def get_attributes(self, user_id: str) -> dict:
         """ Get attributes from table in Dynamodb resource.
 
@@ -136,8 +123,7 @@ class DynamoDbAdapter:
 
         :param attributes: Attributes stored under the partition keygen mapping in the table
         """
-        print(f"Saving persistent attributes to user_id {self.user_id}")
-
+        print(f"Saving persistent attributes to user_id {self.user_id} : {attributes}")
         try:
             table = self.dynamodb.Table(self.table_name)
             table.put_item(Item={"id": self.user_id, self.attribute_name: attributes})
@@ -162,7 +148,7 @@ class DynamoDbAdapter:
         try:
             table = self.dynamodb.Table(self.table_name)
             partition_key_val = self.partition_keygen(request_envelope)
-            table.delete_item(Key={self.partition_key_name: partition_key_val})
+            table.delete_item(Key={self.primary_key_name: partition_key_val})
         except ResourceNotExistsError:
             raise PersistenceException(f"DynamoDb table {self.table_name} doesn't exist. Failed to delete attributes from DynamoDb table.")
         except Exception as e:
@@ -181,13 +167,13 @@ class DynamoDbAdapter:
                     TableName=self.table_name,
                     KeySchema=[
                         {
-                            'AttributeName': self.partition_key_name,
+                            'AttributeName': self.primary_key_name,
                             'KeyType': 'HASH'
                         }
                     ],
                     AttributeDefinitions=[
                         {
-                            'AttributeName': self.partition_key_name,
+                            'AttributeName': self.primary_key_name,
                             'AttributeType': 'S'
                         }
                     ],

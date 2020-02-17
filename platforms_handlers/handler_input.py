@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from json import loads as json_loads
 
 from inoft_vocal_framework.platforms_handlers.alexa_v1.session import Session
@@ -11,72 +12,89 @@ from inoft_vocal_framework.platforms_handlers.alexa_v1.request import Request as
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.request import Request as RequestDialogflow
 from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
+from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
 
 
-class HandlerInput:
-    session = Session()
-    context = None
-    response = Response()
+class HandlerInput(CurrentPlatformData):
+    def __init__(self, db_table_name: str, db_region_name=None):
+        self.is_alexa_v1 = False
+        self.is_dialogflow_v1 = False
+        self.is_bixby_v1 = False
 
-    session_user_data = SafeDict()
-    persistent_user_id = None
-    persistent_user_data = SafeDict()
-    persistent_attributes_been_modified = False
+        self.session = Session()
+        # self.context = None
+        # self.response = Response()
 
-    dynamodb_adapter = DynamoDbAdapter(table_name="hackaton-cite-des-sciences_users-data", partition_key_name="id", create_table=True)
+        self.session_user_data = SafeDict()
+        self.persistent_user_id = None
+        self.persistent_user_data = SafeDict()
+        self.persistent_attributes_been_modified = False
 
-    @staticmethod
-    def load_persistent_user_data() -> None:
-        persistent_user_data = HandlerInput.dynamodb_adapter.get_attributes(user_id=HandlerInput.get_user_id())
+        self.dynamodb_adapter = DynamoDbAdapter(table_name=db_table_name, region_name=db_region_name,
+                                                primary_key_name="id", create_table=True)
+
+        self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput = None, None, None
+
+    # todo: decide if i create a close method or not to reset the static variables
+
+    def _load_persistent_user_data(self) -> None:
+        persistent_user_data = self.dynamodb_adapter.get_attributes(user_id=self._get_user_id())
         print(f"persistent_user_data = {persistent_user_data}")
 
         if isinstance(persistent_user_data, dict):
-            HandlerInput.persistent_user_data = SafeDict(persistent_user_data)
+            self.persistent_user_data = SafeDict(persistent_user_data)
         else:
-            HandlerInput.persistent_user_data = SafeDict()
+            self.persistent_user_data = SafeDict()
 
-    @staticmethod
-    def get_user_id() -> str:
+    def _get_user_id(self) -> str:
         user_id = None
-
-        if not isinstance(HandlerInput.persistent_user_id, str) or HandlerInput.persistent_user_id.replace(" ", "") == "":
-            if CurrentPlatformData.is_alexa_v1 is True:
-                user_id = SafeDict(AlexaHandlerInput.session.user).get("userId").to_str(default=None)
-            elif CurrentPlatformData.is_dialogflow_v1 is True:
-                user_id = DialogFlowHandlerInput.get_user_id()
+        if not isinstance(self.persistent_user_id, str) or (self.persistent_user_id.replace(" ", "") == ""):
+            if self.is_alexa_v1 is True:
+                user_id = SafeDict(self.alexaHandlerInput.session.user).get("userId").to_str(default=None)
+            elif self.is_dialogflow_v1 is True:
+                user_id = self.dialogFlowHandlerInput.get_user_id()
 
             if not isinstance(user_id, str) or user_id.replace(" ", "") == "":
-                user_id = HandlerInput._generate_memorize_user_id()
+                user_id = self._generate_memorize_user_id()
 
-            HandlerInput.persistent_user_id = user_id
-            HandlerInput.dynamodb_adapter.user_id = HandlerInput.persistent_user_id
+            self.persistent_user_id = user_id
+            self.dynamodb_adapter.user_id = self.persistent_user_id
+        else:
+            user_id = self.persistent_user_id
+            self.dynamodb_adapter.user_id = self.persistent_user_id
 
         print(f"user_id = {user_id}")
         return user_id
 
-    @staticmethod
-    def _generate_memorize_user_id() -> str:
+    def _generate_memorize_user_id(self) -> str:
         from uuid import uuid4 as uuid4_generator
         user_id = str(uuid4_generator())
-        HandlerInput.persistent_memorize("userId", user_id)
+        self.persistent_memorize("userId", user_id)
         print(f"Created a new user_id, will now create the field in the database : {user_id}")
         return user_id
 
-    @staticmethod
-    def load_event_and_context(event: dict, context: dict):
-        if CurrentPlatformData.is_alexa_v1 is True:
-            AlexaHandlerInput.load_event_and_context(event=event, context=context)
-            HandlerInput.load_persistent_user_data()
+    def load_event_and_context(self, event: dict, context: dict) -> None:
+        if self.is_alexa_v1 is True:
+            self._alexaHandlerInput = AlexaHandlerInput()
+            self.alexaHandlerInput.load_event_and_context(event=event, context=context)
 
-        elif CurrentPlatformData.is_dialogflow_v1 is True:
-            NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=DialogFlowHandlerInput.request,
+            if isinstance(self.alexaHandlerInput.session.attributes, dict):
+                self.session_user_data = SafeDict(self.alexaHandlerInput.session.attributes)
+            else:
+                self.session_user_data = SafeDict()
+
+            self._load_persistent_user_data()
+
+        elif self.is_dialogflow_v1 is True:
+            self._dialogFlowHandlerInput = DialogFlowHandlerInput()
+            NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
                                                                       request_json_dict_or_stringed_dict=event,
                                                                       key_names_identifier_objects_to_go_into=["json_key"])
-            HandlerInput.load_persistent_user_data()
+            self._load_persistent_user_data()
 
-            SessionInfo.session_id = DialogFlowHandlerInput.request.session  # Important to set the session id for google assistant
+            SessionInfo.session_id = self.dialogFlowHandlerInput.request.session  # Important to set the session id for google assistant
 
-            for output_context in DialogFlowHandlerInput.request.queryResult.outputContexts:
+            for output_context in self.dialogFlowHandlerInput.request.queryResult.outputContexts:
                 if isinstance(output_context, dict) and "name" in output_context.keys() and "parameters" in output_context.keys():
                     all_texts_after_slash = output_context["name"].split("/")
                     last_text_after_slash = all_texts_after_slash[len(all_texts_after_slash) - 1]
@@ -86,95 +104,254 @@ class HandlerInput:
                             if isinstance(parameters_stringed_dict_or_dict, str):
                                 parameters_stringed_dict_or_dict = json_loads(parameters_stringed_dict_or_dict)
                             if isinstance(parameters_stringed_dict_or_dict, dict):
-                                HandlerInput.session_user_data = SafeDict(parameters_stringed_dict_or_dict)
+                                self.session_user_data = SafeDict(parameters_stringed_dict_or_dict)
                             else:
                                 raise Exception(f"parameters_stringed_dict_or_dict was nto None, not a str, dict and could not be json converted to a dict : {parameters_stringed_dict_or_dict}")
 
-    @staticmethod
-    def is_launch_request():
-        if CurrentPlatformData.is_alexa_v1 is True:
-            return AlexaHandlerInput.request.is_launch_request()
+        elif self.is_bixby_v1 is True:
+            self._bixbyHandlerInput = BixbyHandlerInput()
 
-        elif CurrentPlatformData.is_dialogflow_v1 is True:
-            return DialogFlowHandlerInput.request.is_launch_request()
+    def is_launch_request(self) -> bool:
+        if self.is_alexa_v1 is True:
+            return self.alexaHandlerInput.request.is_launch_request()
 
-    @staticmethod
-    def is_in_intent_names(intent_names_list):
+        elif self.is_dialogflow_v1 is True:
+            return self.dialogFlowHandlerInput.request.is_launch_request()
+
+    def is_in_intent_names(self, intent_names_list) -> bool:
         if not isinstance(intent_names_list, list):
             if isinstance(intent_names_list, str):
                 intent_names_list = [intent_names_list]
             else:
                 raise Exception(f"The intent_names_list must be a list or a str in order to be converted to a list, but it was a {type(intent_names_list)} object : {intent_names_list}")
 
-        if CurrentPlatformData.is_alexa_v1 is True:
-            return AlexaHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
+        if self.is_alexa_v1 is True:
+            return self.alexaHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
 
-        elif CurrentPlatformData.is_dialogflow_v1 is True:
-            return DialogFlowHandlerInput.request.is_in_intent_names(intent_names_list=intent_names_list)
+        elif self.is_dialogflow_v1 is True:
+            return self.dialogFlowHandlerInput.request.is_in_intent_names(intent_names_list=intent_names_list)
 
-    @staticmethod
-    def say(text_or_ssml: str):
-        if CurrentPlatformData.is_alexa_v1 is True:
-            AlexaHandlerInput.say(text_or_ssml=text_or_ssml)
-        elif CurrentPlatformData.is_dialogflow_v1 is True:
-            DialogFlowHandlerInput.say(text_or_ssml=text_or_ssml)
+    def say(self, text_or_ssml: str) -> None:
+        if self.is_alexa_v1 is True:
+            self.alexaHandlerInput.say(text_or_ssml=text_or_ssml)
+        elif self.is_dialogflow_v1 is True:
+            self.dialogFlowHandlerInput.say(text_or_ssml=text_or_ssml)
 
-    @staticmethod
-    def session_memorize(data_key: str, data_value=None) -> None:
+    def reprompt(self, text_or_ssml: str) -> None:
+        if self.is_alexa_v1 is True:
+            self.alexaHandlerInput.reprompt(text_or_ssml=text_or_ssml)
+        elif self.is_dialogflow_v1 is True:
+            self.dialogFlowHandlerInput.reprompt(text_or_ssml=text_or_ssml)
+
+    def session_memorize(self, data_key: str, data_value=None) -> None:
         if data_value is not None and isinstance(data_key, str) and data_key != "":
-            HandlerInput.session_user_data.put(dict_key=data_key, value_to_put=data_value)
+            self.session_user_data.put(dict_key=data_key, value_to_put=data_value)
 
-    @staticmethod
-    def session_batch_memorize(data_dict: dict) -> None:
+    def session_batch_memorize(self, data_dict: dict) -> None:
         if not isinstance(data_dict, dict):
             raise Exception(f"The data_dict must be of type dict but was of type {type(data_dict)}")
         else:
             for key_item, value_item in data_dict.items():
-                HandlerInput.session_user_data.put(dict_key=key_item, value_to_put=value_item)
+                self.session_user_data.put(dict_key=key_item, value_to_put=value_item)
 
-    @staticmethod
-    def session_remember(data_key: str, specific_object_type=None):
-        data_object = HandlerInput.session_user_data.get(data_key)
+    def session_remember(self, data_key: str, specific_object_type=None):
+        data_object = self.session_user_data.get(data_key)
         if specific_object_type is None:
             return data_object.to_any()
         else:
             return data_object.to_specific_type(type_to_return=specific_object_type)
 
-    @staticmethod
-    def persistent_memorize(data_key: str, data_value=None) -> None:
-        if data_value is not None and isinstance(data_key, str) and data_key != "":
-            HandlerInput.persistent_attributes_been_modified = True
-            HandlerInput.persistent_user_data.put(dict_key=data_key, value_to_put=data_value)
+    def session_forget(self, data_key: str) -> None:
+        self.session_user_data.pop(dict_key=data_key)
 
-    @staticmethod
-    def persistent_batch_memorize(data_dict: dict) -> None:
+    def persistent_memorize(self, data_key: str, data_value=None) -> None:
+        if data_value is not None and isinstance(data_key, str) and data_key != "":
+            self.persistent_attributes_been_modified = True
+            self.persistent_user_data.put(dict_key=data_key, value_to_put=data_value)
+
+    def persistent_batch_memorize(self, data_dict: dict) -> None:
         if not isinstance(data_dict, dict):
             raise Exception(f"The data_dict must be of type dict but was of type {type(data_dict)}")
         else:
             for key_item, value_item in data_dict.items():
-                HandlerInput.persistent_attributes_been_modified = True
-                HandlerInput.persistent_user_data.put(dict_key=key_item, value_to_put=value_item)
+                self.persistent_attributes_been_modified = True
+                self.persistent_user_data.put(dict_key=key_item, value_to_put=value_item)
 
-    @staticmethod
-    def persistent_remember(data_key: str, specific_object_type=None):
-        data_object = HandlerInput.persistent_user_data.get(data_key)
+    def persistent_remember(self, data_key: str, specific_object_type=None):
+        data_object = self.persistent_user_data.get(data_key)
         if specific_object_type is None:
             return data_object.to_any()
         else:
             return data_object.to_specific_type(type_to_return=specific_object_type)
 
-    @staticmethod
-    def to_platform_dict():
-        HandlerInput.session.attributes = HandlerInput.session_user_data.to_dict()
+    def persistent_forget(self, data_key: str) -> None:
+        self.persistent_attributes_been_modified = True
+        self.persistent_user_data.pop(dict_key=data_key)
+
+    def memorize_session_then_state(self, state_handler_class_type_or_name) -> None:
+        from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftStateHandler
+
+        if state_handler_class_type_or_name is not None:
+            then_state_class_name = None
+
+            if isinstance(state_handler_class_type_or_name, type):
+                try:
+                    if InoftStateHandler in state_handler_class_type_or_name.__bases__:
+                        then_state_class_name = state_handler_class_type_or_name.__name__
+                    else:
+                        raise Exception(f"The state handler {state_handler_class_type_or_name} did not had {InoftStateHandler} in its bases classes.")
+                except Exception as e:
+                    raise Exception(f"Error while setting the following session_then_state {state_handler_class_type_or_name}."
+                                    f"Make sure its a class with {InoftStateHandler} as its/one of its parent class."
+                                    f"No checks are being made on the class, only a try and except that returned : {e}")
+
+            elif isinstance(state_handler_class_type_or_name, str):
+                then_state_class_name = state_handler_class_type_or_name
+
+            if then_state_class_name is not None:
+                self.session_memorize(data_key="then_state", data_value=then_state_class_name)
+        else:
+            raise Exception(f"state_handler_class_type_or_name must be an class type or str but was {state_handler_class_type_or_name}")
+
+    def remember_session_then_state(self):
+        last_session_then_state = self.session_remember("then_state", str)
+        if last_session_then_state.replace(" ", "") != "":
+            return last_session_then_state
+        else:
+            return None
+
+    def forget_session_then_state(self) -> None:
+        self.session_forget("then_state")
+
+    def to_platform_dict(self) -> dict:
+        self.session.attributes = self.session_user_data.to_dict()
         # todo: improve this code, i found it dirty...
-        if HandlerInput.persistent_attributes_been_modified:
-            HandlerInput.dynamodb_adapter.save_attributes(HandlerInput.persistent_user_data.to_dict())
+        if self.persistent_attributes_been_modified:
+            self.dynamodb_adapter.save_attributes(self.persistent_user_data.to_dict())
 
-        if CurrentPlatformData.is_alexa_v1 is True:
+        if self.is_alexa_v1 is True:
             return {
                 "version": "1.0",
-                "sessionAttributes": HandlerInput.session.attributes,
-                "response": AlexaHandlerInput.response.to_dict()["response"]  # todo: fix the need to enter with response key
+                "sessionAttributes": self.session.attributes,
+                "response": self.alexaHandlerInput.response.to_dict()["response"]  # todo: fix the need to enter with response key
             }
-        elif CurrentPlatformData.is_dialogflow_v1 is True:
-            return DialogFlowHandlerInput.response.to_dict()
+        elif self.is_dialogflow_v1 is True:
+            return self.dialogFlowHandlerInput.response.to_dict()
+
+    @property
+    def alexaHandlerInput(self) -> AlexaHandlerInput:
+        return self._alexaHandlerInput
+
+    @property
+    def dialogFlowHandlerInput(self) -> DialogFlowHandlerInput:
+        return self._dialogFlowHandlerInput
+
+    @property
+    def bixbyHandlerInput(self) -> BixbyHandlerInput:
+        return self._bixbyHandlerInput
+
+
+class HandlerInputWrapper:
+    def __init__(self, parent_handler=None):
+        if parent_handler is None:
+            self._handler_input = None
+        else:
+            try:
+                self._handler_input = parent_handler.handler_input
+            except Exception as e:
+                raise Exception(f"A parent_handler has been specified, but do not has an handler_input property : {parent_handler} : {e}")
+
+    @property
+    def handler_input(self) -> HandlerInput:
+        return self._handler_input
+
+    @handler_input.setter
+    def handler_input(self, handler_input: HandlerInput) -> None:
+        if not isinstance(handler_input, HandlerInput):
+            raise Exception(f"handler_input was type {type(handler_input)} which is not valid value for his parameter.")
+        self._handler_input = handler_input
+
+    def is_launch_request(self) -> bool:
+        return self.handler_input.is_launch_request()
+
+    def is_in_intent_names(self, intent_names_list) -> bool:
+        return self.handler_input.is_in_intent_names(intent_names_list=intent_names_list)
+
+    def say(self, text_or_ssml: str):
+        self.handler_input.say(text_or_ssml=text_or_ssml)
+        return self
+
+    def reprompt(self, text_or_ssml: str):
+        self.handler_input.reprompt(text_or_ssml=text_or_ssml)
+        return self
+
+    def session_memorize(self, data_key: str, data_value=None):
+        self.handler_input.session_memorize(data_key=data_key, data_value=data_value)
+        return self
+
+    def session_batch_memorize(self, data_dict: dict):
+        self.handler_input.session_batch_memorize(data_dict=data_dict)
+        return self
+
+    def session_remember(self, data_key: str, specific_object_type=None):
+        return self.handler_input.session_remember(data_key=data_key, specific_object_type=specific_object_type)
+
+    def session_forget(self, data_key: str) -> None:
+        self.handler_input.session_forget(data_key=data_key)
+        return self
+
+    def persistent_memorize(self, data_key: str, data_value=None):
+        self.handler_input.persistent_memorize(data_key=data_key, data_value=data_value)
+        return self
+
+    def persistent_batch_memorize(self, data_dict: dict):
+        self.handler_input.persistent_batch_memorize(data_dict=data_dict)
+        return self
+
+    def persistent_remember(self, data_key: str, specific_object_type=None):
+        return self.handler_input.persistent_remember(data_key=data_key, specific_object_type=specific_object_type)
+
+    def persistent_forget(self, data_key: str):
+        self.handler_input.persistent_forget(data_key=data_key)
+        return self
+
+    def memorize_session_then_state(self, state_handler_class_type_or_name):
+        self.handler_input.memorize_session_then_state(state_handler_class_type_or_name=state_handler_class_type_or_name)
+        return self
+
+    def remember_session_then_state(self):
+        self.handler_input.remember_session_then_state()
+        return self
+
+    def forget_session_then_state(self):
+        self.handler_input.forget_session_then_state()
+
+    # todo: add the then states saved in the persistent attributes, allow to
+    #  set who should take over if there is a then state in persistent and session
+
+    def to_platform_dict(self) -> dict:
+        return self.handler_input.to_platform_dict()
+
+    @property
+    def is_alexa_v1(self) -> bool:
+        return self.handler_input.is_alexa_v1
+
+    @property
+    def is_dialogflow_v1(self) -> bool:
+        return self.handler_input.is_dialogflow_v1
+
+    @property
+    def is_bixby_v1(self) -> bool:
+        return self.handler_input.is_bixby_v1
+
+    @property
+    def alexaHandlerInput(self) -> AlexaHandlerInput:
+        return self.handler_input.alexaHandlerInput
+
+    @property
+    def dialogFlowHandlerInput(self) -> DialogFlowHandlerInput:
+        return self.handler_input.dialogFlowHandlerInput
+
+    @property
+    def bixbyHandlerInput(self) -> BixbyHandlerInput:
+        return self.handler_input.bixbyHandlerInput

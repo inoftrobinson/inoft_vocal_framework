@@ -1,4 +1,4 @@
-from inoft_vocal_framework.utils import get_dict_of_all_custom_defined_variables_of_class
+from inoft_vocal_framework.utils.general import get_dict_of_all_custom_defined_variables_of_class
 
 class CurrentPlatformData:
     used_platform_id = None

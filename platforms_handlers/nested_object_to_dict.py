@@ -23,9 +23,9 @@ class NestedObjectToDict:
         functions_of_object = dir(class_object)
         # We use dir and not vars, because vars do not include the functions of the class
 
-        if "is_not_usable" in functions_of_object:
-            # We make sure that the is_not_usable var is a function that can be called and not a shadow variable
-            if class_object.is_not_usable():
+        if "do_not_include" in functions_of_object:
+            # We make sure that the do_not_include var is a function that can be called and not a shadow variable
+            if class_object.do_not_include():
                 return True
         return False
 
@@ -39,7 +39,7 @@ class NestedObjectToDict:
         # We use dir and not vars, because vars do not include the functions of the class
 
         if "return_transformations" in functions_of_object:
-            # We make sure that the is_not_usable var is a function that can be called and not a shadow variable
+            # We make sure that the return_transformations var is a function that can be called and not a shadow variable
             class_object.return_transformations()
             return True
         return False
@@ -83,15 +83,15 @@ class NestedObjectToDict:
                                     break
 
                             if found_accepted_key_name_in_vars_of_current_object is False and main_var_object is not None:
-                                current_item_is_not_usable = False
+                                do_not_include_current_item = False
 
                                 if isinstance(main_var_object, str):
                                     if main_var_object.replace(" ", "") == "":
-                                        current_item_is_not_usable = True
+                                        do_not_include_current_item = True
 
                                 elif isinstance(main_var_object, dict) or isinstance(main_var_object, list):
                                     if not len(main_var_object) > 0:
-                                        current_item_is_not_usable = True
+                                        do_not_include_current_item = True
                                     else:
                                         if isinstance(main_var_object, dict):
                                             for key_item_main_var_object, value_item_main_var_object in main_var_object.items():
@@ -102,7 +102,7 @@ class NestedObjectToDict:
                                                 main_var_object[i_item_main_var_object] = NestedObjectToDict._process_potential_nested_object(
                                                     class_object=item_main_var_object, key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
 
-                                if not current_item_is_not_usable:
+                                if not do_not_include_current_item:
                                     cleaned_key = NestedObjectToDict._remove_start_underscores_from_string_key(main_var_key)
                                     output_dict[cleaned_key] = main_var_object
 
@@ -180,17 +180,17 @@ class NestedObjectToDict:
                                     key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
 
                     if not found_accepted_key_name_in_vars_of_current_object:
-                        current_item_is_not_usable = False
+                        do_not_include_current_item = False
 
                         if isinstance(value_request_element, str):
                             if value_request_element.replace(" ", "") == "":
-                                current_item_is_not_usable = True
+                                do_not_include_current_item = True
 
                         elif isinstance(value_request_element, dict) or isinstance(value_request_element, list):
                             if not len(value_request_element) > 0:
-                                current_item_is_not_usable = True
+                                do_not_include_current_item = True
 
-                        if not current_item_is_not_usable:
+                        if not do_not_include_current_item:
                             unprocessed_vars_dict[current_unprocessed_variable_name] = value_request_element
 
         for key_to_pop in keys_to_pop_after_loop_finished:

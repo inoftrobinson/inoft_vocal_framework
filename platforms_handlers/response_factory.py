@@ -109,7 +109,7 @@ class Response:
     def to_platform_dict(self) -> dict:
         from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
 
-        if CurrentPlatformData.is_alexa_v1 is True:
+        if HandlerInput.is_alexa_v1 is True:
             from inoft_vocal_framework.platforms_handlers.alexa_v1 import response
             output_response = response.Response()
 
@@ -127,7 +127,7 @@ class Response:
             print(f"Final platform adapted on Alexa-v1 : {platform_adapted_response_dict}")
             return platform_adapted_response_dict
 
-        elif CurrentPlatformData.is_dialogflow_v1 is True:
+        elif HandlerInput.is_dialogflow_v1 is True:
             from inoft_vocal_framework.platforms_handlers.dialogflow_v1 import response
             output_response = HandlerInput.handler_input.response
 

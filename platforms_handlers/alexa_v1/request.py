@@ -59,7 +59,7 @@ class Request:
                 return True
         return False
 
-    def is_not_usable(self) -> bool:
+    def do_not_include(self) -> bool:
         if self.type is not None and self.type not in [self.LaunchRequestKeyName, self.IntentRequestKeyName, self.SessionEndedRequestKeyName]:
             raise Exception(f"The request type '{self.type}' is not None or any of the supported types.")
 
