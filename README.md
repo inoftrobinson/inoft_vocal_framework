@@ -66,7 +66,7 @@ def lambda_handler(event, context):
  - Identify the intent/request type (like launch, end, and any intent) (02/01/2020)
  - HandlerInput object to have access to all the features without needing 42 imports in each file (02/01/2020)
  - Saving and access of user data/interactions in the session and accross sessions (02/07/2020)
- - StateHandlers (set the user in a state, where he can interacte with multiples intents, and fallback to a specific function if he is not in one of the intents)
+ - StateHandlers (set the user in a state, where he can interacte with multiples intents, and fallback to a specific function if he is not in one of the intents) (02/07/2020)
  
  #### Credits :
  - The Amazon Alexa Python SDK. If you look at the class and variables that will be interacted with, i have use the same type of logic than the SDK (like a skill_builder, the requests and intents handlers, the handler_input, etc). I did not use their code, but written everything from scratch, unfortunatly ;) https://github.com/alexa/alexa-skills-kit-sdk-for-python
