@@ -151,6 +151,19 @@ class Response:
         self.payload = Payload()
         self.outputContexts = list()
 
+    def say(self, text_or_ssml: str) -> None:
+        # todo: allow to have 2 differents response in the same one, not just one
+        output_response = SimpleResponse()
+        output_response.textToSpeech = text_or_ssml
+        self.payload.google.richResponse.add_response_item(output_response)
+
+    def reprompt(self, text_or_ssml: str) -> None:
+        # todo: finish the reprompt function
+        return None
+        output_response = SimpleResponse()
+        output_response.textToSpeech = text_or_ssml
+        self.payload.google.richResponse.add_response_item(output_response)
+
     def add_output_context_item(self, output_context_item: OutputContextItem) -> None:
         if isinstance(output_context_item, OutputContextItem):
             self.outputContexts.append(output_context_item)

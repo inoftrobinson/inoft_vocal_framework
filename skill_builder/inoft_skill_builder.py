@@ -179,14 +179,13 @@ class InoftSkill:
             event = NestedObjectToDict.get_dict_from_json(event_safedict.get("body").to_str())
 
         elif event_safedict.get("resource").to_str() == "/samsung-bixby-v1":
+            # A samsung bixby request always pass trough an API gateway
             self.handler_input.is_bixby_v1 = True
             event = NestedObjectToDict.get_dict_from_json(event_safedict.get("body").to_str())
-            print(f"this is the event created by bixby ! : {event}")
 
         elif "amzn1." in event_safedict.get("context").get("System").get("application").get("applicationId").to_str():
             # Alexa always go last, since it do not pass trough an api resource, its a less robust identification than the other platforms.
             self.handler_input.is_alexa_v1 = True
-
         else:
             from inoft_vocal_framework.messages import ERROR_PLATFORM_NOT_SUPPORTED
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)

@@ -13,10 +13,14 @@ class LambdaResponseWrapper:
         if handler_input.is_alexa_v1 is True:
             return self._response_dict
 
-        elif handler_input.is_dialogflow_v1 is True:
+        elif (handler_input.is_dialogflow_v1 is True
+        or handler_input.is_bixby_v1 is True):
             return {
                 "isBase64Encoded": False,
                 "statusCode": 200,
                 "headers": dict(),
                 "body": json_dumps(self._response_dict)
             }
+
+        else:
+            raise Exception(f"Platform is not supported.")

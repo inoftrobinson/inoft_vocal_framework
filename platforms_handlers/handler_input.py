@@ -53,6 +53,8 @@ class HandlerInput(CurrentPlatformData):
                 user_id = SafeDict(self.alexaHandlerInput.session.user).get("userId").to_str(default=None)
             elif self.is_dialogflow_v1 is True:
                 user_id = self.dialogFlowHandlerInput.get_user_id()
+            elif self.is_bixby_v1 is True:
+                user_id = self.bixbyHandlerInput.request.userId
 
             if not isinstance(user_id, str) or user_id.replace(" ", "") == "":
                 user_id = self._generate_memorize_user_id()
@@ -110,13 +112,18 @@ class HandlerInput(CurrentPlatformData):
 
         elif self.is_bixby_v1 is True:
             self._bixbyHandlerInput = BixbyHandlerInput()
+            NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
+                                                                      request_json_dict_or_stringed_dict=event,
+                                                                      key_names_identifier_objects_to_go_into=["json_key"])
+            self._load_persistent_user_data()
 
     def is_launch_request(self) -> bool:
         if self.is_alexa_v1 is True:
             return self.alexaHandlerInput.request.is_launch_request()
-
         elif self.is_dialogflow_v1 is True:
             return self.dialogFlowHandlerInput.request.is_launch_request()
+        elif self.is_bixby_v1 is True:
+            return self.bixbyHandlerInput.request.is_launch_request()
 
     def is_in_intent_names(self, intent_names_list) -> bool:
         if not isinstance(intent_names_list, list):
@@ -126,22 +133,27 @@ class HandlerInput(CurrentPlatformData):
                 raise Exception(f"The intent_names_list must be a list or a str in order to be converted to a list, but it was a {type(intent_names_list)} object : {intent_names_list}")
 
         if self.is_alexa_v1 is True:
-            return self.alexaHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
-
+            return self.alexaHandlerInput.request.is_in_intent_names(intent_names_list=intent_names_list)
         elif self.is_dialogflow_v1 is True:
             return self.dialogFlowHandlerInput.request.is_in_intent_names(intent_names_list=intent_names_list)
+        elif self.is_bixby_v1 is True:
+            return self.bixbyHandlerInput.request.is_in_intent_names(intent_names_list=intent_names_list)
 
     def say(self, text_or_ssml: str) -> None:
         if self.is_alexa_v1 is True:
-            self.alexaHandlerInput.say(text_or_ssml=text_or_ssml)
+            self.alexaHandlerInput.response.say(text_or_ssml=text_or_ssml)
         elif self.is_dialogflow_v1 is True:
-            self.dialogFlowHandlerInput.say(text_or_ssml=text_or_ssml)
+            self.dialogFlowHandlerInput.response.say(text_or_ssml=text_or_ssml)
+        elif self.is_bixby_v1 is True:
+            self.bixbyHandlerInput.response.say(text_or_ssml=text_or_ssml)
 
     def reprompt(self, text_or_ssml: str) -> None:
         if self.is_alexa_v1 is True:
-            self.alexaHandlerInput.reprompt(text_or_ssml=text_or_ssml)
+            self.alexaHandlerInput.response.reprompt(text_or_ssml=text_or_ssml)
         elif self.is_dialogflow_v1 is True:
-            self.dialogFlowHandlerInput.reprompt(text_or_ssml=text_or_ssml)
+            self.dialogFlowHandlerInput.response.reprompt(text_or_ssml=text_or_ssml)
+        elif self.is_bixby_v1 is True:
+            self.bixbyHandlerInput.response.reprompt(text_or_ssml=text_or_ssml)
 
     def session_memorize(self, data_key: str, data_value=None) -> None:
         if data_value is not None and isinstance(data_key, str) and data_key != "":
@@ -237,6 +249,8 @@ class HandlerInput(CurrentPlatformData):
             }
         elif self.is_dialogflow_v1 is True:
             return self.dialogFlowHandlerInput.response.to_dict()
+        elif self.is_bixby_v1 is True:
+            return self.bixbyHandlerInput.response.to_dict()
 
     @property
     def alexaHandlerInput(self) -> AlexaHandlerInput:

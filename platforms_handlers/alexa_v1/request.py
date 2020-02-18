@@ -53,10 +53,14 @@ class Request:
         else:
             return False
 
-    def is_in_intent_names(self, intent_names_list: list):
+    def is_in_intent_names(self, intent_names_list):
         if self.type == self.IntentRequestKeyName:
-            if self.intent.name in intent_names_list:
-                return True
+            if isinstance(intent_names_list, list):
+                if self.intent.name in intent_names_list:
+                    return True
+            elif isinstance(intent_names_list, str):
+                if self.intent.name == intent_names_list:
+                    return True
         return False
 
     def do_not_include(self) -> bool:

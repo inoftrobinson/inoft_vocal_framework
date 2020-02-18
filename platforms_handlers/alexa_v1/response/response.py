@@ -99,6 +99,37 @@ class Response:
         self.card = Card()
         self._shouldEndSession = False
 
+    @staticmethod
+    def is_text_ssml(self, text_or_ssml: str):
+        is_ssml = False
+        if "<speak>" in text_or_ssml:
+            # For ssml, the speak balise must start the string, so if we find other chars than
+            # whitespaces before the balise, we consider that the string to not be a ssml string.
+            before_start_balise, after_start_balise = text_or_ssml.split("<speak>", maxsplit=1)
+            are_all_chars_in_before_start_balise_whitespaces = True
+            for char in before_start_balise:
+                if char != " ":
+                    are_all_chars_in_before_start_balise_whitespaces = False
+            if are_all_chars_in_before_start_balise_whitespaces is True:
+                is_ssml = True
+        return is_ssml
+
+    def say(self, text_or_ssml: str):
+        is_ssml = self.is_text_ssml(text_or_ssml=text_or_ssml)
+
+        if is_ssml is True:
+            self.outputSpeech.set_ssml(ssml_string=text_or_ssml)
+        else:
+            self.outputSpeech.set_text(text=text_or_ssml)
+
+    def reprompt(self, text_or_ssml: str):
+        is_ssml = self.is_text_ssml(text_or_ssml=text_or_ssml)
+
+        if is_ssml is True:
+            self.reprompt.outputSpeech.set_ssml(ssml_string=text_or_ssml)
+        else:
+            self.reprompt.outputSpeech.set_text(text=text_or_ssml)
+
     @property
     def shouldEndSession(self):
         return self._shouldEndSession

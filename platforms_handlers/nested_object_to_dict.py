@@ -198,7 +198,12 @@ class NestedObjectToDict:
 
     @staticmethod
     def get_dict_from_json(stringed_json_dict: str) -> dict:
-        return json_loads(stringed_json_dict)
+        try:
+            return json_loads(stringed_json_dict)
+        except Exception as e:
+            print(f"Warning ! The following string has tried to be converted in the get_dict_from_json function"
+                  f"of the nested_object_to_dict file, but the following error occurred, returning None : {e}")
+            return None
 
     @staticmethod
     def get_json_key_from_variable_name(variable_name: str):
