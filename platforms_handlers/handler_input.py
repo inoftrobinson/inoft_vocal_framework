@@ -38,7 +38,7 @@ class HandlerInput(CurrentPlatformData):
     # todo: decide if i create a close method or not to reset the static variables
 
     def _load_persistent_user_data(self) -> None:
-        persistent_user_data = self.dynamodb_adapter.get_attributes(user_id=self._get_user_id())
+        persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self._get_user_id())
         print(f"persistent_user_data = {persistent_user_data}")
 
         if isinstance(persistent_user_data, dict):
@@ -60,10 +60,8 @@ class HandlerInput(CurrentPlatformData):
                 user_id = self._generate_memorize_user_id()
 
             self.persistent_user_id = user_id
-            self.dynamodb_adapter.user_id = self.persistent_user_id
         else:
             user_id = self.persistent_user_id
-            self.dynamodb_adapter.user_id = self.persistent_user_id
 
         print(f"user_id = {user_id}")
         return user_id
@@ -155,6 +153,14 @@ class HandlerInput(CurrentPlatformData):
         elif self.is_bixby_v1 is True:
             self.bixbyHandlerInput.response.reprompt(text_or_ssml=text_or_ssml)
 
+    def get_intent_arg_value(self, arg_key: str):
+        if self.is_alexa_v1 is True:
+            return self.alexaHandlerInput.request.get_intent_slot_value(slot_key=arg_key)
+        elif self.is_dialogflow_v1 is True:
+            return self.dialogFlowHandlerInput.request.get_intent_parameter_value(parameter_key=arg_key)
+        elif self.is_bixby_v1 is True:
+            return self.bixbyHandlerInput.request.get_intent_parameter_value(parameter_key=arg_key)
+
     def session_memorize(self, data_key: str, data_value=None) -> None:
         if data_value is not None and isinstance(data_key, str) and data_key != "":
             self.session_user_data.put(dict_key=data_key, value_to_put=data_value)
@@ -236,18 +242,28 @@ class HandlerInput(CurrentPlatformData):
         self.session_forget("then_state")
 
     def to_platform_dict(self) -> dict:
-        self.session.attributes = self.session_user_data.to_dict()
         # todo: improve this code, i found it dirty...
+        user_id = self._get_user_id()
         if self.persistent_attributes_been_modified:
-            self.dynamodb_adapter.save_attributes(self.persistent_user_data.to_dict())
+            self.dynamodb_adapter.save_attributes(user_id=user_id,
+                                                  smart_session_attributes=None,
+                                                  persistent_attributes=self.persistent_user_data.to_dict())
 
         if self.is_alexa_v1 is True:
             return {
                 "version": "1.0",
-                "sessionAttributes": self.session.attributes,
+                "sessionAttributes": self.session_user_data.to_dict(),
                 "response": self.alexaHandlerInput.response.to_dict()["response"]  # todo: fix the need to enter with response key
             }
         elif self.is_dialogflow_v1 is True:
+            self.dialogFlowHandlerInput.response.payload.google.userStorage = str({"user_id": user_id})
+
+            from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import OutputContextItem
+            session_user_data_context_item = OutputContextItem()
+            for key_item_saved_data, value_item_saved_data in self.session_user_data.to_dict().items():
+                session_user_data_context_item.add_set_session_attribute(key_item_saved_data, 42)  # value_item_saved_data)
+            self.dialogFlowHandlerInput.response.add_output_context_item(session_user_data_context_item)
+
             return self.dialogFlowHandlerInput.response.to_dict()
         elif self.is_bixby_v1 is True:
             return self.bixbyHandlerInput.response.to_dict()
@@ -298,6 +314,9 @@ class HandlerInputWrapper:
     def reprompt(self, text_or_ssml: str):
         self.handler_input.reprompt(text_or_ssml=text_or_ssml)
         return self
+
+    def get_intent_arg_value(self, arg_key: str):
+        return self.handler_input.get_intent_arg_value(arg_key=arg_key)
 
     def session_memorize(self, data_key: str, data_value=None):
         self.handler_input.session_memorize(data_key=data_key, data_value=data_value)

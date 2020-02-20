@@ -114,7 +114,8 @@ class OutputContextItem:
         self._parameters = dict()
 
     def return_transformations(self) -> None:
-        self._parameters = self._parameters  # json.dumps()
+        if "data" in self.parameters.keys():
+            self.parameters["data"] = json_dumps(self._parameters["data"])
 
     def add_set_parameter(self, parameter_key: str, parameter_value=None):
         """

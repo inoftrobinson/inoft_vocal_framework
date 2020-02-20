@@ -1,0 +1,113 @@
+{
+    "resource": "/google-assistant-v1",
+    "path": "/google-assistant-v1",
+    "httpMethod": "POST",
+    "headers": {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip,deflate,br",
+        "CloudFront-Forwarded-Proto": "https",
+        "CloudFront-Is-Desktop-Viewer": "true",
+        "CloudFront-Is-Mobile-Viewer": "false",
+        "CloudFront-Is-SmartTV-Viewer": "false",
+        "CloudFront-Is-Tablet-Viewer": "false",
+        "CloudFront-Viewer-Country": "US",
+        "content-type": "application/json",
+        "Host": "bxnplkx150.execute-api.eu-west-3.amazonaws.com",
+        "User-Agent": "Google-Dialogflow",
+        "Via": "1.1 3ebe5e903d733a5e00724b1dfdba02bc.cloudfront.net (CloudFront)",
+        "X-Amz-Cf-Id": "an72x531BQbkTOsEdCn420Sj5Rz3YT0RyhQ3fstMF_B0xK--2IRpBA==",
+        "X-Amzn-Trace-Id": "Root=1-5e4e745b-2b2b9b68e9eaf36cbd508fcd",
+        "X-Forwarded-For": "66.249.83.54, 64.252.151.88",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https"
+    },
+    "multiValueHeaders": {
+        "Accept": [
+            "*/*"
+        ],
+        "Accept-Encoding": [
+            "gzip,deflate,br"
+        ],
+        "CloudFront-Forwarded-Proto": [
+            "https"
+        ],
+        "CloudFront-Is-Desktop-Viewer": [
+            "true"
+        ],
+        "CloudFront-Is-Mobile-Viewer": [
+            "false"
+        ],
+        "CloudFront-Is-SmartTV-Viewer": [
+            "false"
+        ],
+        "CloudFront-Is-Tablet-Viewer": [
+            "false"
+        ],
+        "CloudFront-Viewer-Country": [
+            "US"
+        ],
+        "content-type": [
+            "application/json"
+        ],
+        "Host": [
+            "bxnplkx150.execute-api.eu-west-3.amazonaws.com"
+        ],
+        "User-Agent": [
+            "Google-Dialogflow"
+        ],
+        "Via": [
+            "1.1 3ebe5e903d733a5e00724b1dfdba02bc.cloudfront.net (CloudFront)"
+        ],
+        "X-Amz-Cf-Id": [
+            "an72x531BQbkTOsEdCn420Sj5Rz3YT0RyhQ3fstMF_B0xK--2IRpBA=="
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-5e4e745b-2b2b9b68e9eaf36cbd508fcd"
+        ],
+        "X-Forwarded-For": [
+            "66.249.83.54, 64.252.151.88"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "resourceId": "whiybk",
+        "resourcePath": "/google-assistant-v1",
+        "httpMethod": "POST",
+        "extendedRequestId": "IMceYGSGCGYFsAg=",
+        "requestTime": "20/Feb/2020:11:58:19 +0000",
+        "path": "/v1/google-assistant-v1",
+        "accountId": "631258222318",
+        "protocol": "HTTP/1.1",
+        "stage": "v1",
+        "domainPrefix": "bxnplkx150",
+        "requestTimeEpoch": 1582199899964,
+        "requestId": "58292ccb-afda-4fed-8601-432cb0bfd129",
+        "identity": {
+            "cognitoIdentityPoolId": null,
+            "accountId": null,
+            "cognitoIdentityId": null,
+            "caller": null,
+            "sourceIp": "66.249.83.54",
+            "principalOrgId": null,
+            "accessKey": null,
+            "cognitoAuthenticationType": null,
+            "cognitoAuthenticationProvider": null,
+            "userArn": null,
+            "userAgent": "Google-Dialogflow",
+            "user": null
+        },
+        "domainName": "bxnplkx150.execute-api.eu-west-3.amazonaws.com",
+        "apiId": "bxnplkx150"
+    },
+    "body": "{\n  \"responseId\": \"2e36847b-dcca-4b8e-a450-7b1c93532fdb-7f245a81\",\n  \"queryResult\": {\n    \"queryText\": \"Dis trois\",\n    \"parameters\": {\n      \"number\": 3.0\n    },\n    \"allRequiredParamsPresent\": true,\n    \"fulfillmentMessages\": [{\n      \"text\": {\n        \"text\": [\"\"]\n      }\n    }],\n    \"outputContexts\": [{\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHHgDXUhzLjfboQdsHDeht9urkhUm_OvBVueEw3m8xqVhvFsgAuFRfTqH09EOnFWjOQPQtWGMQ3AAXl7PeE/contexts/actions_capability_account_linking\",\n      \"parameters\": {\n        \"number\": 3.0,\n        \"number.original\": \"trois\"\n      }\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHHgDXUhzLjfboQdsHDeht9urkhUm_OvBVueEw3m8xqVhvFsgAuFRfTqH09EOnFWjOQPQtWGMQ3AAXl7PeE/contexts/actions_capability_audio_output\",\n      \"parameters\": {\n        \"number\": 3.0,\n        \"number.original\": \"trois\"\n      }\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHHgDXUhzLjfboQdsHDeht9urkhUm_OvBVueEw3m8xqVhvFsgAuFRfTqH09EOnFWjOQPQtWGMQ3AAXl7PeE/contexts/actions_capability_media_response_audio\",\n      \"parameters\": {\n        \"number\": 3.0,\n        \"number.original\": \"trois\"\n      }\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHHgDXUhzLjfboQdsHDeht9urkhUm_OvBVueEw3m8xqVhvFsgAuFRfTqH09EOnFWjOQPQtWGMQ3AAXl7PeE/contexts/actions_capability_screen_output\",\n      \"parameters\": {\n        \"number\": 3.0,\n        \"number.original\": \"trois\"\n      }\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHHgDXUhzLjfboQdsHDeht9urkhUm_OvBVueEw3m8xqVhvFsgAuFRfTqH09EOnFWjOQPQtWGMQ3AAXl7PeE/contexts/google_assistant_input_type_voice\",\n      \"parameters\": {\n        \"number\": 3.0,\n        \"number.original\": \"trois\"\n      }\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHHgDXUhzLjfboQdsHDeht9urkhUm_OvBVueEw3m8xqVhvFsgAuFRfTqH09EOnFWjOQPQtWGMQ3AAXl7PeE/contexts/__system_counters__\",\n      \"parameters\": {\n        \"no-input\": 0.0,\n        \"no-match\": 0.0,\n        \"number\": 3.0,\n        \"number.original\": \"trois\"\n      }\n    }],\n    \"intent\": {\n      \"name\": \"projects/cite-des-sciences/agent/intents/6d2fade1-1226-45c7-8481-8ebd958fad75\",\n      \"displayName\": \"ANumber\"\n    },\n    \"intentDetectionConfidence\": 1.0,\n    \"languageCode\": \"fr\"\n  },\n  \"originalDetectIntentRequest\": {\n    \"source\": \"google\",\n    \"version\": \"2\",\n    \"payload\": {\n      \"user\": {\n        \"locale\": \"fr-CA\",\n        \"lastSeen\": \"2020-02-20T11:58:08Z\",\n        \"userStorage\": \"{\\u0027user_id\\u0027: \\u002789dbd657-3858-4cef-8c2e-2cf354c3971d\\u0027}\",\n        \"userVerificationStatus\": \"VERIFIED\"\n      },\n      \"conversation\": {\n        \"conversationId\": \"ABwppHHgDXUhzLjfboQdsHDeht9urkhUm_OvBVueEw3m8xqVhvFsgAuFRfTqH09EOnFWjOQPQtWGMQ3AAXl7PeE\",\n        \"type\": \"ACTIVE\",\n        \"conversationToken\": \"[]\"\n      },\n      \"inputs\": [{\n        \"intent\": \"actions.intent.TEXT\",\n        \"rawInputs\": [{\n          \"inputType\": \"VOICE\",\n          \"query\": \"Dis trois\"\n        }],\n        \"arguments\": [{\n          \"name\": \"text\",\n          \"rawText\": \"Dis trois\",\n          \"textValue\": \"Dis trois\"\n        }]\n      }],\n      \"surface\": {\n        \"capabilities\": [{\n          \"name\": \"actions.capability.ACCOUNT_LINKING\"\n        }, {\n          \"name\": \"actions.capability.AUDIO_OUTPUT\"\n        }, {\n          \"name\": \"actions.capability.MEDIA_RESPONSE_AUDIO\"\n        }, {\n          \"name\": \"actions.capability.SCREEN_OUTPUT\"\n        }]\n      },\n      \"isInSandbox\": true,\n      \"availableSurfaces\": [{\n        \"capabilities\": [{\n          \"name\": \"actions.capability.SCREEN_OUTPUT\"\n        }, {\n          \"name\": \"actions.capability.WEB_BROWSER\"\n        }, {\n          \"name\": \"actions.capability.AUDIO_OUTPUT\"\n        }]\n      }],\n      \"requestType\": \"SIMULATOR\"\n    }\n  },\n  \"session\": \"projects/cite-des-sciences/agent/sessions/ABwppHHgDXUhzLjfboQdsHDeht9urkhUm_OvBVueEw3m8xqVhvFsgAuFRfTqH09EOnFWjOQPQtWGMQ3AAXl7PeE\"\n}",
+    "isBase64Encoded": false
+}

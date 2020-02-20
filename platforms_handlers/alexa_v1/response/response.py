@@ -1,5 +1,6 @@
 from json import dumps as json_dumps
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_framework.utils.general import is_text_ssml
 from messages import *
 
 class Card:
@@ -94,28 +95,13 @@ class Response:
     json_key = "response"
 
     def __init__(self):
-        self.outputSpeech = OutputSpeech()
-        self.reprompt = Reprompt()
-        self.card = Card()
+        self._outputSpeech = OutputSpeech()
+        self._reprompt = Reprompt()
+        self._card = Card()
         self._shouldEndSession = False
 
-    @staticmethod
-    def is_text_ssml(self, text_or_ssml: str):
-        is_ssml = False
-        if "<speak>" in text_or_ssml:
-            # For ssml, the speak balise must start the string, so if we find other chars than
-            # whitespaces before the balise, we consider that the string to not be a ssml string.
-            before_start_balise, after_start_balise = text_or_ssml.split("<speak>", maxsplit=1)
-            are_all_chars_in_before_start_balise_whitespaces = True
-            for char in before_start_balise:
-                if char != " ":
-                    are_all_chars_in_before_start_balise_whitespaces = False
-            if are_all_chars_in_before_start_balise_whitespaces is True:
-                is_ssml = True
-        return is_ssml
-
     def say(self, text_or_ssml: str):
-        is_ssml = self.is_text_ssml(text_or_ssml=text_or_ssml)
+        is_ssml = is_text_ssml(text_or_ssml=text_or_ssml)
 
         if is_ssml is True:
             self.outputSpeech.set_ssml(ssml_string=text_or_ssml)
@@ -123,12 +109,20 @@ class Response:
             self.outputSpeech.set_text(text=text_or_ssml)
 
     def reprompt(self, text_or_ssml: str):
-        is_ssml = self.is_text_ssml(text_or_ssml=text_or_ssml)
+        is_ssml = is_text_ssml(text_or_ssml=text_or_ssml)
 
         if is_ssml is True:
-            self.reprompt.outputSpeech.set_ssml(ssml_string=text_or_ssml)
+            self._reprompt.outputSpeech.set_ssml(ssml_string=text_or_ssml)
         else:
-            self.reprompt.outputSpeech.set_text(text=text_or_ssml)
+            self._reprompt.outputSpeech.set_text(text=text_or_ssml)
+
+    @property
+    def outputSpeech(self) -> OutputSpeech:
+        return self._outputSpeech
+
+    @property
+    def card(self) -> Card:
+        return self._card
 
     @property
     def shouldEndSession(self):

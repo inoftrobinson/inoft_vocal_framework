@@ -1,4 +1,5 @@
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_framework.safe_dict import SafeDict
 
 
 class IntentSlot:
@@ -11,19 +12,39 @@ class Intent:
     def __init__(self):
         self._name = str()
         self._confirmationStatus = str()
-        self._slots = list()
+        self._slots = SafeDict()
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
-    @property
-    def confirmationStatus(self):
-        return self._confirmationStatus
+    @name.setter
+    def name(self, name: str) -> None:
+        if not isinstance(name, str):
+            raise Exception(f"name was type {type(name)} which is not valid value for his parameter.")
+        self._name = name
 
     @property
-    def slots(self):
+    def confirmationStatus(self) -> str:
+        return self._confirmationStatus
+
+    @confirmationStatus.setter
+    def confirmationStatus(self, confirmationStatus: str) -> None:
+        if not isinstance(confirmationStatus, str):
+            raise Exception(f"confirmationStatus was type {type(confirmationStatus)} which is not valid value for his parameter.")
+        self._confirmationStatus = confirmationStatus
+
+    @property
+    def slots(self) -> SafeDict:
+        if isinstance(self._slots, dict):
+            self._slots = SafeDict(self._slots)
         return self._slots
+
+    @slots.setter
+    def slots(self, slots: dict) -> None:
+        if not isinstance(slots, dict):
+            raise Exception(f"slots was type {type(slots)} which is not valid value for his parameter.")
+        self._slots = SafeDict(slots)
 
 class Request:
     json_key = "request"
@@ -62,6 +83,11 @@ class Request:
                 if self.intent.name == intent_names_list:
                     return True
         return False
+
+    def get_intent_slot_value(self, slot_key: str, default=None):
+        slot_value = self.intent.slots.get(dict_key=slot_key).get("value").to_any(default=default)
+        # In Alexa, a ? as an arg value, means that it has not been specified
+        return default if slot_value == "?" else slot_value
 
     def do_not_include(self) -> bool:
         if self.type is not None and self.type not in [self.LaunchRequestKeyName, self.IntentRequestKeyName, self.SessionEndedRequestKeyName]:

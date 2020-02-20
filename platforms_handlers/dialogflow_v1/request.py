@@ -1,4 +1,5 @@
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_framework.safe_dict import SafeDict
 
 
 class Intent:
@@ -131,7 +132,7 @@ class QueryResult:
     def __init__(self):
         self._queryText = str()
         self._action = str()
-        self._parameters = dict()
+        self._parameters = SafeDict()
         self._allRequiredParamsPresent = bool()
         self._fulfillmentText = str()
         self._fulfillmentMessages = list()
@@ -164,15 +165,16 @@ class QueryResult:
             raise Exception(f"action was type {type(action)} which is not valid value for his parameter.")
 
     @property
-    def parameters(self) -> dict:
+    def parameters(self) -> SafeDict:
+        if isinstance(self._parameters, dict):
+            self._parameters = SafeDict(self._parameters)
         return self._parameters
 
     @parameters.setter
     def parameters(self, parameters: dict) -> None:
-        if isinstance(parameters, str):
-            self._parameters = parameters
-        else:
+        if not isinstance(parameters, dict):
             raise Exception(f"parameters was type {type(parameters)} which is not valid value for his parameter.")
+        self._parameters = SafeDict(parameters)
 
     @property
     def allRequiredParamsPresent(self) -> bool:
@@ -273,7 +275,8 @@ class Request:
         self._session = str()
 
     def process_and_set_json_request_to_object(self, stringed_request_json_dict: str):
-        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self, request_json_dict_or_stringed_dict=stringed_request_json_dict)
+        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self,
+                                                                  request_json_dict_or_stringed_dict=stringed_request_json_dict)
 
     def is_launch_request(self) -> bool:
         if self.queryResult.intent.displayName == "LaunchIntentRequest":
@@ -285,6 +288,9 @@ class Request:
         if self.queryResult.intent.displayName in intent_names_list:
             return True
         return False
+
+    def get_intent_parameter_value(self, parameter_key: str, default=None):
+        return self.queryResult.parameters.get(dict_key=parameter_key).to_any(default=default)
 
     def is_not_usable(self):
         return False

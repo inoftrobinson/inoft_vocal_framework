@@ -1,0 +1,125 @@
+{
+    "resource": "/samsung-bixby-v1",
+    "path": "/samsung-bixby-v1",
+    "httpMethod": "PUT",
+    "headers": {
+        "Accept": "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2",
+        "Accept-Charset": "UTF-8",
+        "Accept-Encoding": "gzip",
+        "Cache-Control": "no-cache",
+        "CloudFront-Forwarded-Proto": "https",
+        "CloudFront-Is-Desktop-Viewer": "true",
+        "CloudFront-Is-Mobile-Viewer": "false",
+        "CloudFront-Is-SmartTV-Viewer": "false",
+        "CloudFront-Is-Tablet-Viewer": "false",
+        "CloudFront-Viewer-Country": "US",
+        "Content-Type": "application/json",
+        "Host": "bxnplkx150.execute-api.eu-west-3.amazonaws.com",
+        "Pragma": "no-cache",
+        "User-Agent": "Mozilla/5.0 (compatible) gzip",
+        "Via": "1.1 6bbe4a9aad662e1acf4b237e3193bb25.cloudfront.net (CloudFront)",
+        "X-Amz-Cf-Id": "hp8XDwLdmP8g-41wQBW-JO0F4x_RkcWbx-TG1T8hgnlk4GCjASleTg==",
+        "X-Amzn-Trace-Id": "Root=1-5e4e8362-48d290147a518e088f22e76c",
+        "X-Forwarded-For": "18.188.238.231, 64.252.143.93",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https"
+    },
+    "multiValueHeaders": {
+        "Accept": [
+            "text/html, image/gif, image/jpeg, *; q=.2, */*; q=.2"
+        ],
+        "Accept-Charset": [
+            "UTF-8"
+        ],
+        "Accept-Encoding": [
+            "gzip"
+        ],
+        "Cache-Control": [
+            "no-cache"
+        ],
+        "CloudFront-Forwarded-Proto": [
+            "https"
+        ],
+        "CloudFront-Is-Desktop-Viewer": [
+            "true"
+        ],
+        "CloudFront-Is-Mobile-Viewer": [
+            "false"
+        ],
+        "CloudFront-Is-SmartTV-Viewer": [
+            "false"
+        ],
+        "CloudFront-Is-Tablet-Viewer": [
+            "false"
+        ],
+        "CloudFront-Viewer-Country": [
+            "US"
+        ],
+        "Content-Type": [
+            "application/json"
+        ],
+        "Host": [
+            "bxnplkx150.execute-api.eu-west-3.amazonaws.com"
+        ],
+        "Pragma": [
+            "no-cache"
+        ],
+        "User-Agent": [
+            "Mozilla/5.0 (compatible) gzip"
+        ],
+        "Via": [
+            "1.1 6bbe4a9aad662e1acf4b237e3193bb25.cloudfront.net (CloudFront)"
+        ],
+        "X-Amz-Cf-Id": [
+            "hp8XDwLdmP8g-41wQBW-JO0F4x_RkcWbx-TG1T8hgnlk4GCjASleTg=="
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-5e4e8362-48d290147a518e088f22e76c"
+        ],
+        "X-Forwarded-For": [
+            "18.188.238.231, 64.252.143.93"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "resourceId": "hrdalb",
+        "resourcePath": "/samsung-bixby-v1",
+        "httpMethod": "PUT",
+        "extendedRequestId": "IMl3YGgLiGYFuUA=",
+        "requestTime": "20/Feb/2020:13:02:26 +0000",
+        "path": "/v1/samsung-bixby-v1",
+        "accountId": "631258222318",
+        "protocol": "HTTP/1.1",
+        "stage": "v1",
+        "domainPrefix": "bxnplkx150",
+        "requestTimeEpoch": 1582203746308,
+        "requestId": "be446efa-0c12-4427-b7fd-60beb4ba7b36",
+        "identity": {
+            "cognitoIdentityPoolId": null,
+            "accountId": null,
+            "cognitoIdentityId": null,
+            "caller": null,
+            "sourceIp": "18.188.238.231",
+            "principalOrgId": null,
+            "accessKey": null,
+            "cognitoAuthenticationType": null,
+            "cognitoAuthenticationProvider": null,
+            "userArn": null,
+            "userAgent": "Mozilla/5.0 (compatible) gzip",
+            "user": null
+        },
+        "domainName": "bxnplkx150.execute-api.eu-west-3.amazonaws.com",
+        "apiId": "bxnplkx150"
+    },
+    "body": "{\"userId\":\"LBQ3uiP7veM0Qjos1z5V6LrsjVODK4lfUwJj2D1o8bU\",\"intent\":\"ANumber\",\"parameters\":{\"number\":3}}",
+    "isBase64Encoded": false
+}
