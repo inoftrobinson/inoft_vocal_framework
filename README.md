@@ -53,7 +53,7 @@ class YesHandler(InoftRequestHandler):
         return self.is_in_intent_names(["AMAZON.YesIntent", ""OkConfirmation"])
 
     def handle(self):
-        self.session_memorize("is_the_user_weird", True)
+        self.persistent_memorize("is_the_user_weird", True)
         self.say(f"Why are you saying Yes ? You are not in a StateHandler. You are crazy weird.")
         return self.to_platform_dict()
 
