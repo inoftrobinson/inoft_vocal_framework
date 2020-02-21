@@ -1,7 +1,7 @@
 # Inoft Vocal Framework
  ## Create Alexa Skills, Google Actions and Samsung Bixby Capsules with the same codebase. In Python !
  
- ### The example do not show how to deploy the skill (in Lambda, API Gateway and the Javascript files for bixby). I'm soon going to make videos in french and english to explain how to use the framework, and deploy a skill accross a platform. Then at some point there will be the CLI for auto-deployment ;)
+ #### The example do not show how to deploy the skill (in Lambda, API Gateway and the Javascript files for bixby). I'm soon going to make videos in french and english to explain how to use the framework, and deploy a skill accross platforms. Then a bit later on, there will be the CLI for auto-deployment, then the CMS, then the web interface, then the free cloud platform that will host everything for you while giving you access to everything, then the tools on the platform to collaborate between developpers and voice designers extremly efficiently. It's going to be great ;)
  
  This repo is still under developpement, not everything is implemented. Yet you can see for the dates of releases, it will be soon.
  
