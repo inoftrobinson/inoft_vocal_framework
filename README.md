@@ -1,5 +1,5 @@
 # Inoft Vocal Framework
- ## Create Alexa Skills and Google Actions with the same codebase. In Python !
+ ## Create Alexa Skills, Google Actions and Samsung Bixby Capsules with the same codebase. In Python !
  
  
  This repo is still under developpement, not everything is implemented. Yet you can see for the dates of releases, it will be soon.
