@@ -1,6 +1,4 @@
 from json import dumps as json_dumps
-
-from inoft_vocal_framework.platforms_handlers.current_platform_static_data import SessionInfo
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from messages import *
 
@@ -107,10 +105,11 @@ class Payload:
 
 class OutputContextItem:
     json_key = "outputContextItem"
+    session_data_name = "sessionData"
 
-    def __init__(self):
-        self.name = f"{SessionInfo.session_id}/contexts/test"
-        self.lifespanCount = int()
+    def __init__(self, session_id: str, name:str, lifespanCount=999):
+        self.name = f"{session_id}/contexts/{name}"
+        self.lifespanCount = lifespanCount
         self._parameters = dict()
 
     def return_transformations(self) -> None:

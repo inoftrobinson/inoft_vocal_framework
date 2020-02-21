@@ -1,4 +1,4 @@
-from inoft_vocal_framework.platforms_handlers.current_platform_static_data import CurrentPlatformData, SessionInfo
+from inoft_vocal_framework.platforms_handlers.current_platform_data import CurrentPlatformData
 
 
 class Card:

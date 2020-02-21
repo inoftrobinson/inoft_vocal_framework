@@ -2,7 +2,7 @@ from abc import abstractmethod
 from json import loads as json_loads
 
 from inoft_vocal_framework.platforms_handlers.alexa_v1.session import Session
-from inoft_vocal_framework.platforms_handlers.current_platform_static_data import CurrentPlatformData, SessionInfo
+from inoft_vocal_framework.platforms_handlers.current_platform_data import CurrentPlatformData
 from inoft_vocal_framework.platforms_handlers.databases.dynamodb import DynamoDbAdapter
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.platforms_handlers.response_factory import Response
@@ -25,9 +25,9 @@ class HandlerInput(CurrentPlatformData):
         # self.context = None
         # self.response = Response()
 
-        self.session_user_data = SafeDict()
-        self.persistent_user_id = None
-        self.persistent_user_data = SafeDict()
+        self._simple_session_user_data = None
+        self._persistent_user_id = None
+        self._persistent_user_data = None
         self.persistent_attributes_been_modified = False
 
         self.dynamodb_adapter = DynamoDbAdapter(table_name=db_table_name, region_name=db_region_name,
@@ -35,20 +35,23 @@ class HandlerInput(CurrentPlatformData):
 
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput = None, None, None
 
-    # todo: decide if i create a close method or not to reset the static variables
+    @property
+    def simple_session_user_data(self) -> SafeDict:
+        if self._simple_session_user_data is None:
+            if self.is_alexa_v1 is True:
+                self._simple_session_user_data = self.alexaHandlerInput.session_attributes
+            elif self.is_dialogflow_v1 is True:
+                self._simple_session_user_data = self.dialogFlowHandlerInput.simple_session_user_data
+            elif self.is_bixby_v1 is True:
+                pass
 
-    def _load_persistent_user_data(self) -> None:
-        persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self._get_user_id())
-        print(f"persistent_user_data = {persistent_user_data}")
+            if not isinstance(self._simple_session_user_data, SafeDict):
+                self._simple_session_user_data = SafeDict()
+        return self._simple_session_user_data
 
-        if isinstance(persistent_user_data, dict):
-            self.persistent_user_data = SafeDict(persistent_user_data)
-        else:
-            self.persistent_user_data = SafeDict()
-
-    def _get_user_id(self) -> str:
-        user_id = None
-        if not isinstance(self.persistent_user_id, str) or (self.persistent_user_id.replace(" ", "") == ""):
+    @property
+    def persistent_user_id(self) -> str:
+        if not isinstance(self._persistent_user_id, str) or (self._persistent_user_id.replace(" ", "") == ""):
             if self.is_alexa_v1 is True:
                 user_id = SafeDict(self.alexaHandlerInput.session.user).get("userId").to_str(default=None)
             elif self.is_dialogflow_v1 is True:
@@ -57,63 +60,46 @@ class HandlerInput(CurrentPlatformData):
                 user_id = self.bixbyHandlerInput.request.userId
 
             if not isinstance(user_id, str) or user_id.replace(" ", "") == "":
-                user_id = self._generate_memorize_user_id()
+                from inoft_vocal_framework.utils.general import generate_uuid4
+                self._persistent_user_id = generate_uuid4()
+                # We need to set the persistent_user_id before memorizing it, because the memorize function will access the
+                # persistent_user_data, and if the user_id is not set, we will get stuck in an infinite recursion loop
+                self.persistent_memorize("userId", user_id)
+                print(f"user_id {self._persistent_user_id} has been memorized in the database.")
+            else:
+                self._persistent_user_id = user_id
 
-            self.persistent_user_id = user_id
-        else:
-            user_id = self.persistent_user_id
+        print(f"_persistent_user_id = {self._persistent_user_id}")
+        return self._persistent_user_id
 
-        print(f"user_id = {user_id}")
-        return user_id
+    @property
+    def persistent_user_data(self) -> SafeDict:
+        if self._persistent_user_data is None:
+            persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
+            if isinstance(persistent_user_data, dict):
+                self._persistent_user_data = SafeDict(persistent_user_data)
+            else:
+                self._persistent_user_data = SafeDict()
 
-    def _generate_memorize_user_id(self) -> str:
-        from uuid import uuid4 as uuid4_generator
-        user_id = str(uuid4_generator())
-        self.persistent_memorize("userId", user_id)
-        print(f"Created a new user_id, will now create the field in the database : {user_id}")
-        return user_id
+        print(f"_persistent_user_data = {self._persistent_user_data}")
+        return self._persistent_user_data
 
     def load_event_and_context(self, event: dict, context: dict) -> None:
         if self.is_alexa_v1 is True:
             self._alexaHandlerInput = AlexaHandlerInput()
             self.alexaHandlerInput.load_event_and_context(event=event, context=context)
 
-            if isinstance(self.alexaHandlerInput.session.attributes, dict):
-                self.session_user_data = SafeDict(self.alexaHandlerInput.session.attributes)
-            else:
-                self.session_user_data = SafeDict()
-
-            self._load_persistent_user_data()
-
         elif self.is_dialogflow_v1 is True:
             self._dialogFlowHandlerInput = DialogFlowHandlerInput()
             NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
                                                                       request_json_dict_or_stringed_dict=event,
                                                                       key_names_identifier_objects_to_go_into=["json_key"])
-            self._load_persistent_user_data()
-
-            SessionInfo.session_id = self.dialogFlowHandlerInput.request.session  # Important to set the session id for google assistant
-
-            for output_context in self.dialogFlowHandlerInput.request.queryResult.outputContexts:
-                if isinstance(output_context, dict) and "name" in output_context.keys() and "parameters" in output_context.keys():
-                    all_texts_after_slash = output_context["name"].split("/")
-                    last_text_after_slash = all_texts_after_slash[len(all_texts_after_slash) - 1]
-                    if last_text_after_slash == "session_user_data":
-                        parameters_stringed_dict_or_dict = output_context["parameters"]
-                        if parameters_stringed_dict_or_dict is not None:
-                            if isinstance(parameters_stringed_dict_or_dict, str):
-                                parameters_stringed_dict_or_dict = json_loads(parameters_stringed_dict_or_dict)
-                            if isinstance(parameters_stringed_dict_or_dict, dict):
-                                self.session_user_data = SafeDict(parameters_stringed_dict_or_dict)
-                            else:
-                                raise Exception(f"parameters_stringed_dict_or_dict was nto None, not a str, dict and could not be json converted to a dict : {parameters_stringed_dict_or_dict}")
 
         elif self.is_bixby_v1 is True:
             self._bixbyHandlerInput = BixbyHandlerInput()
             NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
                                                                       request_json_dict_or_stringed_dict=event,
                                                                       key_names_identifier_objects_to_go_into=["json_key"])
-            self._load_persistent_user_data()
 
     def is_launch_request(self) -> bool:
         if self.is_alexa_v1 is True:
@@ -163,24 +149,24 @@ class HandlerInput(CurrentPlatformData):
 
     def session_memorize(self, data_key: str, data_value=None) -> None:
         if data_value is not None and isinstance(data_key, str) and data_key != "":
-            self.session_user_data.put(dict_key=data_key, value_to_put=data_value)
+            self.simple_session_user_data.put(dict_key=data_key, value_to_put=data_value)
 
     def session_batch_memorize(self, data_dict: dict) -> None:
         if not isinstance(data_dict, dict):
             raise Exception(f"The data_dict must be of type dict but was of type {type(data_dict)}")
         else:
             for key_item, value_item in data_dict.items():
-                self.session_user_data.put(dict_key=key_item, value_to_put=value_item)
+                self.simple_session_user_data.put(dict_key=key_item, value_to_put=value_item)
 
     def session_remember(self, data_key: str, specific_object_type=None):
-        data_object = self.session_user_data.get(data_key)
+        data_object = self.simple_session_user_data.get(data_key)
         if specific_object_type is None:
             return data_object.to_any()
         else:
             return data_object.to_specific_type(type_to_return=specific_object_type)
 
     def session_forget(self, data_key: str) -> None:
-        self.session_user_data.pop(dict_key=data_key)
+        self.simple_session_user_data.pop(dict_key=data_key)
 
     def persistent_memorize(self, data_key: str, data_value=None) -> None:
         if data_value is not None and isinstance(data_key, str) and data_key != "":
@@ -243,25 +229,26 @@ class HandlerInput(CurrentPlatformData):
 
     def to_platform_dict(self) -> dict:
         # todo: improve this code, i found it dirty...
-        user_id = self._get_user_id()
         if self.persistent_attributes_been_modified:
-            self.dynamodb_adapter.save_attributes(user_id=user_id,
+            self.dynamodb_adapter.save_attributes(user_id=self.persistent_user_id,
                                                   smart_session_attributes=None,
                                                   persistent_attributes=self.persistent_user_data.to_dict())
 
         if self.is_alexa_v1 is True:
             return {
                 "version": "1.0",
-                "sessionAttributes": self.session_user_data.to_dict(),
+                "sessionAttributes": self.simple_session_user_data.to_dict(),
                 "response": self.alexaHandlerInput.response.to_dict()["response"]  # todo: fix the need to enter with response key
             }
         elif self.is_dialogflow_v1 is True:
-            self.dialogFlowHandlerInput.response.payload.google.userStorage = str({"user_id": user_id})
+            self.dialogFlowHandlerInput.response.payload.google.userStorage = str({"userId": self.persistent_user_id})
 
             from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import OutputContextItem
-            session_user_data_context_item = OutputContextItem()
-            for key_item_saved_data, value_item_saved_data in self.session_user_data.to_dict().items():
-                session_user_data_context_item.add_set_session_attribute(key_item_saved_data, 42)  # value_item_saved_data)
+            session_user_data_context_item = OutputContextItem(session_id=self.dialogFlowHandlerInput.session_id,
+                                                               name=OutputContextItem.session_data_name)
+
+            for key_item_saved_data, value_item_saved_data in self.simple_session_user_data.to_dict().items():
+                session_user_data_context_item.add_set_session_attribute(key_item_saved_data, value_item_saved_data)
             self.dialogFlowHandlerInput.response.add_output_context_item(session_user_data_context_item)
 
             return self.dialogFlowHandlerInput.response.to_dict()

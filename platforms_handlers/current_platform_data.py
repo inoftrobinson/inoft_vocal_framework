@@ -1,9 +1,8 @@
-from inoft_vocal_framework.utils.general import get_dict_of_all_custom_defined_variables_of_class
-
 class CurrentPlatformData:
-    used_platform_id = None
-    _is_alexa_v1 = False
-    _is_dialogflow_v1 = False
+    def __init__(self):
+        self.used_platform_id = None
+        self._is_alexa_v1 = False
+        self._is_dialogflow_v1 = False
 
     @property
     def is_alexa_v1(self) -> bool:
@@ -24,6 +23,3 @@ class CurrentPlatformData:
         if not isinstance(is_dialogflow_v1, bool):
             raise Exception(f"is_dialogflow_v1 was type {type(is_dialogflow_v1)} which is not valid value for his parameter.")
         self._is_dialogflow_v1 = is_dialogflow_v1
-
-class SessionInfo:
-    session_id = str()

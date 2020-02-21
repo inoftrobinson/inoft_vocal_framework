@@ -20,3 +20,9 @@ def is_text_ssml(text_or_ssml: str):
         if are_all_chars_in_before_start_balise_whitespaces is True:
             is_ssml = True
     return is_ssml
+
+def generate_uuid4() -> str:
+    from uuid import uuid4 as uuid4_generator
+    id_str = str(uuid4_generator())
+    print(f"Generated id : {id_str}")
+    return id_str
