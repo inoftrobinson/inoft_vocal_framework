@@ -1,39 +1,55 @@
-from abc import abstractmethod
 from json import loads as json_loads
 
-from inoft_vocal_framework.platforms_handlers.alexa_v1.session import Session
-from inoft_vocal_framework.platforms_handlers.current_platform_data import CurrentPlatformData
+from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
 from inoft_vocal_framework.platforms_handlers.databases.dynamodb import DynamoDbAdapter
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from inoft_vocal_framework.platforms_handlers.response_factory import Response
 from inoft_vocal_framework.safe_dict import SafeDict
-
-from inoft_vocal_framework.platforms_handlers.alexa_v1.request import Request as RequestAlexa
-from inoft_vocal_framework.platforms_handlers.dialogflow_v1.request import Request as RequestDialogflow
 from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
 from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
 
 
-class HandlerInput(CurrentPlatformData):
+class HandlerInput(CurrentUsedPlatformInfo):
     def __init__(self, db_table_name: str, db_region_name=None):
-        self.is_alexa_v1 = False
-        self.is_dialogflow_v1 = False
-        self.is_bixby_v1 = False
-
-        self.session = Session()
-        # self.context = None
-        # self.response = Response()
-
+        super().__init__()
+        self._session_id = None
+        self._default_session_data_timeout = 60
         self._simple_session_user_data = None
+        self._smart_session_user_data = None
         self._persistent_user_id = None
         self._persistent_user_data = None
-        self.persistent_attributes_been_modified = False
+        self.data_for_database_has_been_modified = False
 
         self.dynamodb_adapter = DynamoDbAdapter(table_name=db_table_name, region_name=db_region_name,
                                                 primary_key_name="id", create_table=True)
 
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput = None, None, None
+
+    @property
+    def session_id(self):
+        if self._session_id is None:
+            if self.is_alexa_v1 is True:
+                self._session_id = self.alexaHandlerInput.session.sessionId
+            elif self.is_dialogflow_v1 is True:
+                self._session_id = self.dialogFlowHandlerInput.session_id
+            elif self.is_bixby_v1 is True:
+                self._session_id = self.bixbyHandlerInput.request.sessionId
+
+            if not isinstance(self._session_id, str):
+                self._session_id = str(self._session_id)
+
+        return self._session_id
+
+    @property
+    def default_session_data_timeout(self):
+        return self._default_session_data_timeout
+
+    # todo: allow for the session timeout to be personallized and memorized for every user
+    @default_session_data_timeout.setter
+    def default_session_data_timeout(self, default_session_data_timeout) -> None:
+        if default_session_data_timeout is not None and not isinstance(default_session_data_timeout, int):
+            raise Exception(f"The default_session_data_timeout variable must be of type {None} or {int} but was : {default_session_data_timeout}")
+        self._default_session_data_timeout = default_session_data_timeout
 
     @property
     def simple_session_user_data(self) -> SafeDict:
@@ -43,11 +59,21 @@ class HandlerInput(CurrentPlatformData):
             elif self.is_dialogflow_v1 is True:
                 self._simple_session_user_data = self.dialogFlowHandlerInput.simple_session_user_data
             elif self.is_bixby_v1 is True:
-                pass
+                print("simple_session_user_data is not implemented for the bixby platform.")
 
             if not isinstance(self._simple_session_user_data, SafeDict):
                 self._simple_session_user_data = SafeDict()
         return self._simple_session_user_data
+
+    @property
+    def smart_session_user_data(self) -> SafeDict:
+        if self._smart_session_user_data is None:
+            self._smart_session_user_data = self.dynamodb_adapter.get_smart_session_attributes(
+                user_id=self.persistent_user_id, session_id=self.session_id, timeout_seconds=self.default_session_data_timeout)
+
+            if not isinstance(self._smart_session_user_data, SafeDict):
+                self._smart_session_user_data = SafeDict()
+        return self._smart_session_user_data
 
     @property
     def persistent_user_id(self) -> str:
@@ -55,7 +81,7 @@ class HandlerInput(CurrentPlatformData):
             if self.is_alexa_v1 is True:
                 user_id = SafeDict(self.alexaHandlerInput.session.user).get("userId").to_str(default=None)
             elif self.is_dialogflow_v1 is True:
-                user_id = self.dialogFlowHandlerInput.get_user_id()
+                user_id = self.dialogFlowHandlerInput.user_id
             elif self.is_bixby_v1 is True:
                 user_id = self.bixbyHandlerInput.request.userId
 
@@ -147,30 +173,56 @@ class HandlerInput(CurrentPlatformData):
         elif self.is_bixby_v1 is True:
             return self.bixbyHandlerInput.request.get_intent_parameter_value(parameter_key=arg_key)
 
-    def session_memorize(self, data_key: str, data_value=None) -> None:
+    def simple_session_memorize(self, data_key: str, data_value=None) -> None:
         if data_value is not None and isinstance(data_key, str) and data_key != "":
             self.simple_session_user_data.put(dict_key=data_key, value_to_put=data_value)
 
-    def session_batch_memorize(self, data_dict: dict) -> None:
+    def simple_session_batch_memorize(self, data_dict: dict) -> None:
         if not isinstance(data_dict, dict):
             raise Exception(f"The data_dict must be of type dict but was of type {type(data_dict)}")
         else:
             for key_item, value_item in data_dict.items():
                 self.simple_session_user_data.put(dict_key=key_item, value_to_put=value_item)
 
-    def session_remember(self, data_key: str, specific_object_type=None):
+    def simple_session_remember(self, data_key: str, specific_object_type=None):
         data_object = self.simple_session_user_data.get(data_key)
         if specific_object_type is None:
             return data_object.to_any()
         else:
             return data_object.to_specific_type(type_to_return=specific_object_type)
 
-    def session_forget(self, data_key: str) -> None:
+    def simple_session_forget(self, data_key: str) -> None:
         self.simple_session_user_data.pop(dict_key=data_key)
+
+    def session_memorize(self, data_key: str, data_value=None) -> None:
+        if data_value is not None and isinstance(data_key, str) and data_key != "":
+            self.data_for_database_has_been_modified = True
+            self.smart_session_user_data.put(dict_key=data_key, value_to_put=data_value)
+
+    def session_batch_memorize(self, data_dict: dict) -> None:
+        if not isinstance(data_dict, dict):
+            raise Exception(f"The data_dict must be of type dict but was of type {type(data_dict)}")
+        else:
+            if len(data_dict) > 0:
+                self.data_for_database_has_been_modified = True
+
+            for key_item, value_item in data_dict.items():
+                self.smart_session_user_data.put(dict_key=key_item, value_to_put=value_item)
+
+    def session_remember(self, data_key: str, specific_object_type=None):
+        data_object = self.smart_session_user_data.get(data_key)
+        if specific_object_type is None:
+            return data_object.to_any()
+        else:
+            return data_object.to_specific_type(type_to_return=specific_object_type)
+
+    def session_forget(self, data_key: str) -> None:
+        self.data_for_database_has_been_modified = True
+        self.smart_session_user_data.pop(dict_key=data_key)
 
     def persistent_memorize(self, data_key: str, data_value=None) -> None:
         if data_value is not None and isinstance(data_key, str) and data_key != "":
-            self.persistent_attributes_been_modified = True
+            self.data_for_database_has_been_modified = True
             self.persistent_user_data.put(dict_key=data_key, value_to_put=data_value)
 
     def persistent_batch_memorize(self, data_dict: dict) -> None:
@@ -178,7 +230,7 @@ class HandlerInput(CurrentPlatformData):
             raise Exception(f"The data_dict must be of type dict but was of type {type(data_dict)}")
         else:
             for key_item, value_item in data_dict.items():
-                self.persistent_attributes_been_modified = True
+                self.data_for_database_has_been_modified = True
                 self.persistent_user_data.put(dict_key=key_item, value_to_put=value_item)
 
     def persistent_remember(self, data_key: str, specific_object_type=None):
@@ -189,7 +241,7 @@ class HandlerInput(CurrentPlatformData):
             return data_object.to_specific_type(type_to_return=specific_object_type)
 
     def persistent_forget(self, data_key: str) -> None:
-        self.persistent_attributes_been_modified = True
+        self.data_for_database_has_been_modified = True
         self.persistent_user_data.pop(dict_key=data_key)
 
     def memorize_session_then_state(self, state_handler_class_type_or_name) -> None:
@@ -229,9 +281,9 @@ class HandlerInput(CurrentPlatformData):
 
     def to_platform_dict(self) -> dict:
         # todo: improve this code, i found it dirty...
-        if self.persistent_attributes_been_modified:
-            self.dynamodb_adapter.save_attributes(user_id=self.persistent_user_id,
-                                                  smart_session_attributes=None,
+        if self.data_for_database_has_been_modified:
+            self.dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
+                                                  smart_session_attributes=self.smart_session_user_data.to_dict(),
                                                   persistent_attributes=self.persistent_user_data.to_dict())
 
         if self.is_alexa_v1 is True:
@@ -288,6 +340,14 @@ class HandlerInputWrapper:
             raise Exception(f"handler_input was type {type(handler_input)} which is not valid value for his parameter.")
         self._handler_input = handler_input
 
+    @property
+    def default_session_data_timeout(self):
+        return self.handler_input.default_session_data_timeout
+
+    @default_session_data_timeout.setter
+    def default_session_data_timeout(self, default_session_data_timeout) -> None:
+        self.handler_input.default_session_data_timeout = default_session_data_timeout
+
     def is_launch_request(self) -> bool:
         return self.handler_input.is_launch_request()
 
@@ -302,8 +362,23 @@ class HandlerInputWrapper:
         self.handler_input.reprompt(text_or_ssml=text_or_ssml)
         return self
 
-    def get_intent_arg_value(self, arg_key: str):
+    def get_intent_arg_value(self, arg_key: str) -> SafeDict:
         return self.handler_input.get_intent_arg_value(arg_key=arg_key)
+
+    def simple_session_memorize(self, data_key: str, data_value=None):
+        self.handler_input.simple_session_memorize(data_key=data_key, data_value=data_value)
+        return self
+
+    def simple_session_batch_memorize(self, data_dict: dict):
+        self.handler_input.simple_session_batch_memorize(data_dict=data_dict)
+        return self
+
+    def simple_session_remember(self, data_key: str, specific_object_type=None):
+        return self.handler_input.simple_session_remember(data_key=data_key, specific_object_type=specific_object_type)
+
+    def simple_session_forget(self, data_key: str):
+        self.handler_input.simple_session_forget(data_key=data_key)
+        return self
 
     def session_memorize(self, data_key: str, data_value=None):
         self.handler_input.session_memorize(data_key=data_key, data_value=data_value)
@@ -316,7 +391,7 @@ class HandlerInputWrapper:
     def session_remember(self, data_key: str, specific_object_type=None):
         return self.handler_input.session_remember(data_key=data_key, specific_object_type=specific_object_type)
 
-    def session_forget(self, data_key: str) -> None:
+    def session_forget(self, data_key: str):
         self.handler_input.session_forget(data_key=data_key)
         return self
 

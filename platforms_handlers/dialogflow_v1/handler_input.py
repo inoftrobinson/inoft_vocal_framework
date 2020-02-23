@@ -8,10 +8,12 @@ class DialogFlowHandlerInput:
     def __init__(self):
         self.request = Request()
         self.response = Response()
+
+        self._user_id = None
         self._session_id = None
         self._simple_session_user_data = None
 
-    def get_user_persistent_data(self):
+    def _get_user_persistent_stored_data(self):
         unprocessed_user_stored_data = self.request.originalDetectIntentRequest.payload.user.userStorage
         if isinstance(unprocessed_user_stored_data, str) and unprocessed_user_stored_data.replace(" ", "") != "":
             from unicodedata import normalize as unicode_normalize
@@ -27,16 +29,16 @@ class DialogFlowHandlerInput:
                 print(f"Error while processing the user_persistent_data. Non-crashing but returning None : {e}")
         return None
 
-    def get_user_id(self):
-        return None
-        persistent_data = self.get_user_persistent_data()
-        if not isinstance(persistent_data, dict) or "userId" not in persistent_data.keys():
-            return None
-        else:
+    @property
+    def user_id(self):
+        persistent_data = self._get_user_persistent_stored_data()
+        if isinstance(persistent_data, dict) and "userId" in persistent_data.keys():
             return persistent_data["userId"]
+        else:
+            return None
 
     @property
-    def session_id(self):
+    def session_id(self) -> str:
         if self._session_id is None:
             self._session_id = self.request.session
         return self._session_id

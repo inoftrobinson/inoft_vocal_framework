@@ -6,6 +6,7 @@ class Request:
 
     def __init__(self):
         self._userId = str()
+        self._sessionId = str()
         self._intent = str()
         self._parameters = SafeDict()
 
@@ -36,6 +37,16 @@ class Request:
         if not isinstance(userId, str):
             raise Exception(f"userId was type {type(userId)} which is not valid value for his parameter.")
         self._userId = userId
+
+    @property
+    def sessionId(self) -> str:
+        return self._sessionId
+
+    @sessionId.setter
+    def sessionId(self, sessionId: str) -> None:
+        if not isinstance(sessionId, str):
+            raise Exception(f"sessionId was type {type(sessionId)} which is not valid value for his parameter.")
+        self._sessionId = sessionId
 
     @property
     def intent(self) -> str:

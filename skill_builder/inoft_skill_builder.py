@@ -212,3 +212,13 @@ class InoftSkill:
     @property
     def handler_input(self) -> HandlerInput:
         return self._handler_input
+
+    @property
+    def default_session_data_timeout(self):
+        return self._handler_input.default_session_data_timeout
+
+    @default_session_data_timeout.setter
+    def default_session_data_timeout(self, default_session_data_timeout: int) -> None:
+        if not isinstance(default_session_data_timeout, int):
+            raise Exception(f"default_session_data_timeout was type {type(default_session_data_timeout)} which is not valid value for his parameter.")
+        self.handler_input._default_session_data_timeout = default_session_data_timeout

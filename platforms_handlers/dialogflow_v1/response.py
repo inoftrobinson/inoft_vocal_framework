@@ -1,6 +1,5 @@
 from json import dumps as json_dumps
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from messages import *
 
 
 class SimpleResponse:

@@ -1,4 +1,9 @@
-from inoft_vocal_framework.platforms_handlers.current_platform_data import CurrentPlatformData
+"""
+This file is deprecated and shall not be used. It will soon be discarded in future versions of the framework.
+"""
+
+
+from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentPlatformData
 
 
 class Card:

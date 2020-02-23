@@ -1,7 +1,5 @@
-from json import dumps as json_dumps
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.utils.general import is_text_ssml
-from messages import *
 
 class Card:
     json_key = "card"

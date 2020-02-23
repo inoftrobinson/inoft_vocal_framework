@@ -1,3 +1,5 @@
+import time
+
 import boto3
 from ask_sdk_core.exceptions import PersistenceException
 from boto3.dynamodb.table import TableResource
@@ -74,7 +76,8 @@ class DynamoDbAdapter:
             table = self.dynamodb.Table(self.table_name)
             response = table.get_item(Key={"id": user_id}, ConsistentRead=True)
             if "Item" in response:
-                return SafeDict(response["Item"])
+                from inoft_vocal_framework.platforms_handlers.databases.dynamodb_utils import dynamodb_to_dict
+                return SafeDict(dynamodb_to_dict(response["Item"]))
             else:
                 return SafeDict()
         except ResourceNotExistsError:
@@ -88,19 +91,39 @@ class DynamoDbAdapter:
         # todo: find what type of object is a dynamodb Table (if any)
         return self.dynamodb.Table(self.table_name)
 
+    @property
+    def fetchedData(self) -> SafeDict:
+        if self._fetchedData is None:
+            self._fetchedData = self._fetch_attributes(user_id=self.last_user_id)
+        return self._fetchedData
+
     def get_field(self, user_id: str, field_key: str):
         self.last_user_id = user_id
         return self.fetchedData.get(field_key).to_any()
 
-    def get_smart_session_attributes(self, user_id: str) -> dict:
-        smart_session_attributes = self.get_field(user_id=user_id, field_key=self.smart_session_attributes_key_name)
-        return smart_session_attributes if isinstance(smart_session_attributes, dict) else dict()
+    def get_smart_session_attributes(self, user_id: str, session_id: str, timeout_seconds: int) -> SafeDict:
+        # If the value from get_field is of dict or list type, the SafeDict will be populated, otherwise it will be empty without errors.
+        timeout_expired = True
 
-    def get_persistent_attributes(self, user_id: str) -> dict:
-        persistent_attributes = self.get_field(user_id=user_id, field_key=self.persistent_attributes_key_name)
-        return persistent_attributes if isinstance(persistent_attributes, dict) else dict()
+        last_session_id = self.get_field(user_id=user_id, field_key="lastSessionId")
+        if session_id == last_session_id:
+            timeout_expired = False
+        else:
+            last_interaction_time = self.get_field(user_id=user_id, field_key="lastInteractionTime")
+            if last_interaction_time is not None and time.time() <= last_interaction_time + timeout_seconds:
+                timeout_expired = False
 
-    def save_attributes(self, user_id: str, smart_session_attributes: dict, persistent_attributes: dict) -> None:
+        if timeout_expired is False:
+            return SafeDict(self.get_field(user_id=user_id, field_key=self.smart_session_attributes_key_name))
+        else:
+            return SafeDict()
+
+    #todo: make it so that the smart session data timeout can be customized for each user, and is saved and retrieved from the db at each invocation
+    def get_persistent_attributes(self, user_id: str) -> SafeDict:
+        # If the value from get_field is of dict or list type, the SafeDict will be populated, otherwise it will be empty without errors.
+        return SafeDict(self.get_field(user_id=user_id, field_key=self.persistent_attributes_key_name))
+
+    def save_attributes(self, user_id: str, session_id: str, smart_session_attributes: dict, persistent_attributes: dict) -> None:
         self.last_user_id = user_id
 
         if not isinstance(smart_session_attributes, dict):
@@ -112,6 +135,8 @@ class DynamoDbAdapter:
 
         item_dict = {
             "id": user_id,
+            "lastSessionId": session_id,
+            "lastInteractionTime": round(time.time()),  # No need to store milliseconds for the last interaction time
             self.smart_session_attributes_key_name: smart_session_attributes,
             self.persistent_attributes_key_name: persistent_attributes
         }
@@ -119,7 +144,9 @@ class DynamoDbAdapter:
         try:
             print(f"Saving attributes : {item_dict}")
             table = self._get_db_table()
-            table.put_item(Item=item_dict)
+            from inoft_vocal_framework.platforms_handlers.databases.dynamodb_utils import dict_to_dynamodb
+            out = dict_to_dynamodb(item_dict)
+            table.put_item(Item=dict_to_dynamodb(item_dict))
         except ResourceNotExistsError:
             raise PersistenceException(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
         except Exception as e:
@@ -165,12 +192,6 @@ class DynamoDbAdapter:
             except Exception as e:
                 if e.__class__.__name__ != "ResourceInUseException":
                     raise Exception(f"Create table if not exists request failed: Exception of type {type(e).__name__} occurred {str(e)}")
-
-    @property
-    def fetchedData(self) -> SafeDict:
-        if self._fetchedData is None:
-            self._fetchedData = self._fetch_attributes(user_id=self.last_user_id)
-        return self._fetchedData
 
     @property
     def last_user_id(self) -> str:
