@@ -1,47 +1,101 @@
 # Inoft Vocal Framework
- ## Create Alexa Skills and Google Actions with the same codebase. In Python !
+ ## Create Alexa Skills, Google Actions and Samsung Bixby Capsules with the same codebase. In Python !
  
+ #### The example do not show how to deploy the skill (in Lambda, API Gateway and the Javascript files for bixby). I'm soon going to make videos in french and english to explain how to use the framework, and deploy a skill accross platforms. Then a bit later on, there will be the CLI for auto-deployment, then the CMS, then the web interface, then the free cloud platform that will host everything for you while giving you access to everything, then the tools on the platform to collaborate between developpers and voice designers extremly efficiently. It's going to be great ;)
  
  This repo is still under developpement, not everything is implemented. Yet you can see for the dates of releases, it will be soon.
  
  The main framework is constructed, i have build it so that it will be extremly fast and easy to add or change features in the platforms, or even add new platforms !
  
- #### This code makes both an Alexa Skill and a Google Action, and its Pythonic !
+ #### This code makes an Alexa Skill, a Google Action and a Bixby Capsule, and its Pythonic !
  
  ```
- class LaunchRequestHandler(InoftRequestHandler):
-    def can_handle(self):
-        return self.is_launch_request()
+from inoft_vocal_framework.skill_builder.inoft_skill_builder import (InoftSkill,
+InoftRequestHandler, InoftStateHandler, InoftDefaultFallback)
 
-    def handle(self):
-        self.persistent_memorize("has_launched_at_least_once", True)
-        self.session_memorize("count_interactions_in_session", 1)
-        
-        self.say("Readme, readme, readme... README !")
-        return self.to_platform_dict()
-        
+
+class LaunchRequestHandler(InoftRequestHandler):
+   def can_handle(self) -> bool:
+       return self.is_launch_request()
+
+   def handle(self):
+       self.persistent_memorize("has_launched_at_least_once", True)
+       self.say("Do you want to read me ? I'm a good example, i assure you !")
+       self.memorize_session_then_state(LaunchStateHandler)
+       return self.to_platform_dict()
+
+class LaunchStateHandler(InoftStateHandler):
+   """ This is a state handler which has been set by the memorize_session_then_state() in the
+   LaunchRequestHandler. When the user is in a state_handler, the handler function of the handler
+   (for example our Yes and No handlers are not used, and everything is handled by the StateHandler """
+   def handle(self):
+       """ If something is returned by the handle function (if the user said
+       yes or no), we will reset the then_state, and the user can move on """
+
+       # In order for an handler to be used on its own (not in the context of an InoftSkill),
+       # you must pass the self keyword to the class. Otherwise you will get an exception.
+       if YesHandler(self).can_handle():
+           self.say("I'm so happy that you want to read me !")
+           return self.to_platform_dict()
+
+       elif NoHandler(self).can_handle():
+           self.say("WHAT DO YOU MEAN YOU DO NOT WANT TO READ ME ?!")
+           return self.to_platform_dict()
+
+   def fallback(self):
+       """ But if nothing is returned, the fallback function is called, and the user will stay in
+       the then_state until he said something that will make the handle function return something. """
+
+       self.say("You can say Yes, or No. And that's it my guy")
+       return self.to_platform_dict()
+
 class YesHandler(InoftRequestHandler):
-    DEFAULT_YES_INTENT_NAME = "AMAZON.YesIntent"
-    CUSTOM_OK_INTENT_NAME = "OkConfirmation"
+   def can_handle(self) -> bool:
+       return self.is_in_intent_names(["AMAZON.YesIntent", "OkConfirmation"])
 
-    def can_handle(self):
-        return self.is_in_intent_names([self.DEFAULT_YES_INTENT_NAME, self.CUSTOM_OK_INTENT_NAME])
+   def handle(self):
+       self.persistent_memorize("is_the_user_weird", True)
+       self.say(f"Why are you saying Yes ? You are not in a StateHandler. You are crazy weird.")
+       return self.to_platform_dict()
 
-    def handle(self):
-        self.say("Im currently implementing the system to handle easily the previous interactions."
-                 "Yet we can at least manipulate some informations !")
-                 
-        self.session_memorize("count_interactions_in_session",
-                              self.session_remember("count_interactions_in_session", int) + 1)
+class NoHandler(InoftRequestHandler):
+   def can_handle(self) -> bool:
+       return self.is_in_intent_names(["AMAZON.NoIntent", "NoConfirmation"])
 
-        return self.to_platform_dict()
-        
-skill_builder = InoftSkill()
-skill_builder.add_request_handler(LaunchRequestHandler())
-skill_builder.add_request_handler(YesHandler())
+   def handle(self):
+       self.say("YOU SAID NO TO ME ?! I KNOW WHERE YOU LIVE !")
+       return self.to_platform_dict()
+
+class NumberHandler(InoftRequestHandler):
+   def can_handle(self) -> bool:
+       return self.is_in_intent_names(["SayANumber"])
+
+   def handle(self):
+       # You can get arg_value from intents (slots for Alexa, parameters for Google Assistant and Bixby)
+       number = self.get_intent_arg_value(arg_key="number")
+       if number is not None:
+           self.say(f"Here is your number : {number}")
+       else:
+           self.say(f"What's your number ? I did not got it.")
+       return self.to_platform_dict()
+
+class DefaultFallback(InoftDefaultFallback):
+   def handle(self):
+       self.say("I have no idea what you want. Go cook yourself an egg.")
+       return self.to_platform_dict()
+
 
 def lambda_handler(event, context):
-    return handle_any_platform(event=event, context=context, skill_builder=skill_builder)
+   # The inoft skill must be initiated in the lambda_handler function, otherwise we would not reset the variables due to staticness of lambda
+   skill_builder = InoftSkill(db_table_name="my-table-name_users-data", db_region_name="eu-west-3")
+   # For now the framework only support dynamodb as the database client (which is why there is the db_region_name argument)
+   skill_builder.add_request_handler(LaunchRequestHandler)
+   skill_builder.add_request_handler(YesHandler)
+   skill_builder.add_request_handler(NoHandler)
+   skill_builder.add_request_handler(NumberHandler)
+   skill_builder.add_state_handler(LaunchStateHandler)
+   skill_builder.set_default_fallback_handler(DefaultFallback)
+   return skill_builder.handle_any_platform(event=event, context=context)
 ```
  
  ### Roadmap :
