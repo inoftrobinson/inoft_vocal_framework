@@ -22,6 +22,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._persistent_user_data = None
         self.data_for_database_has_been_modified = False
 
+        if disable_database is not True and (not isinstance(db_table_name, str) or db_region_name is None):
+            raise Exception(f"The disable_database argument on the initialization of the InoftSkill has not been"
+                            f"specified or set to True, yet the database table name or region name are missing.")
         self.dynamodb_adapter = (DynamoDbAdapter(table_name=db_table_name, region_name=db_region_name,
                                                 primary_key_name="id", create_table=True)
                                  if disable_database is False else None)
