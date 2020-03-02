@@ -10,18 +10,21 @@ from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input impo
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
-    def __init__(self, db_table_name: str, db_region_name=None):
+    def __init__(self, disable_database: bool, db_table_name: str, db_region_name=None):
         super().__init__()
+        self.disable_database = disable_database
         self._session_id = None
         self._default_session_data_timeout = 60
+        self._session_been_resumed = False
         self._simple_session_user_data = None
         self._smart_session_user_data = None
         self._persistent_user_id = None
         self._persistent_user_data = None
         self.data_for_database_has_been_modified = False
 
-        self.dynamodb_adapter = DynamoDbAdapter(table_name=db_table_name, region_name=db_region_name,
+        self.dynamodb_adapter = (DynamoDbAdapter(table_name=db_table_name, region_name=db_region_name,
                                                 primary_key_name="id", create_table=True)
+                                 if disable_database is False else None)
 
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput = None, None, None
 
@@ -52,6 +55,16 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._default_session_data_timeout = default_session_data_timeout
 
     @property
+    def session_been_resumed(self) -> bool:
+        return self._session_been_resumed
+
+    @session_been_resumed.setter
+    def session_been_resumed(self, session_been_resumed: bool) -> None:
+        if not isinstance(session_been_resumed, bool):
+            raise Exception(f"session_been_resumed was type {type(session_been_resumed)} which is not valid value for his parameter.")
+        self._session_been_resumed = session_been_resumed
+
+    @property
     def simple_session_user_data(self) -> SafeDict:
         if self._simple_session_user_data is None:
             if self.is_alexa_v1 is True:
@@ -68,10 +81,13 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def smart_session_user_data(self) -> SafeDict:
         if self._smart_session_user_data is None:
-            self._smart_session_user_data = self.dynamodb_adapter.get_smart_session_attributes(
-                user_id=self.persistent_user_id, session_id=self.session_id, timeout_seconds=self.default_session_data_timeout)
+            if self.disable_database is False:
+                self._smart_session_user_data, self.session_been_resumed = self.dynamodb_adapter.get_smart_session_attributes(
+                    user_id=self.persistent_user_id, session_id=self.session_id, timeout_seconds=self.default_session_data_timeout)
 
-            if not isinstance(self._smart_session_user_data, SafeDict):
+                if not isinstance(self._smart_session_user_data, SafeDict):
+                    self._smart_session_user_data = SafeDict()
+            else:
                 self._smart_session_user_data = SafeDict()
         return self._smart_session_user_data
 
@@ -101,9 +117,12 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def persistent_user_data(self) -> SafeDict:
         if self._persistent_user_data is None:
-            persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
-            if isinstance(persistent_user_data, dict):
-                self._persistent_user_data = SafeDict(persistent_user_data)
+            if self.disable_database is False:
+                persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
+                if isinstance(persistent_user_data, dict):
+                    self._persistent_user_data = SafeDict(persistent_user_data)
+                else:
+                    self._persistent_user_data = SafeDict()
             else:
                 self._persistent_user_data = SafeDict()
 
@@ -261,33 +280,72 @@ class HandlerInput(CurrentUsedPlatformInfo):
                                     f"Make sure its a class with {InoftStateHandler} as its/one of its parent class."
                                     f"No checks are being made on the class, only a try and except that returned : {e}")
 
-            elif isinstance(state_handler_class_type_or_name, str):
+            if isinstance(state_handler_class_type_or_name, str):
                 then_state_class_name = state_handler_class_type_or_name
 
             if then_state_class_name is not None:
-                self.session_memorize(data_key="then_state", data_value=then_state_class_name)
+                self.session_memorize(data_key="thenState", data_value=then_state_class_name)
         else:
             raise Exception(f"state_handler_class_type_or_name must be an class type or str but was {state_handler_class_type_or_name}")
 
     def remember_session_then_state(self):
-        last_session_then_state = self.session_remember("then_state", str)
+        last_session_then_state = self.session_remember("thenState", str)
         if last_session_then_state.replace(" ", "") != "":
             return last_session_then_state
         else:
             return None
 
     def forget_session_then_state(self) -> None:
-        self.session_forget("then_state")
+        self.session_forget("thenState")
+
+    def memorize_session_last_intent_handler(self, handler_class_type_instance_name) -> None:
+        from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftRequestHandler, InoftStateHandler
+
+        if handler_class_type_instance_name is not None:
+            handler_class_name = None
+
+            if isinstance(handler_class_type_instance_name, str):
+                handler_class_name = handler_class_type_instance_name
+            else:
+                try:
+                    handler_class_type_object = handler_class_type_instance_name if callable(handler_class_type_instance_name) else handler_class_type_instance_name.__class__
+                    if InoftRequestHandler in handler_class_type_object.__bases__ or InoftStateHandler in handler_class_type_object.__bases__:
+                        handler_class_name = handler_class_type_object.__name__
+                    else:
+                        raise Exception(f"The state handler {handler_class_type_object} did not had {InoftStateHandler} in its bases classes.")
+                except Exception as e:
+                    raise Exception(f"Error while setting the following session_last_intent_handler {handler_class_type_instance_name}."
+                                    f"Make sure its a class with {InoftStateHandler} as its/one of its parent class."
+                                    f"No checks are being made on the class, only a try and except that returned : {e}")
+
+            if handler_class_name is not None:
+                self.session_memorize(data_key="lastIntentHandler", data_value=handler_class_name)
+                print("SAVED")
+        else:
+            raise Exception(f"handler_class_type_or_name must be an class type or str but was {handler_class_type_instance_name}")
+
+    def remember_session_last_intent_handler(self):
+        last_intent_handler_class_name = self.session_remember("lastIntentHandler", str)
+        if last_intent_handler_class_name.replace(" ", "") != "":
+            return last_intent_handler_class_name
+        else:
+            return None
+
+    def forget_session_last_intent_handler(self) -> None:
+        self.session_forget("lastIntentHandler")
+
+    def save_attributes_if_need_to(self):
+        if self.data_for_database_has_been_modified:
+            if self.disable_database is False:
+                self.dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
+                                                      smart_session_attributes=self.smart_session_user_data.to_dict(),
+                                                      persistent_attributes=self.persistent_user_data.to_dict())
 
     def to_platform_dict(self) -> dict:
+        output_response_dict = None
         # todo: improve this code, i found it dirty...
-        if self.data_for_database_has_been_modified:
-            self.dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
-                                                  smart_session_attributes=self.smart_session_user_data.to_dict(),
-                                                  persistent_attributes=self.persistent_user_data.to_dict())
-
         if self.is_alexa_v1 is True:
-            return {
+            output_response_dict = {
                 "version": "1.0",
                 "sessionAttributes": self.simple_session_user_data.to_dict(),
                 "response": self.alexaHandlerInput.response.to_dict()["response"]  # todo: fix the need to enter with response key
@@ -303,9 +361,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 session_user_data_context_item.add_set_session_attribute(key_item_saved_data, value_item_saved_data)
             self.dialogFlowHandlerInput.response.add_output_context_item(session_user_data_context_item)
 
-            return self.dialogFlowHandlerInput.response.to_dict()
+            output_response_dict = self.dialogFlowHandlerInput.response.to_dict()
         elif self.is_bixby_v1 is True:
-            return self.bixbyHandlerInput.response.to_dict()
+            output_response_dict = self.bixbyHandlerInput.response.to_dict()
+
+        return output_response_dict
 
     @property
     def alexaHandlerInput(self) -> AlexaHandlerInput:
@@ -347,6 +407,10 @@ class HandlerInputWrapper:
     @default_session_data_timeout.setter
     def default_session_data_timeout(self, default_session_data_timeout) -> None:
         self.handler_input.default_session_data_timeout = default_session_data_timeout
+
+    @property
+    def session_been_resumed(self):
+        return self.handler_input.session_been_resumed
 
     def is_launch_request(self) -> bool:
         return self.handler_input.is_launch_request()

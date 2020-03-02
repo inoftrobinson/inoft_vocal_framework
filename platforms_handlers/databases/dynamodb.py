@@ -101,7 +101,7 @@ class DynamoDbAdapter:
         self.last_user_id = user_id
         return self.fetchedData.get(field_key).to_any()
 
-    def get_smart_session_attributes(self, user_id: str, session_id: str, timeout_seconds: int) -> SafeDict:
+    def get_smart_session_attributes(self, user_id: str, session_id: str, timeout_seconds: int) -> (SafeDict, bool):
         # If the value from get_field is of dict or list type, the SafeDict will be populated, otherwise it will be empty without errors.
         timeout_expired = True
 
@@ -114,9 +114,9 @@ class DynamoDbAdapter:
                 timeout_expired = False
 
         if timeout_expired is False:
-            return SafeDict(self.get_field(user_id=user_id, field_key=self.smart_session_attributes_key_name))
+            return SafeDict(self.get_field(user_id=user_id, field_key=self.smart_session_attributes_key_name)), True
         else:
-            return SafeDict()
+            return SafeDict(), False
 
     #todo: make it so that the smart session data timeout can be customized for each user, and is saved and retrieved from the db at each invocation
     def get_persistent_attributes(self, user_id: str) -> SafeDict:

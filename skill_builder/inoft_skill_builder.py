@@ -23,6 +23,10 @@ class InoftRequestHandler(HandlerInputWrapper):  # (HandlerInput):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def handle_resume(self):
+        print(f"Resuming an user session, but no logic has been found in the handle_resume function, defaulting to the handle function")
+
 class InoftStateHandler(HandlerInputWrapper):  # (HandlerInput):
     @abstractmethod
     def handle(self):
@@ -40,17 +44,21 @@ class InoftStateHandler(HandlerInputWrapper):  # (HandlerInput):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def handle_resume(self):
+        print(f"Resuming an user session, but no logic has been found in the handle_resume function, defaulting to the handle function")
+
 class InoftDefaultFallback(HandlerInputWrapper):
     @abstractmethod
     def handle(self):
         raise NotImplementedError
 
 class InoftSkill:
-    def __init__(self, db_table_name: str, db_region_name=None):
-        self._request_handlers_chain = list()
+    def __init__(self, disable_database=False, db_table_name="my-inoft-skill-table-name", db_region_name=None):
+        self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()
         self._default_fallback_handler = None
-        self._handler_input = HandlerInput(db_table_name=db_table_name, db_region_name=db_region_name)
+        self._handler_input = HandlerInput(disable_database=disable_database, db_table_name=db_table_name, db_region_name=db_region_name)
 
     def add_request_handler(self, request_handler_instance_or_class) -> None:
         if request_handler_instance_or_class is not None:
@@ -66,7 +74,7 @@ class InoftSkill:
                 if InoftRequestHandler in handler_bases_parent_classes:
                     request_handler_instance_or_class.handler_input = self.handler_input
                     # We set a reference to the skill handler_input in each handler so that it can use it with its HandlerInputWrapper
-                    self.request_handlers_chain.append(request_handler_instance_or_class)
+                    self.request_handlers_chain[request_handler_instance_or_class.__class__.__name__] = request_handler_instance_or_class
             except Exception as e:
                 raise Exception(f"Error while adding a request handler. Please make sure it is a {InoftRequestHandler} class object : {e}")
         else:
@@ -105,11 +113,6 @@ class InoftSkill:
                     # If the variable is a class instance
                     handler_bases_parent_classes = default_fallback_handler_instance_or_class.__class__.__bases__
 
-                if InoftRequestHandler in handler_bases_parent_classes:
-                    default_fallback_handler_instance_or_class.handler_input = self.handler_input
-                    # We set a reference to the skill handler_input in each handler so that it can use it with its HandlerInputWrapper
-                    self.request_handlers_chain.append(default_fallback_handler_instance_or_class)
-
                 if InoftDefaultFallback in handler_bases_parent_classes:
                     default_fallback_handler_instance_or_class.handler_input = self.handler_input
                     # We set a reference to the skill handler_input in each handler so that it can use it with its HandlerInputWrapper
@@ -125,18 +128,31 @@ class InoftSkill:
         handler_is_a_then_state_handler = False
         handler_is_a_request_handler = False
 
-        last_then_state_class_name = self.handler_input.remember_session_then_state()
-        if last_then_state_class_name is not None:
-            if last_then_state_class_name in self.state_handlers_chain.keys():
-                handler_to_use = self.state_handlers_chain[last_then_state_class_name]
-                handler_is_a_then_state_handler = True
-                self.handler_input.forget_session_then_state()
-            else:
-                print(f"Warning ! A thenState class name ({last_then_state_class_name}) was not None"
-                      f" and has not been found in the available classes : {self.state_handlers_chain}")
+        # Steps of priority
 
+        # First, resuming of the last intent of the previous session
+        if self.handler_input.session_been_resumed is True:
+            last_intent_handler_class_key_name = self.handler_input.session_remember("lastIntentHandler")
+            if last_intent_handler_class_key_name in self.request_handlers_chain.keys():
+                handler_to_use = self.request_handlers_chain[last_intent_handler_class_key_name]
+            elif last_intent_handler_class_key_name in self.state_handlers_chain.keys():
+                handler_to_use = self.state_handlers_chain[last_intent_handler_class_key_name]
+
+        # Second, loading of the then_state in the session
         if handler_to_use is None:
-            for request_handler in self.request_handlers_chain:
+            last_then_state_class_name = self.handler_input.remember_session_then_state()
+            if last_then_state_class_name is not None:
+                if last_then_state_class_name in self.state_handlers_chain.keys():
+                    handler_to_use = self.state_handlers_chain[last_then_state_class_name]
+                    handler_is_a_then_state_handler = True
+                    self.handler_input.forget_session_then_state()
+                else:
+                    print(f"Warning ! A thenState class name ({last_then_state_class_name}) was not None"
+                          f" and has not been found in the available classes : {self.state_handlers_chain}")
+
+        # Third, classical requests handlers
+        if handler_to_use is None:
+            for request_handler in self.request_handlers_chain.values():
                 if request_handler.can_handle() is True:
                     handler_to_use = request_handler
                     handler_is_a_request_handler = True
@@ -146,19 +162,27 @@ class InoftSkill:
 
         output_event = None
         if handler_to_use is not None:
-            print(f"Handled by : {handler_to_use.__class__}")
-            output_event = handler_to_use.handle()
-            if handler_is_a_then_state_handler is True:
-                if output_event is None:
+            if self.handler_input.session_been_resumed is True:
+                print(f"Handled and resumed by : {handler_to_use.__class__}")
+                output_event = handler_to_use.handle_resume()
+
+            if output_event is None:
+                print(f"Handled classically by : {handler_to_use.__class__}")
+                output_event = handler_to_use.handle()
+                if handler_is_a_then_state_handler is True and output_event is None:
                     # If the handle function of the a then_state handler do not return anything, we call its fallback
                     # function, and we set back the then_state to the session attributes (we do so before calling
                     # the fallback, in case the fallback function changed the then_state)
                     self.handler_input.memorize_session_then_state(state_handler_class_type_or_name=last_then_state_class_name)
                     output_event = handler_to_use.fallback()
 
-        if output_event is None:
+        if output_event is not None:
+            self.handler_input.memorize_session_last_intent_handler(handler_class_type_instance_name=handler_to_use)
+        else:
             print(f"Handler by default fallback : {self.default_fallback_handler}")
             output_event = self.default_fallback_handler.handle()
+
+        self.handler_input.save_attributes_if_need_to()
 
         print(f"output_event = {output_event}")
         wrapped_output_event = LambdaResponseWrapper(response_dict=output_event).get_wrapped(handler_input=self.handler_input)
@@ -194,11 +218,11 @@ class InoftSkill:
         return self.process_request()
 
     @property
-    def request_handlers_chain(self):
+    def request_handlers_chain(self) -> dict:
         return self._request_handlers_chain
 
     @property
-    def state_handlers_chain(self):
+    def state_handlers_chain(self) -> dict:
         return self._state_handlers_chain
 
     @property
