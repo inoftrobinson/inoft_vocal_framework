@@ -1,6 +1,5 @@
 class SafeDict:
     def __init__(self, classic_dict=None, overloaded_navigated_dict=None):
-        # region Load the classic dict
         if classic_dict is None:
             classic_dict = dict()
         if isinstance(classic_dict, list):
@@ -17,7 +16,6 @@ class SafeDict:
                     classic_dict = dict(vars(classic_dict))
                 except Exception:
                     print(f"The following variable could not be converted to a dict in order to create a SafeDict object : {classic_dict}")
-        # endregion
 
         if isinstance(classic_dict, dict):
             self.classic_dict = classic_dict
