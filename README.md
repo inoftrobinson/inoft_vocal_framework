@@ -9,6 +9,31 @@
  
  #### This code makes an Alexa Skill, a Google Action and a Bixby Capsule, and its Pythonic !
  
+ Hello World :
+ ```
+from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftSkill,InoftRequestHandler, InoftDefaultFallback
+
+class LaunchRequestHandler(InoftRequestHandler):
+   def can_handle(self) -> bool:
+       return self.is_launch_request()
+
+   def handle(self):
+       self.say("Hello World !")
+       return self.to_platform_dict()
+
+class DefaultFallback(InoftDefaultFallback):
+   def handle(self):
+       self.say("I did not understand. Do you want for me to say HELLO WORLD ?!")
+       return self.to_platform_dict()
+
+def lambda_handler(event, context):
+   skill_builder = InoftSkill(disable_database=True)
+   skill_builder.add_request_handler(LaunchRequestHandler)
+   skill_builder.set_default_fallback_handler(DefaultFallback)
+   return skill_builder.handle_any_platform(event=event, context=context)
+```
+ 
+ More sophisticated example :
  ```
 from inoft_vocal_framework.skill_builder.inoft_skill_builder import (InoftSkill,
 InoftRequestHandler, InoftStateHandler, InoftDefaultFallback)
