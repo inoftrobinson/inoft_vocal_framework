@@ -11,7 +11,7 @@
  
  Hello World :
  ```
-from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftSkill,InoftRequestHandler, InoftDefaultFallback
+from inoft_vocal_framework import InoftSkill,InoftRequestHandler, InoftDefaultFallback
 
 class LaunchRequestHandler(InoftRequestHandler):
    def can_handle(self) -> bool:
@@ -35,8 +35,7 @@ def lambda_handler(event, context):
  
  More sophisticated example :
  ```
-from inoft_vocal_framework.skill_builder.inoft_skill_builder import (InoftSkill,
-InoftRequestHandler, InoftStateHandler, InoftDefaultFallback)
+from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
 
 
 class LaunchRequestHandler(InoftRequestHandler):
