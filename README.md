@@ -11,7 +11,7 @@
  
  Hello World :
  ```
-from inoft_vocal_framework import InoftSkill,InoftRequestHandler, InoftDefaultFallback
+from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftDefaultFallback
 
 class LaunchRequestHandler(InoftRequestHandler):
    def can_handle(self) -> bool:
