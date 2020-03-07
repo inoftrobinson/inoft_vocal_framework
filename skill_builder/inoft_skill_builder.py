@@ -4,6 +4,7 @@ from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers impo
 from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput, HandlerInputWrapper
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
 
 class InoftRequestHandler(HandlerInputWrapper):  # (HandlerInput):
@@ -54,7 +55,19 @@ class InoftDefaultFallback(HandlerInputWrapper):
         raise NotImplementedError
 
 class InoftSkill:
-    def __init__(self, disable_database=False, db_table_name="my-inoft-skill-table-name", db_region_name=None):
+    def __init__(self, settings_yaml_filepath=None, settings_json_filepath=None, disable_database=False,
+                 db_table_name="my-inoft-skill-table-name", db_region_name=None):
+
+        self.settings = Settings()
+        if settings_yaml_filepath is not None and settings_json_filepath is not None:
+            raise Exception(f"You cannot specify multiple settings files. Please specify only one")
+        elif settings_yaml_filepath is None and settings_json_filepath is None:
+            raise Exception(f"Please specify a yaml or json settings file with the settings_yaml_filepath arg or settings_json_filepath")
+        elif settings_yaml_filepath is not None:
+            self.settings.load_yaml(settings_file=settings_yaml_filepath)
+        elif settings_json_filepath is not None:
+            self.settings.load_json(settings_file=settings_json_filepath)
+
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()
         self._default_fallback_handler = None

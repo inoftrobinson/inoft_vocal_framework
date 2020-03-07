@@ -1,18 +1,21 @@
-from json import loads as json_loads
-
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
-from inoft_vocal_framework.platforms_handlers.databases.dynamodb import DynamoDbAdapter
+from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
 from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
+from inoft_vocal_framework.skill_builder.skill_settings import get_settings_safedict
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
     def __init__(self, disable_database: bool, db_table_name: str, db_region_name=None):
         super().__init__()
-        self.disable_database = disable_database
+        self.session_users_data_safedict = get_settings_safedict().get("sessions_users_data").to_safedict()
+        self.sessions_users_data_disable_database = self.session_users_data_safedict.get("disable_database").to_bool()
+        self.sessions_users_data_db_table_name = self.session_users_data_safedict.get("dynamodb").get("table_name").to_str()
+        self.sessions_users_data_db_region_name = self.session_users_data_safedict.get("dynamodb").get("region_name").to_str()
+
         self._session_id = None
         self._default_session_data_timeout = 60
         self._session_been_resumed = False
@@ -22,12 +25,14 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._persistent_user_data = None
         self.data_for_database_has_been_modified = False
 
-        if disable_database is not True and (not isinstance(db_table_name, str) or db_region_name is None):
+        if (self.sessions_users_data_disable_database is not True
+        and (not isinstance(self.sessions_users_data_db_table_name, str) or self.sessions_users_data_db_region_name is None)):
             raise Exception(f"The disable_database argument on the initialization of the InoftSkill has not been"
                             f"specified or set to True, yet the database table name or region name are missing.")
-        self.dynamodb_adapter = (DynamoDbAdapter(table_name=db_table_name, region_name=db_region_name,
-                                                primary_key_name="id", create_table=True)
-                                 if disable_database is False else None)
+        self.dynamodb_adapter = (DynamoDbAttributesAdapter(table_name=self.sessions_users_data_db_table_name,
+                                                           region_name=self.sessions_users_data_db_region_name,
+                                                           primary_key_name="id", create_table=True)
+                                 if self.sessions_users_data_disable_database is False else None)
 
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput = None, None, None
 
@@ -84,7 +89,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def smart_session_user_data(self) -> SafeDict:
         if self._smart_session_user_data is None:
-            if self.disable_database is False:
+            if self.sessions_users_data_disable_database is False:
                 self._smart_session_user_data, self.session_been_resumed = self.dynamodb_adapter.get_smart_session_attributes(
                     user_id=self.persistent_user_id, session_id=self.session_id, timeout_seconds=self.default_session_data_timeout)
 
@@ -120,7 +125,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def persistent_user_data(self) -> SafeDict:
         if self._persistent_user_data is None:
-            if self.disable_database is False:
+            if self.sessions_users_data_disable_database is False:
                 persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
                 if isinstance(persistent_user_data, dict):
                     self._persistent_user_data = SafeDict(persistent_user_data)
@@ -339,7 +344,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def save_attributes_if_need_to(self):
         if self.data_for_database_has_been_modified:
-            if self.disable_database is False:
+            if self.sessions_users_data_disable_database is False:
                 self.dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
                                                       smart_session_attributes=self.smart_session_user_data.to_dict(),
                                                       persistent_attributes=self.persistent_user_data.to_dict())

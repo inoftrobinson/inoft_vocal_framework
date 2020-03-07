@@ -98,6 +98,13 @@ class SafeDict:
         else:
             return default
 
+    def to_bool(self, default=False, reset_navigated_dict=True) -> bool:
+        navigated_dict_values = self.retrieve_navigated_dict_values(reset_navigated_dict=reset_navigated_dict)
+        if isinstance(navigated_dict_values, bool):
+            return navigated_dict_values
+        else:
+            return default
+
     def to_int(self, default=0, reset_navigated_dict=True) -> int:
         navigated_dict_values = self.retrieve_navigated_dict_values(reset_navigated_dict=reset_navigated_dict)
         try:
@@ -135,6 +142,13 @@ class SafeDict:
         else:
             return default
 
+    def to_safedict(self, default=None, reset_navigated_dict=True):
+        navigated_dict_object = self.retrieve_navigated_dict_object(reset_navigated_dict=reset_navigated_dict)
+        if navigated_dict_object is not None:
+            return SafeDict(navigated_dict_object)
+        else:
+            return default if default is not None else SafeDict()
+
     def to_any(self, default=None, reset_navigated_dict=True):
         navigated_dict_object = self.retrieve_navigated_dict_object(reset_navigated_dict=reset_navigated_dict)
         return navigated_dict_object
@@ -142,6 +156,8 @@ class SafeDict:
     def to_specific_type(self, type_to_return: type, reset_navigated_dict=True):
         if type_to_return == str:
             return self.to_str(reset_navigated_dict=reset_navigated_dict)
+        elif type_to_return == bool:
+            return self.to_bool(reset_navigated_dict=reset_navigated_dict)
         elif type_to_return == int:
             return self.to_int(reset_navigated_dict=reset_navigated_dict)
         elif type_to_return == float:
@@ -150,6 +166,8 @@ class SafeDict:
             return self.to_list(reset_navigated_dict=reset_navigated_dict)
         elif type_to_return == dict:
             return self.to_dict(reset_navigated_dict=reset_navigated_dict)
+        elif type_to_return == SafeDict:
+            return self.to_safedict(reset_navigated_dict=reset_navigated_dict)
         else:
             raise Exception(f"The following type is not supported by the SafeDict object : {type_to_return}."
                             f"If you post a request in the issues section of the GitHub,"

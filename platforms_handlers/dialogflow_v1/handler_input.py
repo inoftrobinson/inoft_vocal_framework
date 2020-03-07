@@ -1,5 +1,5 @@
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.request import Request
-from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import Response, SimpleResponse
+from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import Response
 from inoft_vocal_framework.safe_dict import SafeDict
 from json import loads as json_loads
 
