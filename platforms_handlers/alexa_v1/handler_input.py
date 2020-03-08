@@ -38,14 +38,24 @@ class AlexaHandlerInput:
     def reprompt(self, text_or_ssml: str) -> None:
         self.response.reprompt(text_or_ssml=text_or_ssml)
 
-    def show_title_text_card(self, title: str, text: str) -> None:
+    def show_basic_card(self, title: str, text: str, small_image_url: str = None, large_image_url: str = None) -> None:
         from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Card
-        self.response.card = Card(type_value=Card.type_simple, title=title, content_text=text)
+        if small_image_url is not None or large_image_url is not None:
+            from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Image
 
-    def show_title_text_image_card(self, title: str, text: str, small_image_url: str, large_image_url: str) -> None:
-        from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Card, Image
-        self.response.card = Card(type_value=Card.type_standard, title=title, text=text,
-                                  image=Image(small_image_url=small_image_url, large_image_url=large_image_url))
+            if small_image_url is None and large_image_url is not None:
+                small_image_url = large_image_url
+                print("WARNING ! The small_image_url argument was not specified, the large_image_url"
+                      "argument (which has been specified) is now also used as the small_image_url.")
+            elif large_image_url is None and small_image_url is not None:
+                large_image_url = small_image_url
+                print("WARNING ! The large_image_url argument was not specified, the small_image_url"
+                      "argument (which has been specified) is now also used as the large_image_url.")
+
+            self.response.card = Card(type_value=Card.type_standard, title=title, text=text,
+                                      image=Image(small_image_url=small_image_url, large_image_url=large_image_url))
+        else:
+            self.response.card = Card(type_value=Card.type_simple, title=title, content_text=text)
 
     def show_link_account_card(self) -> None:
         raise Exception("Not yet implemented")
