@@ -2,6 +2,137 @@ from json import dumps as json_dumps
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 
 
+class Image:
+    json_key = "image"
+
+    def __init__(self):
+        self._url = str()
+        self._accessibilityText = str()
+
+
+class ImageDisplayOptions:
+    json_key = "imageDisplayOptions"
+
+    cropped_type = "CROPPED"
+    available_options_types = [cropped_type]
+
+    def __init__(self):
+        self._option_type = str()
+
+    @property
+    def option_type(self) -> str:
+        return self._option_type
+
+    @option_type.setter
+    def option_type(self, option_type: str) -> None:
+        if not isinstance(option_type, str):
+            raise Exception(f"option_type was type {type(option_type)} which is not valid value for his parameter.")
+        if option_type not in self.available_options_types:
+            raise Exception(f"The option_type {option_type} was not a valid display options type.")
+        self._option_type = option_type
+
+class Button:
+    def __init__(self):
+        self._title = str()
+        self._openUrlAction = str()
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @title.setter
+    def title(self, title: str) -> None:
+        if not isinstance(title, str):
+            raise Exception(f"title was type {type(title)} which is not valid value for his parameter.")
+        self._title = title
+
+    @property
+    def openUrlAction(self) -> str:
+        return self._openUrlAction
+
+    @openUrlAction.setter
+    def openUrlAction(self, openUrlAction: str) -> None:
+        if not isinstance(openUrlAction, str):
+            raise Exception(f"openUrlAction was type {type(openUrlAction)} which is not valid value for his parameter.")
+        self._openUrlAction = openUrlAction
+
+class BasicCard:
+    json_key = "basicCard"
+
+    def __init__(self, title: str, subtitle: str, formatted_text: str = None, buttons: list = None,
+                 image: Image = None, image_display_options: ImageDisplayOptions = None):
+
+        self._title = title
+        self._subtitle = subtitle
+        self._formattedText = formatted_text
+        self._buttons = buttons
+        self._image = image
+        self._imageDisplayOptions = image_display_options
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @title.setter
+    def title(self, title: str) -> None:
+        if not isinstance(title, str):
+            raise Exception(f"title was type {type(title)} which is not valid value for his parameter.")
+        self._title = title
+
+    @property
+    def subtitle(self) -> str:
+        return self._subtitle
+
+    @subtitle.setter
+    def subtitle(self, subtitle: str) -> None:
+        if not isinstance(subtitle, str):
+            raise Exception(f"subtitle was type {type(subtitle)} which is not valid value for his parameter.")
+        self._subtitle = subtitle
+
+    @property
+    def formattedText(self) -> str:
+        return self._formattedText
+
+    @formattedText.setter
+    def formattedText(self, formattedText: str) -> None:
+        if not isinstance(formattedText, str):
+            raise Exception(f"formattedText was type {type(formattedText)} which is not valid value for his parameter.")
+        self._formattedText = formattedText
+
+    @property
+    def buttons(self) -> list:
+        return self._buttons
+
+    @buttons.setter
+    def buttons(self, buttons: list) -> None:
+        if not isinstance(buttons, list):
+            raise Exception(f"buttons was type {type(buttons)} which is not valid value for his parameter.")
+        self._buttons = buttons
+
+    @property
+    def image(self) -> Image:
+        return self._image
+
+    @image.setter
+    def image(self, image: Image) -> None:
+        if not isinstance(image, Image):
+            raise Exception(f"image was type {type(image)} which is not valid value for his parameter.")
+        self._image = image
+
+    @property
+    def imageDisplayOptions(self):
+        return self._imageDisplayOptions
+
+    @imageDisplayOptions.setter
+    def imageDisplayOptions(self, imageDisplayOptionType: str) -> None:
+        if not isinstance(imageDisplayOptionType, str):
+            raise Exception(f"imageDisplayOptionType was type {type(imageDisplayOptionType)} which is not valid value for his parameter.")
+        self._imageDisplayOptions.option_type = imageDisplayOptionType
+
+    def return_transformations(self) -> None:
+        self._imageDisplayOptions = self._imageDisplayOptions if self._imageDisplayOptions is None else self._imageDisplayOptions.option_type()
+
+
 class SimpleResponse:
     json_key = "simpleResponse"
 
@@ -41,27 +172,25 @@ class RichResponseInPayload:
 
     def __init__(self):
         self._items = list()
-        # [{"simpleResponse": { "textToSpeech": f"<speak>{MSGS_FIRST_USE_WELCOME.pick(None)}</speak>", "displayText": "dummy text to display"}}]
-        self.suggestions = [
-          {
-            "title": "Api"
-          },
-          {
-            "title": "Suggestion 2"
-          }
-        ]
-
-    # "<speak>Here are <say-as interpret-as=\"characters\">SSML</say-as> samples. I can pause <break time=\"3\" />. I can play a sound <audio src=\"https://www.example.com/MY_WAVE_FILE.wav\">your wave file</audio>. I can speak in cardinals. Your position is <say-as interpret-as=\"cardinal\">10</say-as> in line. Or I can speak in ordinals. You are <say-as interpret-as=\"ordinal\">10</say-as> in line. Or I can even speak in digits. Your position in line is <say-as interpret-as=\"digits\">10</say-as>. I can also substitute phrases, like the <sub alias=\"World Wide Web Consortium\">W3C</sub>. Finally, I can speak a paragraph with two sentences. <p><s>This is sentence one.</s><s>This is sentence two.</s></p></speak>"
+        self.suggestions = list()
 
     @property
     def items(self):
         return self._items
 
     def add_response_item(self, response_item_object):
-        if isinstance(response_item_object, SimpleResponse):
-            self._items.insert(0, response_item_object.to_json_dict())
-        else:
-            raise Exception(f"{type(response_item_object)} is not supported as a response item object type.")
+        response_item_dict = NestedObjectToDict.get_dict_from_nested_object(
+            object_to_process=response_item_object, key_names_identifier_objects_to_go_into=["json_key"])
+        self._items.append(response_item_dict)
+
+    def add_suggestion_chip(self, title: str):
+        # todo: add external link suggestion chip (cannot be used on platforms without the actions.capability.WEB_BROWSER capability
+        if not isinstance(title, str):
+            raise Exception(f"The title variable must be of type str but was {type(title)}")
+        if len(title) > 25:
+            raise Exception(f"A suggestion chip title can have a maximum of 25 chars but {title} was {len(title)} chars")
+
+        self.suggestions.append({"title": title})
 
 class GoogleInPayload:
     json_key = "google"
@@ -168,6 +297,20 @@ class Response:
             self.outputContexts.append(output_context_item)
         else:
             raise Exception(f"The output context item needed to be of instance {OutputContextItem} but was : {output_context_item}")
+
+    def add_response_item_to_show(self, item_object) -> None:
+        if not len(self.payload.google.richResponse.items) > 0:
+            raise Exception("A google response take in consideration the order with which the elements have been added. "
+                            "You cannot set a visual element as first element of the response. "
+                            "Try to set a speech element with the .say() function before you add a visual element.")
+        self.payload.google.richResponse.add_response_item(item_object)
+
+    def add_suggestions_chips(self, chips_titles: list) -> None:
+        if isinstance(chips_titles, list):
+            for chip_title in chips_titles:
+                self.payload.google.richResponse.add_suggestion_chip(title=chip_title)
+        elif isinstance(chips_titles, str):
+            self.payload.google.richResponse.add_suggestion_chip(title=chips_titles)
 
     def to_dict(self) -> dict:
         return NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,

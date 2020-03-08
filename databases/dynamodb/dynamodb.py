@@ -1,6 +1,5 @@
 import time
 
-from ask_sdk_core.exceptions import PersistenceException
 from boto3.session import ResourceNotExistsError
 
 from inoft_vocal_framework.databases.dynamodb.dynamodb_core import DynamoDbCoreAdapter
@@ -32,11 +31,11 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
             else:
                 return SafeDict()
         except ResourceNotExistsError:
-            raise PersistenceException(f"DynamoDb table {self.table_name} do not exist or in the process of "
-                                       f"being created. Failed to get attributes from DynamoDb table.")
+            raise Exception(f"DynamoDb table {self.table_name} do not exist or in the process"
+                            "of being created. Failed to get attributes from DynamoDb table.")
         except Exception as e:
-            raise PersistenceException(f"Failed to retrieve attributes from DynamoDb table. "
-                                       f"Exception of type {type(e).__name__} occurred: {str(e)}")
+            raise Exception(f"Failed to retrieve attributes from DynamoDb table."
+                            f"Exception of type {type(e).__name__} occurred: {str(e)}")
 
     @property
     def fetchedData(self) -> SafeDict:
@@ -95,9 +94,9 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
             out = dict_to_dynamodb(item_dict)
             table.put_item(Item=dict_to_dynamodb(item_dict))
         except ResourceNotExistsError:
-            raise PersistenceException(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
+            raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
         except Exception as e:
-            raise PersistenceException(f"Failed to save attributes to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
+            raise Exception(f"Failed to save attributes to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
     def delete_attributes(self, user_id: str):
         """ Deletes attributes from table in Dynamodb resource. """
@@ -106,9 +105,9 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
             table = self._get_db_table()
             table.delete_item(Key={self.primary_key_name: user_id})
         except ResourceNotExistsError:
-            raise PersistenceException(f"DynamoDb table {self.table_name} doesn't exist. Failed to delete attributes from DynamoDb table.")
+            raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to delete attributes from DynamoDb table.")
         except Exception as e:
-            raise PersistenceException(f"Failed to delete attributes in DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
+            raise Exception(f"Failed to delete attributes in DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
     @property
     def last_user_id(self) -> str:
@@ -144,11 +143,11 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
             else:
                 return list()
         except ResourceNotExistsError:
-            raise PersistenceException(f"DynamoDb table {self.table_name} do not exist or in the process of "
-                                       f"being created. Failed to get messages of category from DynamoDb table.")
+            raise Exception(f"DynamoDb table {self.table_name} do not exist or in the process of "
+                            f"being created. Failed to get messages of category from DynamoDb table.")
         except Exception as e:
-            raise PersistenceException(f"Failed to retrieve messages of category from DynamoDb table. "
-                                       f"Exception of type {type(e).__name__} occurred: {str(e)}")
+            raise Exception(f"Failed to retrieve messages of category from DynamoDb table. "
+                            f"Exception of type {type(e).__name__} occurred: {str(e)}")
 
     def get_messages_of_category(self, category_id: str) -> list:
         if self._fetched_messages_of_last_category is None or category_id != self.last_category_id:
@@ -179,9 +178,9 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
                 from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dict_to_dynamodb
                 table.put_item(Item=dict_to_dynamodb(speech_category_dict))
             except ResourceNotExistsError:
-                raise PersistenceException(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
+                raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
             except Exception as e:
-                raise PersistenceException(f"Failed to save speech category to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
+                raise Exception(f"Failed to save speech category to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
 
     def save_attributes(self, user_id: str, session_id: str, smart_session_attributes: dict, persistent_attributes: dict) -> None:
@@ -209,9 +208,9 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
             out = dict_to_dynamodb(item_dict)
             table.put_item(Item=dict_to_dynamodb(item_dict))
         except ResourceNotExistsError:
-            raise PersistenceException(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
+            raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
         except Exception as e:
-            raise PersistenceException(f"Failed to save attributes to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
+            raise Exception(f"Failed to save attributes to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
     def delete_attributes(self, user_id: str):
         """ Deletes attributes from table in Dynamodb resource. """
@@ -220,9 +219,9 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
             table = self._get_db_table()
             table.delete_item(Key={self.primary_key_name: user_id})
         except ResourceNotExistsError:
-            raise PersistenceException(f"DynamoDb table {self.table_name} doesn't exist. Failed to delete attributes from DynamoDb table.")
+            raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to delete attributes from DynamoDb table.")
         except Exception as e:
-            raise PersistenceException(f"Failed to delete attributes in DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
+            raise Exception(f"Failed to delete attributes in DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
     @property
     def last_category_id(self) -> str:

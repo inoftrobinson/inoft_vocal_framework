@@ -123,4 +123,3 @@ class Settings:
                 raise Exception(f"The json file was not valid, and caused an error when loading."
                                 f"Please check the file or recreate it with the cli : {error}")
 
-Settings().load_yaml("F:\\Inoft\\hackaton cite des sciences 1\\lambda_project\\app_settings.yaml")

@@ -1,5 +1,5 @@
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.request import Request
-from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import Response
+from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import Response, Image, ImageDisplayOptions
 from inoft_vocal_framework.safe_dict import SafeDict
 from json import loads as json_loads
 
@@ -75,3 +75,38 @@ class DialogFlowHandlerInput:
             self._simple_session_user_data = SafeDict()
         return self._simple_session_user_data
 
+    def is_launch_request(self) -> bool:
+        return self.request.is_launch_request()
+
+    def is_in_intent_names(self, intent_names_list) -> bool:
+        if not isinstance(intent_names_list, list):
+            if isinstance(intent_names_list, str):
+                intent_names_list = [intent_names_list]
+            else:
+                raise Exception(f"The intent_names_list must be a list or a str in order to be converted to a list,"
+                                f"but it was a {type(intent_names_list)} object : {intent_names_list}")
+
+        return self.request.is_in_intent_names(intent_names_list=intent_names_list)
+
+    def say(self, text_or_ssml: str) -> None:
+        self.response.say(text_or_ssml=text_or_ssml)
+
+    def reprompt(self, text_or_ssml: str) -> None:
+        self.response.reprompt(text_or_ssml=text_or_ssml)
+
+    def show_suggestion_chips(self, chips_titles: list):
+        self.response.add_suggestions_chips(chips_titles=chips_titles)
+
+    def show_basic_card(self, title: str = None, subtitle: str = None, content_formatted_text: str = None,
+                        image: Image = None, image_display_options: ImageDisplayOptions = None, buttons: list = None) -> None:
+
+        if content_formatted_text is None and image is None:
+            raise Exception("A google assistant basic card cannot have both the content_formatted_text and the image variable as None")
+
+        from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import BasicCard
+        basic_card_object = BasicCard(title=title, subtitle=subtitle, formatted_text=content_formatted_text,
+                                      image=image, image_display_options=image_display_options, buttons=buttons)
+        self.response.add_response_item_to_show(item_object=basic_card_object)
+
+    def show_carousel(self):
+        raise Exception("Not implemented yet")

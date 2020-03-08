@@ -1,3 +1,4 @@
+from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
 from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
@@ -156,41 +157,35 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def is_launch_request(self) -> bool:
         if self.is_alexa_v1 is True:
-            return self.alexaHandlerInput.request.is_launch_request()
+            return self.alexaHandlerInput.is_launch_request()
         elif self.is_dialogflow_v1 is True:
-            return self.dialogFlowHandlerInput.request.is_launch_request()
+            return self.dialogFlowHandlerInput.is_launch_request()
         elif self.is_bixby_v1 is True:
-            return self.bixbyHandlerInput.request.is_launch_request()
+            return self.bixbyHandlerInput.is_launch_request()
 
     def is_in_intent_names(self, intent_names_list) -> bool:
-        if not isinstance(intent_names_list, list):
-            if isinstance(intent_names_list, str):
-                intent_names_list = [intent_names_list]
-            else:
-                raise Exception(f"The intent_names_list must be a list or a str in order to be converted to a list, but it was a {type(intent_names_list)} object : {intent_names_list}")
-
         if self.is_alexa_v1 is True:
-            return self.alexaHandlerInput.request.is_in_intent_names(intent_names_list=intent_names_list)
+            return self.alexaHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
         elif self.is_dialogflow_v1 is True:
-            return self.dialogFlowHandlerInput.request.is_in_intent_names(intent_names_list=intent_names_list)
+            return self.dialogFlowHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
         elif self.is_bixby_v1 is True:
-            return self.bixbyHandlerInput.request.is_in_intent_names(intent_names_list=intent_names_list)
+            return self.bixbyHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
 
     def say(self, text_or_ssml: str) -> None:
         if self.is_alexa_v1 is True:
-            self.alexaHandlerInput.response.say(text_or_ssml=text_or_ssml)
+            self.alexaHandlerInput.say(text_or_ssml=text_or_ssml)
         elif self.is_dialogflow_v1 is True:
-            self.dialogFlowHandlerInput.response.say(text_or_ssml=text_or_ssml)
+            self.dialogFlowHandlerInput.say(text_or_ssml=text_or_ssml)
         elif self.is_bixby_v1 is True:
-            self.bixbyHandlerInput.response.say(text_or_ssml=text_or_ssml)
+            self.bixbyHandlerInput.say(text_or_ssml=text_or_ssml)
 
     def reprompt(self, text_or_ssml: str) -> None:
         if self.is_alexa_v1 is True:
-            self.alexaHandlerInput.response.reprompt(text_or_ssml=text_or_ssml)
+            self.alexaHandlerInput.reprompt(text_or_ssml=text_or_ssml)
         elif self.is_dialogflow_v1 is True:
-            self.dialogFlowHandlerInput.response.reprompt(text_or_ssml=text_or_ssml)
+            self.dialogFlowHandlerInput.reprompt(text_or_ssml=text_or_ssml)
         elif self.is_bixby_v1 is True:
-            self.bixbyHandlerInput.response.reprompt(text_or_ssml=text_or_ssml)
+            self.bixbyHandlerInput.reprompt(text_or_ssml=text_or_ssml)
 
     def get_intent_arg_value(self, arg_key: str):
         if self.is_alexa_v1 is True:
@@ -377,15 +372,15 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     @property
     def alexaHandlerInput(self) -> AlexaHandlerInput:
-        return self._alexaHandlerInput
+        return self._alexaHandlerInput if self._alexaHandlerInput is not None else DummyObject()
 
     @property
     def dialogFlowHandlerInput(self) -> DialogFlowHandlerInput:
-        return self._dialogFlowHandlerInput
+        return self._dialogFlowHandlerInput if self._dialogFlowHandlerInput is not None else DummyObject()
 
     @property
     def bixbyHandlerInput(self) -> BixbyHandlerInput:
-        return self._bixbyHandlerInput
+        return self._bixbyHandlerInput if self._bixbyHandlerInput is not None else DummyObject()
 
 
 class HandlerInputWrapper:
@@ -512,13 +507,13 @@ class HandlerInputWrapper:
         return self.handler_input.is_bixby_v1
 
     @property
-    def alexaHandlerInput(self) -> AlexaHandlerInput:
+    def alexa(self) -> AlexaHandlerInput:
         return self.handler_input.alexaHandlerInput
 
     @property
-    def dialogFlowHandlerInput(self) -> DialogFlowHandlerInput:
+    def google(self) -> DialogFlowHandlerInput:
         return self.handler_input.dialogFlowHandlerInput
 
     @property
-    def bixbyHandlerInput(self) -> BixbyHandlerInput:
+    def bixby(self) -> BixbyHandlerInput:
         return self.handler_input.bixbyHandlerInput
