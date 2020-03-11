@@ -6,16 +6,17 @@ class NestedObjectToDict:
     @staticmethod
     def _remove_start_underscores_from_string_key(string_key: str) -> str:
         index_first_underscore = None
-        for i_char in range(len(string_key)):
-            if string_key[i_char] == "_":
-                if index_first_underscore is None:
-                    index_first_underscore = i_char
-            else:
-                if index_first_underscore is not None:
-                    cleaned_string_key = string_key[:index_first_underscore] + string_key[i_char:]
-                    return cleaned_string_key
+        if string_key is not None:
+            for i_char in range(len(string_key)):
+                if string_key[i_char] == "_":
+                    if index_first_underscore is None:
+                        index_first_underscore = i_char
                 else:
-                    return string_key
+                    if index_first_underscore is not None:
+                        cleaned_string_key = string_key[:index_first_underscore] + string_key[i_char:]
+                        return cleaned_string_key
+                    else:
+                        return string_key
         return string_key
 
     @staticmethod
@@ -52,6 +53,9 @@ class NestedObjectToDict:
 
                 if not is_class_object_empty:
                     NestedObjectToDict._apply_return_transformations(class_object=class_object)
+                    # We only need to apply the return transformations here, since an object that could
+                    # contain some return transformations will always be passed to this recurrent function.
+                    # If we called the return transformations somewhere else, we could end up calling them multiple times.
 
                     output_dict = dict()
                     keys_to_pop_after_loop_finished = list()
@@ -61,26 +65,52 @@ class NestedObjectToDict:
                         for main_var_key, main_var_object in main_vars_dict.items():
                             found_accepted_key_name_in_vars_of_current_object = False
 
-                            for accepted_child_key_name in key_names_identifier_objects_to_go_into:
-                                if hasattr(main_var_object, accepted_child_key_name):
-                                    found_accepted_key_name_in_vars_of_current_object = True
+                            if isinstance(main_var_object, list):
+                                for i in range(len(main_var_object)):
+                                    found_accepted_key_name_in_vars_of_current_child_item_object = False
 
-                                    is_main_var_object_empty = NestedObjectToDict._is_object_empty(class_object=main_var_object)
-                                    # We remove an object that is defined as empty (see the called function for details)
-                                    if is_main_var_object_empty:
-                                        keys_to_pop_after_loop_finished.append(main_var_key)
-                                    else:
-                                        NestedObjectToDict._apply_return_transformations(class_object=main_var_object)
+                                    for accepted_child_key_name in key_names_identifier_objects_to_go_into:
+                                        if hasattr(main_var_object[i], accepted_child_key_name):
+                                            # If the object has an accepted child key name, we will set the values
+                                            # of the object inside of a dict with the child key name as the key dict
+                                            found_accepted_key_name_in_vars_of_current_child_item_object = True
 
-                                        nested_object_accepted_key_value = getattr(main_var_object.__class__, accepted_child_key_name)
-                                        cleaned_key = NestedObjectToDict._remove_start_underscores_from_string_key(nested_object_accepted_key_value)
+                                            nested_object_accepted_key_value = getattr(main_var_object[i].__class__, accepted_child_key_name)
+                                            cleaned_key = NestedObjectToDict._remove_start_underscores_from_string_key(nested_object_accepted_key_value)
 
-                                        output_dict[cleaned_key] = NestedObjectToDict._process_potential_nested_object(
-                                            class_object=main_var_object, key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
+                                            item_output_dict = NestedObjectToDict._process_potential_nested_object(class_object=main_var_object[i],
+                                                key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
 
-                                    # The loop we are currently in is just to see if the object has the attribute that tell use that it is an object
-                                    # to go deeper into. If we found at least one, we do not need to look at the same object a second time.
-                                    break
+                                            main_var_object[i] = {cleaned_key: item_output_dict} if cleaned_key is not None else item_output_dict
+                                            # If the key is None, it means that the object needed to be go into to process it, but should not be
+                                            # put inside a dict with its the cleaned_key has its name. This is the case for list items, for
+                                            # examples for items of a carousel, they will be objects, that should be put in a list of items of
+                                            # the carousel, and have their values put right away in a dict, and not inside a dict called "item"
+                                            # that will contain all the values of the item.
+
+                                    if found_accepted_key_name_in_vars_of_current_child_item_object is False:
+                                        # Otherwise, we just process the value and put it back in the list, without creating a dict
+                                        main_var_object[i] = NestedObjectToDict._process_potential_nested_object(class_object=main_var_object[i],
+                                            key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
+                            else:
+                                for accepted_child_key_name in key_names_identifier_objects_to_go_into:
+                                    if hasattr(main_var_object, accepted_child_key_name):
+                                        found_accepted_key_name_in_vars_of_current_object = True
+
+                                        is_main_var_object_empty = NestedObjectToDict._is_object_empty(class_object=main_var_object)
+                                        # We remove an object that is defined as empty (see the called function for details)
+                                        if is_main_var_object_empty:
+                                            keys_to_pop_after_loop_finished.append(main_var_key)
+                                        else:
+                                            nested_object_accepted_key_value = getattr(main_var_object.__class__, accepted_child_key_name)
+                                            cleaned_key = NestedObjectToDict._remove_start_underscores_from_string_key(nested_object_accepted_key_value)
+
+                                            output_dict[cleaned_key] = NestedObjectToDict._process_potential_nested_object(class_object=main_var_object,
+                                               key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
+
+                                        # The loop we are currently in is just to see if the object has the attribute that tell use that it is an object
+                                        # to go deeper into. If we found at least one, we do not need to look at the same object a second time.
+                                        break
 
                             if found_accepted_key_name_in_vars_of_current_object is False and main_var_object is not None:
                                 do_not_include_current_item = False
@@ -136,13 +166,14 @@ class NestedObjectToDict:
         return output_dict
 
     @staticmethod
-    def process_and_set_json_request_to_object(object_class_to_set_to, request_json_dict_or_stringed_dict, key_names_identifier_objects_to_go_into: list):
-        if isinstance(request_json_dict_or_stringed_dict, dict):
-            request_dict = request_json_dict_or_stringed_dict
-        elif isinstance(request_json_dict_or_stringed_dict, str):
-            request_dict = NestedObjectToDict.get_dict_from_json(stringed_json_dict=request_json_dict_or_stringed_dict)
+    def process_and_set_json_request_to_object(object_class_to_set_to, request_json_dict_stringed_dict_or_list, key_names_identifier_objects_to_go_into: list):
+        if isinstance(request_json_dict_stringed_dict_or_list, dict):
+            request_dict = request_json_dict_stringed_dict_or_list
+        elif isinstance(request_json_dict_stringed_dict_or_list, str):
+            request_dict = NestedObjectToDict.get_dict_from_json(stringed_json_dict=request_json_dict_stringed_dict_or_list)
         else:
-            raise Exception(f"The request_json_dict_or_stringed_dict variable is of type {type(request_json_dict_or_stringed_dict)} but must be dict or str.")
+            raise Exception(f"The request_json_dict_stringed_dict_or_list variable is of type"
+                            f"{type(request_json_dict_stringed_dict_or_list)} but must be dict, a str or a list.")
 
         unprocessed_vars_dict = vars(object_class_to_set_to)
         from types import MappingProxyType
@@ -168,7 +199,7 @@ class NestedObjectToDict:
 
                 if current_child_element_object is not None:
                     found_accepted_key_name_in_vars_of_current_object = False
-                    if isinstance(value_request_element, dict):
+                    if isinstance(value_request_element, dict) or isinstance(value_request_element, list):
 
                         for accepted_child_key_name in key_names_identifier_objects_to_go_into:
                             if hasattr(current_child_element_object, accepted_child_key_name):
@@ -176,7 +207,7 @@ class NestedObjectToDict:
 
                                 NestedObjectToDict.process_and_set_json_request_to_object(
                                     object_class_to_set_to=unprocessed_vars_dict[current_unprocessed_variable_name],
-                                    request_json_dict_or_stringed_dict=value_request_element,
+                                    request_json_dict_stringed_dict_or_list=value_request_element,
                                     key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
 
                     if not found_accepted_key_name_in_vars_of_current_object:

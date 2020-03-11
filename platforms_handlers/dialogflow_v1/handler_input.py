@@ -108,5 +108,8 @@ class DialogFlowHandlerInput:
                                       image=image, image_display_options=image_display_options, buttons=buttons)
         self.response.add_response_item_to_show(item_object=basic_card_object)
 
-    def show_carousel(self):
-        raise Exception("Not implemented yet")
+    def show_browse_carousel_item(self, title: str,  url_to_open_on_click: str, description: str = None,
+                                  image_url: str = None, image_accessibility_text: str = None, footer: str = None):
+
+        self.response.add_item_to_browse_carousel(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
+                                                  image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)

@@ -2,13 +2,52 @@ from json import dumps as json_dumps
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 
 
+class OpenUrlAction:
+    json_key = "openUrlAction"
+
+    def __init__(self, url: str):
+        self.url = url
+
+    @property
+    def url(self) -> str:
+        return self._url
+
+    @url.setter
+    def url(self, url: str) -> None:
+        if not isinstance(url, str):
+            raise Exception(f"url was type {type(url)} which is not valid value for his parameter.")
+        self._url = url
+
 class Image:
     json_key = "image"
 
-    def __init__(self):
-        self._url = str()
-        self._accessibilityText = str()
+    def __init__(self, image_url: str, accessibility_text: str):
+        self.url = image_url
+        if accessibility_text is not None:
+            # The accessibility_text is not required
+            self.accessibilityText = accessibility_text
+        else:
+            self._accessibilityText = None
 
+    @property
+    def url(self) -> str:
+        return self._url
+
+    @url.setter
+    def url(self, url: str) -> None:
+        if not isinstance(url, str):
+            raise Exception(f"url was type {type(url)} which is not valid value for his parameter.")
+        self._url = url
+
+    @property
+    def accessibilityText(self) -> str:
+        return self._accessibilityText
+
+    @accessibilityText.setter
+    def accessibilityText(self, accessibilityText: str) -> None:
+        if accessibilityText is not None and not isinstance(accessibilityText, str):
+            raise Exception(f"accessibilityText was type {type(accessibilityText)} which is not valid value for his parameter.")
+        self._accessibilityText = accessibilityText
 
 class ImageDisplayOptions:
     json_key = "imageDisplayOptions"
@@ -16,8 +55,8 @@ class ImageDisplayOptions:
     cropped_type = "CROPPED"
     available_options_types = [cropped_type]
 
-    def __init__(self):
-        self._option_type = str()
+    def __init__(self, option_type: str):
+        self.option_type = option_type
 
     @property
     def option_type(self) -> str:
@@ -32,6 +71,8 @@ class ImageDisplayOptions:
         self._option_type = option_type
 
 class Button:
+    json_key = "button"
+
     def __init__(self):
         self._title = str()
         self._openUrlAction = str()
@@ -133,6 +174,135 @@ class BasicCard:
         self._imageDisplayOptions = self._imageDisplayOptions if self._imageDisplayOptions is None else self._imageDisplayOptions.option_type()
 
 
+# todo: check if an image/video url is valid and throw an exception if not
+# todo: raise for google if more than 2 response items have been set
+# todo: do not allow to use elements that the plateform cannot support (like a carousel need to be on a platform that support a web browser, like a phone)
+
+class BrowseCarousel:
+    json_key = "carouselBrowse"
+
+    def __init__(self):
+        self._items = list()
+        self._first_item_used_keys = None
+
+    @property
+    def items(self) -> list:
+        return self._items
+
+    def add_item(self, title: str,  url_to_open_on_click: str, description: str = None,
+                 image_url: str = None, image_accessibility_text: str = None, footer: str = None):
+
+        if len(self._items) < 10:
+            # A carousel can have a maximum of 10 items
+            item = self.Item(title=title, description=description, openUrlAction=OpenUrlAction(url=url_to_open_on_click), footer=footer,
+                             image=None if image_url is None else Image(image_url=image_url, accessibility_text=image_accessibility_text))
+
+            if self._first_item_used_keys is None:
+                self._first_item_used_keys = ["title", "url_to_open_on_click"]
+                if description is not None:
+                    self._first_item_used_keys.append("description")
+                if image_url is not None:
+                    self._first_item_used_keys.append("image_url")
+                if image_accessibility_text is not None:
+                    self._first_item_used_keys.append("image_accessibility_text")
+                if footer is not None:
+                    self._first_item_used_keys.append("footer")
+            else:
+                if (("description" in self._first_item_used_keys if description is None else "description" not in self._first_item_used_keys)
+                or ("image_url" in self._first_item_used_keys if image_url is None else "image_url" not in self._first_item_used_keys)
+                or ("image_accessibility_text" in self._first_item_used_keys if image_accessibility_text is None else "image_accessibility_text" not in self._first_item_used_keys)
+                or ("footer" in self._first_item_used_keys if footer is None else "footer" not in self._first_item_used_keys)):
+                    raise Exception(f"All carousel items must have the same variable, to assure a tile consistency."
+                                    f"The first item of the carousel had the following variables : {self._first_item_used_keys}"
+                                    f"which are not the same as the last item you inserted : {item.__dict__}")
+
+            self._items.append(item)
+        else:
+            print("The browse carousel items limit of 10 has ben reached. Your new item has not been included.")
+
+    def do_not_include(self):
+        # If no items are present in the carousel, we do not include it
+        if len(self._items) == 0:
+            return True
+        else:
+            return False
+
+    def return_transformations(self) -> None:
+        if self.do_not_include() is False and len(self._items) == 1:
+            # If the carousel has only one item, we duplicate it, because a carousel need at least 2 items
+            first_item = self._items[0]
+            if isinstance(first_item, self.Item):
+                self._items.append(self.Item(title=first_item.title, description=first_item.description, image=first_item.image,
+                                             openUrlAction=first_item.openUrlAction, footer=first_item.footer))
+                print(f"Warning, a carousel had only one item, since we require two items, the only one has been duplicated.")
+            else:
+                raise Exception(f"The first_item of the carousel was not an instance of carousel item but {first_item}")
+
+        del self._first_item_used_keys
+        # The first_item_used_keys variable is only for backend practices and should not be
+        # included in the response, so we delete the attributes on the return transformations.
+
+    class Item:
+        json_key = None
+
+        def __init__(self, title: str, description: str = None, image: Image = None, openUrlAction: OpenUrlAction = None, footer: str = None):
+            self.title = title
+            self.description = description
+            self.image = image
+            self.openUrlAction = openUrlAction
+            self.footer = footer
+
+        @property
+        def title(self) -> str:
+            return self._title
+
+        @title.setter
+        def title(self, title: str) -> None:
+            if not isinstance(title, str):
+                raise Exception(f"title was type {type(title)} which is not valid value for his parameter.")
+            self._title = title
+
+        @property
+        def description(self) -> str:
+            return self._description
+
+        @description.setter
+        def description(self, description: str) -> None:
+            if description is not None and not isinstance(description, str):
+                raise Exception(f"description was type {type(description)} which is not valid value for his parameter.")
+            self._description = description
+
+        @property
+        def image(self):
+            return self._image
+
+        @image.setter
+        def image(self, image: Image) -> None:
+            if image is not None and not isinstance(image, Image):
+                raise Exception(f"image was type {type(image)} which is not valid value for his parameter.")
+            self._image = image
+
+        @property
+        def openUrlAction(self):
+            return self._openUrlAction
+
+        @openUrlAction.setter
+        def openUrlAction(self, openUrlAction: OpenUrlAction) -> None:
+            if openUrlAction is not None and not isinstance(openUrlAction, OpenUrlAction):
+                raise Exception(f"openUrlAction was type {type(openUrlAction)} which is not valid value for his parameter.")
+            self._openUrlAction = openUrlAction
+
+        @property
+        def footer(self):
+            return self._footer
+
+        @footer.setter
+        def footer(self, footer: str) -> None:
+            if footer is not None and not isinstance(footer, str):
+                raise Exception(f"footer was type {type(footer)} which is not valid value for his parameter.")
+            self._footer = footer
+
+
 class SimpleResponse:
     json_key = "simpleResponse"
 
@@ -161,10 +331,6 @@ class SimpleResponse:
             self._displayText = text
         else:
             raise Exception(f"The text was not a string object : {text}")
-
-    def to_json_dict(self) -> dict:
-        return NestedObjectToDict.get_dict_from_nested_object(
-            object_to_process=self, key_names_identifier_objects_to_go_into=["json_key"])
 
 
 class RichResponseInPayload:
@@ -232,10 +398,10 @@ class Payload:
                                                               key_names_identifier_objects_to_go_into=["json_key"])
 
 class OutputContextItem:
-    json_key = "outputContextItem"
+    json_key = None
     session_data_name = "sessionData"
 
-    def __init__(self, session_id: str, name:str, lifespanCount=999):
+    def __init__(self, session_id: str, name: str, lifespanCount=999):
         self.name = f"{session_id}/contexts/{name}"
         self.lifespanCount = lifespanCount
         self._parameters = dict()
@@ -311,6 +477,20 @@ class Response:
                 self.payload.google.richResponse.add_suggestion_chip(title=chip_title)
         elif isinstance(chips_titles, str):
             self.payload.google.richResponse.add_suggestion_chip(title=chips_titles)
+
+    def add_item_to_browse_carousel(self, title: str,  url_to_open_on_click: str, description: str = None,
+                                    image_url: str = None, image_accessibility_text: str = None, footer: str = None):
+
+        carousel_instance = None
+        for response_item in self.payload.google.richResponse.items:
+            if isinstance(response_item, BrowseCarousel):
+                carousel_instance = response_item
+                break
+        if carousel_instance is None:
+            carousel_instance = BrowseCarousel()
+            self.payload.google.richResponse.items.append(carousel_instance)
+        carousel_instance.add_item(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
+                                   image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
 
     def to_dict(self) -> dict:
         return NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,

@@ -276,7 +276,7 @@ class Request:
 
     def process_and_set_json_request_to_object(self, stringed_request_json_dict: str):
         NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self,
-                                                                  request_json_dict_or_stringed_dict=stringed_request_json_dict)
+                                                                  request_json_dict_stringed_dict_or_list=stringed_request_json_dict)
 
     def is_launch_request(self) -> bool:
         if self.queryResult.intent.displayName == "LaunchIntentRequest":

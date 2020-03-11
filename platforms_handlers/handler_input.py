@@ -146,13 +146,13 @@ class HandlerInput(CurrentUsedPlatformInfo):
         elif self.is_dialogflow_v1 is True:
             self._dialogFlowHandlerInput = DialogFlowHandlerInput()
             NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
-                                                                      request_json_dict_or_stringed_dict=event,
+                                                                      request_json_dict_stringed_dict_or_list=event,
                                                                       key_names_identifier_objects_to_go_into=["json_key"])
 
         elif self.is_bixby_v1 is True:
             self._bixbyHandlerInput = BixbyHandlerInput()
             NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
-                                                                      request_json_dict_or_stringed_dict=event,
+                                                                      request_json_dict_stringed_dict_or_list=event,
                                                                       key_names_identifier_objects_to_go_into=["json_key"])
 
     def is_launch_request(self) -> bool:
