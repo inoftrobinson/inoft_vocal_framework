@@ -1,6 +1,8 @@
 from json import dumps as json_dumps
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 
+# todo: add select carousel
+# todo: add select list
 
 class OpenUrlAction:
     json_key = "openUrlAction"
@@ -21,7 +23,7 @@ class OpenUrlAction:
 class Image:
     json_key = "image"
 
-    def __init__(self, image_url: str, accessibility_text: str):
+    def __init__(self, image_url: str, accessibility_text: str = None):
         self.url = image_url
         if accessibility_text is not None:
             # The accessibility_text is not required
@@ -48,6 +50,14 @@ class Image:
         if accessibilityText is not None and not isinstance(accessibilityText, str):
             raise Exception(f"accessibilityText was type {type(accessibilityText)} which is not valid value for his parameter.")
         self._accessibilityText = accessibilityText
+
+
+class Icon(Image):
+    json_key = "icon"
+    # todo: make sure that when a class inherite from another, we use the icon json_key and not the image key
+
+    def __init__(self, image_url: str, accessibility_text: str = None):
+        super().__init__(image_url=image_url, accessibility_text=accessibility_text)
 
 class ImageDisplayOptions:
     json_key = "imageDisplayOptions"
@@ -303,6 +313,98 @@ class BrowseCarousel:
             self._footer = footer
 
 
+class MediaResponse:
+    json_key = "mediaResponse"
+    key_media_type_audio = "AUDIO"
+    available_media_types_keys = [key_media_type_audio]
+
+    # todo: check that the user device has the capability to play audio files in a media response
+    # todo: add follow up when audio file has finished playing
+
+    def __init__(self):
+        self._mediaType = None
+        self._mediaObjects = list()
+
+    @property
+    def mediaType(self) -> str:
+        return self._mediaType
+
+    @mediaType.setter
+    def mediaType(self, mediaType: str) -> None:
+        if mediaType not in self.available_media_types_keys:
+            raise Exception(f"The media_type {mediaType} was not found in the available media types list : {self.available_media_types_keys}")
+        self._mediaType = mediaType
+
+    @property
+    def mediaObjects(self) -> list:
+        return self._mediaObjects
+
+    def add_audio_content(self, mp3_file_url: str, name: str, description: str = None,
+                          icon_image_url: str = None, icon_accessibility_text: str = None):
+        # todo: check validity of mp3 file, otherwise print a warning and do not add the item
+        #  (and if it was the only item, do not include the media response)
+
+        if self.mediaType is None:
+            self.mediaType = self.key_media_type_audio
+        else:
+            if self.mediaType != self.key_media_type_audio:
+                raise Exception(f"You cannot add an audio content object if you have already instantiated a media"
+                                f"object by adding a different content that is of media type {self.mediaType}")
+
+        self.mediaObjects.append(self.MediaObject(content_url=mp3_file_url, name=name, description=description,
+                                                  icon=None if icon_image_url is None else Icon(image_url=icon_image_url,
+                                                                                                accessibility_text=icon_accessibility_text)))
+
+    class MediaObject:
+        json_key = None
+
+        def __init__(self, content_url: str, name: str, description: str = None, icon: Icon = None):
+            self.contentUrl = content_url
+            self.name = name
+            self.description = description
+            self.icon = icon
+
+        @property
+        def contentUrl(self) -> str:
+            return self._contentUrl
+
+        @contentUrl.setter
+        def contentUrl(self, contentUrl: str) -> None:
+            if contentUrl is not None and not isinstance(contentUrl, str):
+                raise Exception(f"contentUrl was type {type(contentUrl)} which is not valid value for his parameter.")
+            self._contentUrl = contentUrl
+
+        @property
+        def name(self) -> str:
+            return self._name
+
+        @name.setter
+        def name(self, name: str) -> None:
+            if name is not None and not isinstance(name, str):
+                raise Exception(f"name was type {type(name)} which is not valid value for his parameter.")
+            self._name = name
+
+        @property
+        def description(self):
+            return self._description
+
+        @description.setter
+        def description(self, description: str) -> None:
+            if description is not None and not isinstance(description, str):
+                raise Exception(f"description was type {type(description)} which is not valid value for his parameter.")
+            self._description = description
+
+        @property
+        def icon(self):
+            return self._icon
+
+        @icon.setter
+        def icon(self, icon: Icon) -> None:
+            if icon is not None and not isinstance(icon, Icon):
+                raise Exception(f"icon was type {type(icon)} which is not valid value for his parameter.")
+            self._icon = icon
+
+
 class SimpleResponse:
     json_key = "simpleResponse"
 
@@ -482,6 +584,7 @@ class Response:
                                     image_url: str = None, image_accessibility_text: str = None, footer: str = None):
 
         carousel_instance = None
+        # todo: improve this loop so that we do not need to loop every time we add an item
         for response_item in self.payload.google.richResponse.items:
             if isinstance(response_item, BrowseCarousel):
                 carousel_instance = response_item
@@ -491,6 +594,21 @@ class Response:
             self.payload.google.richResponse.items.append(carousel_instance)
         carousel_instance.add_item(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
                                    image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
+
+    def add_item_to_audio_media_response(self, mp3_file_url: str, name: str, description: str = None,
+                                         icon_image_url: str = None, icon_accessibility_text: str = None):
+
+        media_response_instance = None
+        # todo: improve this loop so that we do not need to loop every time we add an item
+        for response_item in self.payload.google.richResponse.items:
+            if isinstance(response_item, MediaResponse):
+                media_response_instance = response_item
+                break
+        if media_response_instance is None:
+            media_response_instance = MediaResponse()
+            self.payload.google.richResponse.items.append(media_response_instance)
+        media_response_instance.add_audio_content(mp3_file_url=mp3_file_url, name=name, description=description,
+                                                  icon_image_url=icon_image_url, icon_accessibility_text=icon_accessibility_text)
 
     def to_dict(self) -> dict:
         return NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,

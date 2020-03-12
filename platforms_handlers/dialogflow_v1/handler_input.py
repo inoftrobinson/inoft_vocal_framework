@@ -113,3 +113,9 @@ class DialogFlowHandlerInput:
 
         self.response.add_item_to_browse_carousel(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
                                                   image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
+
+    def play_audio(self, mp3_file_url: str, name: str, description: str = None,
+                   icon_image_url: str = None, icon_accessibility_text: str = None):
+
+        self.response.add_item_to_audio_media_response(mp3_file_url=mp3_file_url, name=name, description=description,
+                                                       icon_image_url=icon_image_url, icon_accessibility_text=icon_accessibility_text)
