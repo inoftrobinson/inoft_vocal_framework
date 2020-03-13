@@ -1,10 +1,27 @@
+from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.request import Request
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import Response, Image, ImageDisplayOptions
 from inoft_vocal_framework.safe_dict import SafeDict
 from json import loads as json_loads
 
 
-class DialogFlowHandlerInput:
+class SurfaceCapabilities:
+    CAN_PLAY_AUDIO_MEDIA = "actions.capability.MEDIA_RESPONSE_AUDIO"
+    HAS_AN_OUTPUT_SPEAKER = "actions.capability.AUDIO_OUTPUT"
+    CAN_POTENTIALLY_USE_ACCOUNT_LINKING = "actions.capability.ACCOUNT_LINKING"
+    CAN_ACCESS_WEB_BROWSER = "actions.capability.WEB_BROWSER"
+    HAS_A_SCREEN = "actions.capability.SCREEN_OUTPUT"
+
+    ALL_CAPABILITIES = [
+        CAN_PLAY_AUDIO_MEDIA,
+        HAS_AN_OUTPUT_SPEAKER,
+        CAN_POTENTIALLY_USE_ACCOUNT_LINKING,
+        CAN_ACCESS_WEB_BROWSER,
+        HAS_A_SCREEN,
+    ]
+
+
+class DialogFlowHandlerInput(SurfaceCapabilities):
     def __init__(self):
         self.request = Request()
         self.response = Response()
@@ -74,6 +91,32 @@ class DialogFlowHandlerInput:
         if not isinstance(self._simple_session_user_data, SafeDict):
             self._simple_session_user_data = SafeDict()
         return self._simple_session_user_data
+
+    def need_capabilities(self, capability_item_or_list):
+        def check_if_capability_present_in_request(capability_to_check: str) -> bool:
+            for capability_request_item in self.request.originalDetectIntentRequest.payload.surface.capabilities:
+                if isinstance(capability_request_item, dict) and "name" in capability_request_item.keys():
+                    if capability_request_item["name"] == capability_to_check:
+                        return True
+            return False
+
+        if isinstance(capability_item_or_list, str):
+            if (capability_item_or_list not in self.ALL_CAPABILITIES
+            or check_if_capability_present_in_request(capability_to_check=capability_item_or_list) is False):
+                pass  # todo: check from the request if the capibility is present
+                return DummyObject()
+            else:
+                return self
+        elif isinstance(capability_item_or_list, list):
+            for capability_item in capability_item_or_list:
+                if (capability_item not in self.ALL_CAPABILITIES
+                or check_if_capability_present_in_request(capability_to_check=capability_item) is False):
+                    return DummyObject()
+            return self
+        else:
+            raise Exception(f"The variable passed to the need_capabilities function must be of type {list} or {str}"
+                            f"but was {capability_item_or_list} of type {type(capability_item_or_list)}")
+
 
     def is_launch_request(self) -> bool:
         return self.request.is_launch_request()

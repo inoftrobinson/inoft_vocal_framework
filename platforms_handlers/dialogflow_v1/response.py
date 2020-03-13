@@ -1,4 +1,6 @@
 from json import dumps as json_dumps
+
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 
 # todo: add select carousel
@@ -499,8 +501,7 @@ class SystemIntent:
 
             @title.setter
             def title(self, title: str) -> None:
-                if not isinstance(title, str):
-                    raise Exception(f"title was type {type(title)} which is not valid value for his parameter.")
+                raise_if_variable_not_expected_type(value=title, expected_type=str, variable_name="title")
                 self._title = title
 
             @property
@@ -509,8 +510,7 @@ class SystemIntent:
 
             @items.setter
             def items(self, items_list: list) -> None:
-                if not isinstance(items_list, list):
-                    raise Exception(f"items was type {type(items_list)} which is not valid value for his parameter.")
+                raise_if_variable_not_expected_type(value=items_list, expected_type=list, variable_name="items_list")
                 self._items = items_list
 
             class Item:
@@ -528,8 +528,7 @@ class SystemIntent:
 
                 @title.setter
                 def title(self, title: str) -> None:
-                    if not isinstance(title, str):
-                        raise Exception(f"title was type {type(title)} which is not valid value for his parameter.")
+                    raise_if_variable_not_expected_type(value=title, expected_type=str, variable_name="title")
                     self._title = title
 
                 @property
@@ -538,8 +537,7 @@ class SystemIntent:
 
                 @description.setter
                 def description(self, description: str) -> None:
-                    if not isinstance(description, str):
-                        raise Exception(f"description was type {type(description)} which is not valid value for his parameter.")
+                    raise_if_variable_not_expected_type(value=description, expected_type=str, variable_name="description")
                     self._description = description
 
                 @property
@@ -548,8 +546,7 @@ class SystemIntent:
 
                 @image.setter
                 def image(self, image: Image) -> None:
-                    if not isinstance(image, Image):
-                        raise Exception(f"image was type {type(image)} which is not valid value for his parameter.")
+                    raise_if_variable_not_expected_type(value=image, expected_type=Image, variable_name="image")
                     self._image = image
 
                 class OptionInfo:
@@ -557,7 +554,7 @@ class SystemIntent:
 
                     def __init__(self, identifier_key: str):
                         self.key = identifier_key
-                        import random
+                        import random  # todo: check if synonyms are required
                         self._synonyms = [f"{random.randint(0, 1000000000000000)}"]
 
                     @property
@@ -566,8 +563,7 @@ class SystemIntent:
 
                     @key.setter
                     def key(self, key: str) -> None:
-                        if not isinstance(key, str):
-                            raise Exception(f"key was type {type(key)} which is not valid value for his parameter.")
+                        raise_if_variable_not_expected_type(value=key, expected_type=str, variable_name="key")
                         self._key = key
 
                     @property
@@ -576,8 +572,7 @@ class SystemIntent:
 
                     @synonyms.setter
                     def synonyms(self, synonyms_list: list) -> None:
-                        if not isinstance(synonyms_list, list):
-                            raise Exception(f"synonyms was type {type(synonyms_list)} which is not valid value for his parameter.")
+                        raise_if_variable_not_expected_type(value=synonyms_list, expected_type=list, variable_name="synonyms_list")
                         self._synonyms = synonyms_list
 
                 @property

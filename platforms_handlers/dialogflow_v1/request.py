@@ -89,10 +89,82 @@ class Payload:
         self._user = User()
         self._conversation = None
         self._inputs = None
+        self._surface = self.Surface()
+        self._availableSurfaces = self.AvailableSurfaces()
+        self._isInSandbox = bool()
+        self._requestType = str()
 
     @property
     def user(self) -> User:
         return self._user
+
+    class Surface:
+        json_key = "surface"
+
+        def __init__(self):
+            self._capabilities = list()
+
+        @property
+        def capabilities(self) -> list:
+            return self._capabilities
+
+    class AvailableSurfaces:
+        json_key = "availableSurfaces"
+
+        def __init__(self):
+            self._capabilities = list()
+
+        @property
+        def capabilities(self) -> list:
+            return self._capabilities
+
+
+        """"surface": {
+        "capabilities": [
+          {
+            "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
+          },
+          {
+            "name": "actions.capability.AUDIO_OUTPUT"
+          },
+          {
+            "name": "actions.capability.ACCOUNT_LINKING"
+          },
+          {
+            "name": "actions.capability.WEB_BROWSER"
+          },
+          {
+            "name": "actions.capability.SCREEN_OUTPUT"
+          }
+        ]
+      },
+      "isInSandbox": true,
+      "availableSurfaces": [
+        {
+          "capabilities": [
+            {
+              "name": "actions.capability.SCREEN_OUTPUT"
+            },
+            {
+              "name": "actions.capability.WEB_BROWSER"
+            },
+            {
+              "name": "actions.capability.AUDIO_OUTPUT"
+            }
+          ]
+        }
+      ],
+      "requestType": "SIMULATOR"
+    }"""
+
+    @property
+    def surface(self) -> Surface:
+        return self._surface
+
+    @property
+    def availableSurfaces(self) -> AvailableSurfaces:
+        return self._availableSurfaces
+
 
 class OriginalDetectIntentRequest:
     json_key = "originalDetectIntentRequest"

@@ -166,15 +166,7 @@ class NestedObjectToDict:
         return output_dict
 
     @staticmethod
-    def process_and_set_json_request_to_object(object_class_to_set_to, request_json_dict_stringed_dict_or_list, key_names_identifier_objects_to_go_into: list):
-        if isinstance(request_json_dict_stringed_dict_or_list, dict):
-            request_dict = request_json_dict_stringed_dict_or_list
-        elif isinstance(request_json_dict_stringed_dict_or_list, str):
-            request_dict = NestedObjectToDict.get_dict_from_json(stringed_json_dict=request_json_dict_stringed_dict_or_list)
-        else:
-            raise Exception(f"The request_json_dict_stringed_dict_or_list variable is of type"
-                            f"{type(request_json_dict_stringed_dict_or_list)} but must be dict, a str or a list.")
-
+    def _process_and_set_dict_to_object(object_class_to_set_to, dict_object: dict, key_names_identifier_objects_to_go_into: list):
         unprocessed_vars_dict = vars(object_class_to_set_to)
         from types import MappingProxyType
         if isinstance(unprocessed_vars_dict, MappingProxyType):
@@ -185,10 +177,11 @@ class NestedObjectToDict:
         vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names = SafeDict()
         for key_unprocessed_var in unprocessed_vars_dict.keys():
             processed_current_key_name = NestedObjectToDict.get_json_key_from_variable_name(variable_name=key_unprocessed_var)
-            vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names.put(dict_key=processed_current_key_name, value_to_put=key_unprocessed_var)
+            vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names.put(dict_key=processed_current_key_name,
+                                                                                              value_to_put=key_unprocessed_var)
 
         keys_to_pop_after_loop_finished = list()
-        for key_request_element, value_request_element in request_dict.items():
+        for key_request_element, value_request_element in dict_object.items():
             key_request_element = str(key_request_element).replace(" ", "")
             # In the received requests, there can sometimes be spaces in a key before closing it with an apostrophe.
             # Having a single empty space at the end of a key would not be the same as the key without the space.
@@ -199,8 +192,8 @@ class NestedObjectToDict:
 
                 if current_child_element_object is not None:
                     found_accepted_key_name_in_vars_of_current_object = False
-                    if isinstance(value_request_element, dict) or isinstance(value_request_element, list):
 
+                    if isinstance(value_request_element, dict) or isinstance(value_request_element, list):
                         for accepted_child_key_name in key_names_identifier_objects_to_go_into:
                             if hasattr(current_child_element_object, accepted_child_key_name):
                                 found_accepted_key_name_in_vars_of_current_object = True
@@ -226,6 +219,76 @@ class NestedObjectToDict:
 
         for key_to_pop in keys_to_pop_after_loop_finished:
             unprocessed_vars_dict.pop(key_to_pop)
+
+    @staticmethod
+    def _process_and_set_list_to_object(object_class_to_set_to, list_object: list, key_names_identifier_objects_to_go_into: list):
+        unprocessed_vars_dict = vars(object_class_to_set_to)
+        from types import MappingProxyType
+        if isinstance(unprocessed_vars_dict, MappingProxyType):
+            # Sometimes the vars dict is put in a MappingProxy object instead of a dict. A MappingProxy is like a dict,
+            # but cannot have its values modified, so we convert it back to a dict since we will need to modify the values.
+            unprocessed_vars_dict = dict(unprocessed_vars_dict)
+
+        vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names = SafeDict()
+        for key_unprocessed_var in unprocessed_vars_dict.keys():
+            processed_current_key_name = NestedObjectToDict.get_json_key_from_variable_name(variable_name=key_unprocessed_var)
+            vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names.put(dict_key=processed_current_key_name,
+                                                                                              value_to_put=key_unprocessed_var)
+
+        for child_item in list_object:
+            if isinstance(child_item, dict):
+                for key_child_item, value_child_item in child_item.items():
+                    current_unprocessed_variable_name = vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names.get(key_child_item).to_any()
+                    if current_unprocessed_variable_name is not None:
+                        current_child_element_object = unprocessed_vars_dict[current_unprocessed_variable_name]
+
+                        if current_child_element_object is not None:
+                            found_accepted_key_name_in_vars_of_current_object = False
+
+                            for accepted_child_key_name in key_names_identifier_objects_to_go_into:
+                                if hasattr(current_child_element_object, accepted_child_key_name):
+                                    found_accepted_key_name_in_vars_of_current_object = True
+
+                                    NestedObjectToDict.process_and_set_json_request_to_object(
+                                        object_class_to_set_to=unprocessed_vars_dict[current_unprocessed_variable_name],
+                                        request_json_dict_stringed_dict_or_list=value_request_element,
+                                        key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
+
+                            if not found_accepted_key_name_in_vars_of_current_object:
+                                do_not_include_current_item = False
+
+                                if isinstance(value_child_item, str):
+                                    if value_child_item.replace(" ", "") == "":
+                                        do_not_include_current_item = True
+
+                                elif isinstance(value_child_item, dict) or isinstance(value_child_item, list):
+                                    if not len(value_child_item) > 0:
+                                        do_not_include_current_item = True
+
+                                if not do_not_include_current_item:
+                                    unprocessed_vars_dict[current_unprocessed_variable_name] = value_child_item
+
+            elif isinstance(child_item, list):
+                NestedObjectToDict._process_and_set_list_to_object(object_class_to_set_to=child_item, list_object=child_item,
+                                                                   key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
+
+    @staticmethod
+    def process_and_set_json_request_to_object(object_class_to_set_to, request_json_dict_stringed_dict_or_list, key_names_identifier_objects_to_go_into: list):
+        if isinstance(request_json_dict_stringed_dict_or_list, dict):
+            NestedObjectToDict._process_and_set_dict_to_object(object_class_to_set_to=object_class_to_set_to,
+                                                               dict_object=request_json_dict_stringed_dict_or_list,
+                                                               key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
+        elif isinstance(request_json_dict_stringed_dict_or_list, str):
+            NestedObjectToDict._process_and_set_dict_to_object(object_class_to_set_to=object_class_to_set_to,
+                key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into,
+                dict_object=NestedObjectToDict.get_dict_from_json(stringed_json_dict=request_json_dict_stringed_dict_or_list))
+        elif isinstance(request_json_dict_stringed_dict_or_list, list):
+            NestedObjectToDict._process_and_set_list_to_object(object_class_to_set_to=object_class_to_set_to,
+                                                               list_object=request_json_dict_stringed_dict_or_list,
+                                                               key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
+        else:
+            raise Exception(f"The request_json_dict_stringed_dict_or_list variable is of type "
+                            f"{type(request_json_dict_stringed_dict_or_list)} but must of type {dict}, {str} or {list}")
 
     @staticmethod
     def get_dict_from_json(stringed_json_dict: str) -> dict:
