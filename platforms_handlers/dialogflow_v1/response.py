@@ -199,7 +199,7 @@ class BrowseCarousel:
     def items(self) -> list:
         return self._items
 
-    def add_item(self, title: str,  url_to_open_on_click: str, description: str = None,
+    def add_item(self, title: str, url_to_open_on_click: str, description: str = None,
                  image_url: str = None, image_accessibility_text: str = None, footer: str = None):
 
         if len(self._items) < 10:
@@ -405,6 +405,197 @@ class MediaResponse:
             self._icon = icon
 
 
+class SystemIntent:
+    json_key = "systemIntent"
+    intent_type_option = "actions.intent.OPTION"
+    available_intent_keys_types = [intent_type_option]
+    element_type_list_select = "ListSelect"
+    available_elements_types_keys = [element_type_list_select]
+
+    def __init__(self, element_type: str):
+        self.intent = self.intent_type_option
+        self._data = self.Data(element_type=element_type)
+
+    @property
+    def intent(self) -> str:
+        return self._intent
+
+    @intent.setter
+    def intent(self, intent_type: str) -> None:
+        if intent_type not in self.available_intent_keys_types:
+            raise Exception(f"The key_type {intent_type} was not found in the intent keys types list : {self.available_intent_keys_types}")
+        self._intent = intent_type
+
+    class Data:
+        json_key = "data"
+
+        def __init__(self, element_type: str):
+            if element_type == SystemIntent.element_type_list_select:
+                self._type = "type.googleapis.com/google.actions.v2.OptionValueSpec"
+                self._listSelect = self.ListSelect()
+            else:
+                raise Exception(f"The element_type {element_type} is not a supported element type.")
+
+        @property
+        def type(self) -> str:
+            return self._type
+
+        @type.setter
+        def type(self, type_key: str) -> None:
+            if not isinstance(type_key, str):
+                raise Exception(f"type was type {type(type_key)} which is not valid value for his parameter.")
+            self._type = type_key
+
+        def return_transformations(self):
+            # The key that google is expecting is the @type key, yet since in python i cannot directly set a variable
+            # with the @type name, we use a simple '_type' variable name, and in the return transformations, we create
+            # a new var called '@type' with the vars dict to which we assign the value of the 'type' property (it points
+            # to the '_type' variable) and then we can delete the '_type' variable to not include it in the output dict.
+            vars(self)["@type"] = self.type
+            del self._type
+
+        class ListSelect:
+            json_key = "listSelect"
+
+            def __init__(self):
+                self._title = str()
+                self._items = list()
+
+            def add_item(self, identifier_key: str, title: str, description: str = None,
+                         image_url: str = None, image_accessibility_text: str = None):
+
+                if len(self._items) < 30:
+                    self.items.append(self.Item(identifier_key=identifier_key, title=title, description=description,
+                        image=None if image_url is None else Image(image_url=image_url, accessibility_text=image_accessibility_text)))
+                else:
+                    print("The list items limit of 30 has ben reached. Your new item has not been included.")
+
+            def do_not_include(self):
+                # If no items are present in the carousel, we do not include it
+                if len(self.items) == 0:
+                    return True
+                else:
+                    return False
+
+            def return_transformations(self) -> None:
+                if self.do_not_include() is False and len(self._items) == 1:
+                    # If the carousel has only one item, we duplicate it, because a carousel need at least 2 items
+                    first_item = self.items[0]
+                    if isinstance(first_item, self.Item):
+                        new_identifier_key = f"{first_item.optionInfo.key}.2"
+                        self.items.append(self.Item(identifier_key=new_identifier_key, title=f"2 - {first_item.title}",
+                                                    description=first_item.description, image=first_item.image))
+
+                        first_item.title = f"1 - {first_item.title}"
+                        print(f"Warning, a list had only one item, since we require two items, the only one has been duplicated"
+                              f"with a new id of {new_identifier_key} instead of dumbly duplicating the id {first_item.optionInfo.key}"
+                              f"A '1 -' and a '2 -' have also been added to the elements titles, to make them both uniques.")
+                    else:
+                        raise Exception(f"The first_item of the list was not an instance of list item but {first_item}")
+
+            @property
+            def title(self) -> str:
+                return self._title
+
+            @title.setter
+            def title(self, title: str) -> None:
+                if not isinstance(title, str):
+                    raise Exception(f"title was type {type(title)} which is not valid value for his parameter.")
+                self._title = title
+
+            @property
+            def items(self) -> list:
+                return self._items
+
+            @items.setter
+            def items(self, items_list: list) -> None:
+                if not isinstance(items_list, list):
+                    raise Exception(f"items was type {type(items_list)} which is not valid value for his parameter.")
+                self._items = items_list
+
+            class Item:
+                json_key = None
+
+                def __init__(self, identifier_key: str, title: str, description: str = None, image: Image = None):
+                    self._title = title
+                    self._description = description
+                    self._image = image
+                    self._optionInfo = self.OptionInfo(identifier_key=identifier_key)
+
+                @property
+                def title(self) -> str:
+                    return self._title
+
+                @title.setter
+                def title(self, title: str) -> None:
+                    if not isinstance(title, str):
+                        raise Exception(f"title was type {type(title)} which is not valid value for his parameter.")
+                    self._title = title
+
+                @property
+                def description(self) -> str:
+                    return self._description
+
+                @description.setter
+                def description(self, description: str) -> None:
+                    if not isinstance(description, str):
+                        raise Exception(f"description was type {type(description)} which is not valid value for his parameter.")
+                    self._description = description
+
+                @property
+                def image(self) -> Image:
+                    return self._image
+
+                @image.setter
+                def image(self, image: Image) -> None:
+                    if not isinstance(image, Image):
+                        raise Exception(f"image was type {type(image)} which is not valid value for his parameter.")
+                    self._image = image
+
+                class OptionInfo:
+                    json_key = "optionInfo"
+
+                    def __init__(self, identifier_key: str):
+                        self.key = identifier_key
+                        import random
+                        self._synonyms = [f"{random.randint(0, 1000000000000000)}"]
+
+                    @property
+                    def key(self) -> str:
+                        return self._key
+
+                    @key.setter
+                    def key(self, key: str) -> None:
+                        if not isinstance(key, str):
+                            raise Exception(f"key was type {type(key)} which is not valid value for his parameter.")
+                        self._key = key
+
+                    @property
+                    def synonyms(self) -> list:
+                        return self._synonyms
+
+                    @synonyms.setter
+                    def synonyms(self, synonyms_list: list) -> None:
+                        if not isinstance(synonyms_list, list):
+                            raise Exception(f"synonyms was type {type(synonyms_list)} which is not valid value for his parameter.")
+                        self._synonyms = synonyms_list
+
+                @property
+                def optionInfo(self) -> OptionInfo:
+                    return self._optionInfo
+
+        @property
+        def listSelect(self) -> ListSelect:
+            if "_listSelect" not in vars(self):
+                raise Exception(f"The SystemIntent was not set to a ListSelect. Did you tried to show different types"
+                                f"of elements that run with a SystemIntent, in the same execution of your app ?")
+            else:
+                return self._listSelect
+
+    @property
+    def data(self) -> Data:
+        return self._data
+
 class SimpleResponse:
     json_key = "simpleResponse"
 
@@ -594,6 +785,20 @@ class Response:
             self.payload.google.richResponse.items.append(carousel_instance)
         carousel_instance.add_item(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
                                    image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
+
+    def add_interactive_list_item_to_system_intent(self, identifier_key: str, item_title: str, item_description: str = None,
+                                                   item_image_url: str = None, item_image_accessibility_text: str = None):
+
+        if "systemIntent" not in vars(self.payload.google):
+            self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_list_select)
+        elif self.payload.google.systemIntent.data.listSelect is None:
+            # If the listSelect variable is None, it means that the SystemIntent do not represent a ListSelect,
+            # and an exception will be thrown (in the data class itself, the below exception will never be called).
+            raise Exception(f"A systemIntent as already been created. Make sure that you do not tried to show"
+                            f"another interactive (or static element) that use a systemIntent somewhere else.")
+
+        self.payload.google.systemIntent.data.listSelect.add_item(identifier_key=identifier_key, title=item_title, description=item_description,
+                                                                  image_url=item_image_url, image_accessibility_text=item_image_accessibility_text)
 
     def add_item_to_audio_media_response(self, mp3_file_url: str, name: str, description: str = None,
                                          icon_image_url: str = None, icon_accessibility_text: str = None):

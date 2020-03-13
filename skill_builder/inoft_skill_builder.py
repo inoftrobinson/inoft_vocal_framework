@@ -197,6 +197,81 @@ class InoftSkill:
 
         self.handler_input.save_attributes_if_need_to()
 
+        dummy = {
+          "payload": {
+            "google": {
+              "expectUserResponse": True,
+              "systemIntent": {
+                "intent": "actions.intent.OPTION",
+                "data": {
+                  "@type": "type.googleapis.com/google.actions.v2.OptionValueSpec",
+                  "listSelect": {
+                    "title": "List Title",
+                    "items": [
+                      {
+                        "optionInfo": {
+                          "key": "SELECTION_KEY_ONE",
+                          "synonyms": [
+                            "synonym 1",
+                            "synonym 2",
+                            "synonym 3"
+                          ]
+                        },
+                        "description": "This is a description of a list item.",
+                        "image": {
+                          "url": "https://storage.googleapis.com/actionsresources/logo_assistant_2x_64dp.png",
+                          "accessibilityText": "Image alternate text"
+                        },
+                        "title": "Title of First List Item"
+                      },
+                      {
+                        "optionInfo": {
+                          "key": "SELECTION_KEY_GOOGLE_HOME",
+                          "synonyms": [
+                            "Google Home Assistant",
+                            "Assistant on the Google Home"
+                          ]
+                        },
+                        "description": "Google Home is a voice-activated speaker powered by the Google Assistant.",
+                        "image": {
+                          "url": "https://storage.googleapis.com/actionsresources/logo_assistant_2x_64dp.png",
+                          "accessibilityText": "Google Home"
+                        },
+                        "title": "Google Home"
+                      },
+                      {
+                        "optionInfo": {
+                          "key": "SELECTION_KEY_GOOGLE_PIXEL",
+                          "synonyms": [
+                            "Google Pixel XL",
+                            "Pixel",
+                            "Pixel XL"
+                          ]
+                        },
+                        "description": "Pixel. Phone by Google.",
+                        "image": {
+                          "url": "https://storage.googleapis.com/actionsresources/logo_assistant_2x_64dp.png",
+                          "accessibilityText": "Google Pixel"
+                        },
+                        "title": "Google Pixel"
+                      }
+                    ]
+                  }
+                }
+              },
+              "richResponse": {
+                "items": [
+                  {
+                    "simpleResponse": {
+                      "textToSpeech": "This is a list example."
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+
         print(f"output_event = {output_event}")
         wrapped_output_event = LambdaResponseWrapper(response_dict=output_event).get_wrapped(handler_input=self.handler_input)
         return wrapped_output_event

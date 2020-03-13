@@ -108,11 +108,17 @@ class DialogFlowHandlerInput:
                                       image=image, image_display_options=image_display_options, buttons=buttons)
         self.response.add_response_item_to_show(item_object=basic_card_object)
 
-    def show_browse_carousel_item(self, title: str,  url_to_open_on_click: str, description: str = None,
+    def show_browse_carousel_item(self, title: str, url_to_open_on_click: str, description: str = None,
                                   image_url: str = None, image_accessibility_text: str = None, footer: str = None):
 
         self.response.add_item_to_browse_carousel(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
                                                   image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
+
+    def show_interactive_list_item(self, identifier_key: str, title: str, description: str = None,
+                                   image_url: str = None, image_accessibility_text: str = None):
+
+        self.response.add_interactive_list_item_to_system_intent(identifier_key=identifier_key, item_title=title, item_description=description,
+                                                                 item_image_url=image_url, item_image_accessibility_text=image_accessibility_text)
 
     def play_audio(self, mp3_file_url: str, name: str, description: str = None,
                    icon_image_url: str = None, icon_accessibility_text: str = None):
