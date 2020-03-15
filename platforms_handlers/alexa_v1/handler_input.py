@@ -6,7 +6,10 @@ from inoft_vocal_framework.safe_dict import SafeDict
 
 
 class AlexaHandlerInput:
-    def __init__(self):
+    from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
+
+    def __init__(self, parent_handler_input: HandlerInput):
+        self.parent_handler_input = parent_handler_input
         self.session = Session()
         self.context = None
         self.request = Request()

@@ -412,7 +412,8 @@ class SystemIntent:
     intent_type_option = "actions.intent.OPTION"
     available_intent_keys_types = [intent_type_option]
     element_type_list_select = "ListSelect"
-    available_elements_types_keys = [element_type_list_select]
+    element_type_carousel_select = "CarouselSelect"
+    available_elements_types_keys = [element_type_list_select, element_type_carousel_select]
 
     def __init__(self, element_type: str):
         self.intent = self.intent_type_option
@@ -435,6 +436,9 @@ class SystemIntent:
             if element_type == SystemIntent.element_type_list_select:
                 self._type = "type.googleapis.com/google.actions.v2.OptionValueSpec"
                 self._listSelect = self.ListSelect()
+            elif element_type == SystemIntent.element_type_carousel_select:
+                self._type = "type.googleapis.com/google.actions.v2.OptionValueSpec"
+                self._carouselSelect = self.CarouselSelect()
             else:
                 raise Exception(f"The element_type {element_type} is not a supported element type.")
 
@@ -456,6 +460,72 @@ class SystemIntent:
             vars(self)["@type"] = self.type
             del self._type
 
+        class InteractiveListOrCarouselItem:
+            json_key = None
+
+            def __init__(self, identifier_key: str, title: str, description: str = None, image: Image = None):
+                self._title = title
+                self._description = description
+                self._image = image
+                self._optionInfo = self.OptionInfo(identifier_key=identifier_key)
+
+            @property
+            def title(self) -> str:
+                return self._title
+
+            @title.setter
+            def title(self, title: str) -> None:
+                raise_if_variable_not_expected_type(value=title, expected_type=str, variable_name="title")
+                self._title = title
+
+            @property
+            def description(self) -> str:
+                return self._description
+
+            @description.setter
+            def description(self, description: str) -> None:
+                raise_if_variable_not_expected_type(value=description, expected_type=str, variable_name="description")
+                self._description = description
+
+            @property
+            def image(self) -> Image:
+                return self._image
+
+            @image.setter
+            def image(self, image: Image) -> None:
+                raise_if_variable_not_expected_type(value=image, expected_type=Image, variable_name="image")
+                self._image = image
+
+            class OptionInfo:
+                json_key = "optionInfo"
+
+                def __init__(self, identifier_key: str):
+                    self.key = identifier_key
+                    import random  # todo: check if synonyms are required and add possibility to set them
+                    self._synonyms = [f"{random.randint(0, 1000000000000000)}"]
+
+                @property
+                def key(self) -> str:
+                    return self._key
+
+                @key.setter
+                def key(self, key: str) -> None:
+                    raise_if_variable_not_expected_type(value=key, expected_type=str, variable_name="key")
+                    self._key = key
+
+                @property
+                def synonyms(self) -> list:
+                    return self._synonyms
+
+                @synonyms.setter
+                def synonyms(self, synonyms_list: list) -> None:
+                    raise_if_variable_not_expected_type(value=synonyms_list, expected_type=list, variable_name="synonyms_list")
+                    self._synonyms = synonyms_list
+
+            @property
+            def optionInfo(self) -> OptionInfo:
+                return self._optionInfo
+
         class ListSelect:
             json_key = "listSelect"
 
@@ -467,13 +537,14 @@ class SystemIntent:
                          image_url: str = None, image_accessibility_text: str = None):
 
                 if len(self._items) < 30:
-                    self.items.append(self.Item(identifier_key=identifier_key, title=title, description=description,
+                    self.items.append(SystemIntent.Data.InteractiveListOrCarouselItem(
+                        identifier_key=identifier_key, title=title, description=description,
                         image=None if image_url is None else Image(image_url=image_url, accessibility_text=image_accessibility_text)))
                 else:
                     print("The list items limit of 30 has ben reached. Your new item has not been included.")
 
             def do_not_include(self):
-                # If no items are present in the carousel, we do not include it
+                # If no items are present in the list, we do not include it
                 if len(self.items) == 0:
                     return True
                 else:
@@ -483,10 +554,11 @@ class SystemIntent:
                 if self.do_not_include() is False and len(self._items) == 1:
                     # If the carousel has only one item, we duplicate it, because a carousel need at least 2 items
                     first_item = self.items[0]
-                    if isinstance(first_item, self.Item):
+                    if isinstance(first_item, SystemIntent.Data.InteractiveListOrCarouselItem):
                         new_identifier_key = f"{first_item.optionInfo.key}.2"
-                        self.items.append(self.Item(identifier_key=new_identifier_key, title=f"2 - {first_item.title}",
-                                                    description=first_item.description, image=first_item.image))
+                        self.items.append(SystemIntent.Data.InteractiveListOrCarouselItem(
+                            identifier_key=new_identifier_key, title=f"2 - {first_item.title}",
+                            description=first_item.description, image=first_item.image))
 
                         first_item.title = f"1 - {first_item.title}"
                         print(f"Warning, a list had only one item, since we require two items, the only one has been duplicated"
@@ -513,72 +585,6 @@ class SystemIntent:
                 raise_if_variable_not_expected_type(value=items_list, expected_type=list, variable_name="items_list")
                 self._items = items_list
 
-            class Item:
-                json_key = None
-
-                def __init__(self, identifier_key: str, title: str, description: str = None, image: Image = None):
-                    self._title = title
-                    self._description = description
-                    self._image = image
-                    self._optionInfo = self.OptionInfo(identifier_key=identifier_key)
-
-                @property
-                def title(self) -> str:
-                    return self._title
-
-                @title.setter
-                def title(self, title: str) -> None:
-                    raise_if_variable_not_expected_type(value=title, expected_type=str, variable_name="title")
-                    self._title = title
-
-                @property
-                def description(self) -> str:
-                    return self._description
-
-                @description.setter
-                def description(self, description: str) -> None:
-                    raise_if_variable_not_expected_type(value=description, expected_type=str, variable_name="description")
-                    self._description = description
-
-                @property
-                def image(self) -> Image:
-                    return self._image
-
-                @image.setter
-                def image(self, image: Image) -> None:
-                    raise_if_variable_not_expected_type(value=image, expected_type=Image, variable_name="image")
-                    self._image = image
-
-                class OptionInfo:
-                    json_key = "optionInfo"
-
-                    def __init__(self, identifier_key: str):
-                        self.key = identifier_key
-                        import random  # todo: check if synonyms are required
-                        self._synonyms = [f"{random.randint(0, 1000000000000000)}"]
-
-                    @property
-                    def key(self) -> str:
-                        return self._key
-
-                    @key.setter
-                    def key(self, key: str) -> None:
-                        raise_if_variable_not_expected_type(value=key, expected_type=str, variable_name="key")
-                        self._key = key
-
-                    @property
-                    def synonyms(self) -> list:
-                        return self._synonyms
-
-                    @synonyms.setter
-                    def synonyms(self, synonyms_list: list) -> None:
-                        raise_if_variable_not_expected_type(value=synonyms_list, expected_type=list, variable_name="synonyms_list")
-                        self._synonyms = synonyms_list
-
-                @property
-                def optionInfo(self) -> OptionInfo:
-                    return self._optionInfo
-
         @property
         def listSelect(self) -> ListSelect:
             if "_listSelect" not in vars(self):
@@ -586,6 +592,63 @@ class SystemIntent:
                                 f"of elements that run with a SystemIntent, in the same execution of your app ?")
             else:
                 return self._listSelect
+
+        class CarouselSelect:
+            json_key = "carouselSelect"
+
+            def __init__(self):
+                self._items = list()
+
+            def add_item(self, identifier_key: str, title: str, description: str,
+                         image_url: str = None, image_accessibility_text: str = None):
+
+                if len(self._items) < 10:
+                    self.items.append(SystemIntent.Data.InteractiveListOrCarouselItem(
+                        identifier_key=identifier_key, title=title, description=description,
+                        image=None if image_url is None else Image(image_url=image_url, accessibility_text=image_accessibility_text)))
+                else:
+                    print("The carousel items limit of 10 has ben reached. Your new item has not been included.")
+
+            def do_not_include(self):
+                # If no items are present in the carousel, we do not include it
+                if len(self.items) == 0:
+                    return True
+                else:
+                    return False
+
+            def return_transformations(self) -> None:
+                if self.do_not_include() is False and len(self._items) == 1:
+                    # If the carousel has only one item, we duplicate it, because a carousel need at least 2 items
+                    first_item = self.items[0]
+                    if isinstance(first_item, SystemIntent.Data.InteractiveListOrCarouselItem):
+                        new_identifier_key = f"{first_item.optionInfo.key}.2"
+                        self.items.append(SystemIntent.Data.InteractiveListOrCarouselItem(
+                            identifier_key=new_identifier_key, title=f"2 - {first_item.title}",
+                            description=first_item.description, image=first_item.image))
+
+                        first_item.title = f"1 - {first_item.title}"
+                        print(f"Warning, a list had only one item, since we require two items, the only one has been duplicated"
+                              f"with a new id of {new_identifier_key} instead of dumbly duplicating the id {first_item.optionInfo.key}"
+                              f"A '1 -' and a '2 -' have also been added to the elements titles, to make them both uniques.")
+                    else:
+                        raise Exception(f"The first_item of the list was not an instance of list item but {first_item}")
+
+            @property
+            def items(self) -> list:
+                return self._items
+
+            @items.setter
+            def items(self, items_list: list) -> None:
+                raise_if_variable_not_expected_type(value=items_list, expected_type=list, variable_name="items_list")
+                self._items = items_list
+
+        @property
+        def carouselSelect(self) -> CarouselSelect:
+            if "_carouselSelect" not in vars(self):
+                raise Exception(f"The SystemIntent was not set to a CarouselSelect. Did you tried to show different types"
+                                f"of elements that run with a SystemIntent, in the same execution of your app ?")
+            else:
+                return self._carouselSelect
 
     @property
     def data(self) -> Data:
@@ -782,10 +845,15 @@ class Response:
                                    image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
 
     def add_interactive_list_item_to_system_intent(self, identifier_key: str, item_title: str, item_description: str = None,
-                                                   item_image_url: str = None, item_image_accessibility_text: str = None):
+                                                   item_image_url: str = None, item_image_accessibility_text: str = None) -> bool:
+        """
+        :return bool: True if the SystemIntent has been created and so we just set the first interactive element in the invocation and False otherwise
+        """
 
+        is_first_interactive_element_of_invocation = False
         if "systemIntent" not in vars(self.payload.google):
             self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_list_select)
+            is_first_interactive_element_of_invocation = True
         elif self.payload.google.systemIntent.data.listSelect is None:
             # If the listSelect variable is None, it means that the SystemIntent do not represent a ListSelect,
             # and an exception will be thrown (in the data class itself, the below exception will never be called).
@@ -794,6 +862,27 @@ class Response:
 
         self.payload.google.systemIntent.data.listSelect.add_item(identifier_key=identifier_key, title=item_title, description=item_description,
                                                                   image_url=item_image_url, image_accessibility_text=item_image_accessibility_text)
+        return is_first_interactive_element_of_invocation
+
+    def add_interactive_carousel_item_to_system_intent(self, identifier_key: str, item_title: str, item_description: str,
+                                                       item_image_url: str = None, item_image_accessibility_text: str = None) -> bool:
+        """
+        :return bool: True if the SystemIntent has been created and so we just set the first interactive element in the invocation and False otherwise
+        """
+
+        is_first_interactive_element_of_invocation = False
+        if "systemIntent" not in vars(self.payload.google):
+            self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_carousel_select)
+            is_first_interactive_element_of_invocation = True
+        elif self.payload.google.systemIntent.data.carouselSelect is None:
+            # If the carouselSelect variable is None, it means that the SystemIntent do not represent a carouselSelect,
+            # and an exception will be thrown (in the data class itself, the below exception will never be called).
+            raise Exception(f"A systemIntent as already been created. Make sure that you do not tried to show"
+                            f"another interactive (or static element) that use a systemIntent somewhere else.")
+
+        self.payload.google.systemIntent.data.carouselSelect.add_item(identifier_key=identifier_key, title=item_title, description=item_description,
+                                                                      image_url=item_image_url, image_accessibility_text=item_image_accessibility_text)
+        return is_first_interactive_element_of_invocation
 
     def add_item_to_audio_media_response(self, mp3_file_url: str, name: str, description: str = None,
                                          icon_image_url: str = None, icon_accessibility_text: str = None):
@@ -817,7 +906,3 @@ class Response:
 
 if __name__ == "__main__":
     NestedObjectToDict.get_dict_from_nested_object(Payload(), ["json_key"])
-
-
-
-

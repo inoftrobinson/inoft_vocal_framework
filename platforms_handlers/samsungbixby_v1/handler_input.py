@@ -4,7 +4,10 @@ from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.response import Re
 
 
 class BixbyHandlerInput:
-    def __init__(self):
+    from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
+
+    def __init__(self, parent_handler_input: HandlerInput):
+        self.parent_handler_input = parent_handler_input
         self.request = Request()
         self.response = Response()
 

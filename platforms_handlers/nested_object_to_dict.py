@@ -206,16 +206,31 @@ class NestedObjectToDict:
                     if not found_accepted_key_name_in_vars_of_current_object:
                         do_not_include_current_item = False
 
-                        if isinstance(value_request_element, str):
+                        if (isinstance(value_request_element, str)
+                        or (type(value_request_element) == type and "str" in value_request_element.__bases__)):
                             if value_request_element.replace(" ", "") == "":
                                 do_not_include_current_item = True
 
-                        elif isinstance(value_request_element, dict) or isinstance(value_request_element, list):
+                        elif (isinstance(value_request_element, dict) or isinstance(value_request_element, list)
+                        or (type(value_request_element) == type and ("dict" in value_request_element.__bases__
+                                                                     or "list" in value_request_element.__bases__))):
                             if not len(value_request_element) > 0:
                                 do_not_include_current_item = True
 
                         if not do_not_include_current_item:
-                            unprocessed_vars_dict[current_unprocessed_variable_name] = value_request_element
+                            # if (type(value_request_element) == type(current_child_element_object)
+                            # or (((isinstance(value_request_element, float) or isinstance(value_request_element, int))
+                            #     and type(current_child_element_object) in [int, float]))):
+                            # For some variables, we might receive them in int or float, where the framework would store
+                            # them with the other variable type. So we say that if the received variable is an int or a float,
+                            # its considered compatible with the variable in the object if it is also a float or an int.
+
+                            custom_set_from_function = getattr(current_child_element_object, "custom_set_from", None)
+                            if custom_set_from_function is None:
+                                unprocessed_vars_dict[current_unprocessed_variable_name] = value_request_element
+                            # elif type(value_request_element) in current_child_element_object.__bases__:
+                            else:
+                                custom_set_from_function(value_request_element)
 
         for key_to_pop in keys_to_pop_after_loop_finished:
             unprocessed_vars_dict.pop(key_to_pop)
@@ -251,24 +266,31 @@ class NestedObjectToDict:
 
                                     NestedObjectToDict.process_and_set_json_request_to_object(
                                         object_class_to_set_to=unprocessed_vars_dict[current_unprocessed_variable_name],
-                                        request_json_dict_stringed_dict_or_list=value_request_element,
+                                        request_json_dict_stringed_dict_or_list=value_child_item,
                                         key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
 
                             if not found_accepted_key_name_in_vars_of_current_object:
                                 do_not_include_current_item = False
 
-                                if isinstance(value_child_item, str):
+                                if (isinstance(value_child_item, str)
+                                or (type(value_child_item) == type and "str" in value_child_item.__bases__)):
                                     if value_child_item.replace(" ", "") == "":
                                         do_not_include_current_item = True
 
-                                elif isinstance(value_child_item, dict) or isinstance(value_child_item, list):
+                                elif (isinstance(value_child_item, dict) or isinstance(value_child_item, list)
+                                or (type(value_child_item) == type and ("dict" in value_child_item.__bases__
+                                                                        or "list" in value_child_item.__bases__))):
                                     if not len(value_child_item) > 0:
                                         do_not_include_current_item = True
 
                                 if not do_not_include_current_item:
-                                    unprocessed_vars_dict[current_unprocessed_variable_name] = value_child_item
+                                    custom_set_from_function = getattr(current_child_element_object, "custom_set_from", None)
+                                    if custom_set_from_function is None:
+                                        unprocessed_vars_dict[current_unprocessed_variable_name] = value_child_item
+                                    else:
+                                        custom_set_from_function(value_child_item)
 
-            elif isinstance(child_item, list):
+            elif isinstance(child_item, list) or (type(child_item) == type and "list" in child_item.__bases__):
                 NestedObjectToDict._process_and_set_list_to_object(object_class_to_set_to=child_item, list_object=child_item,
                                                                    key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
 

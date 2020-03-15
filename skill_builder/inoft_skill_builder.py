@@ -55,8 +55,7 @@ class InoftDefaultFallback(HandlerInputWrapper):
         raise NotImplementedError
 
 class InoftSkill:
-    def __init__(self, settings_yaml_filepath=None, settings_json_filepath=None, disable_database=False,
-                 db_table_name="my-inoft-skill-table-name", db_region_name=None):
+    def __init__(self, settings_yaml_filepath=None, settings_json_filepath=None):
 
         self.settings = Settings()
         if settings_yaml_filepath is not None and settings_json_filepath is not None:
@@ -71,7 +70,7 @@ class InoftSkill:
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()
         self._default_fallback_handler = None
-        self._handler_input = HandlerInput(disable_database=disable_database, db_table_name=db_table_name, db_region_name=db_region_name)
+        self._handler_input = HandlerInput()
 
     def add_request_handler(self, request_handler_instance_or_class) -> None:
         if request_handler_instance_or_class is not None:
@@ -138,20 +137,73 @@ class InoftSkill:
 
     def process_request(self):
         handler_to_use = None
+        handler_is_an_alone_callback_function = False
         handler_is_a_then_state_handler = False
         handler_is_a_request_handler = False
 
         # Steps of priority
 
-        # First, resuming of the last intent of the previous session
-        if self.handler_input.session_been_resumed is True:
+        # First, if the request is an interactive option made by the user
+        if self.handler_input.is_option_select_request:
+            infos_callback_function_to_use = self.handler_input.interactivity_callback_functions.get(
+                self.handler_input.selected_option_identifier).to_safedict(default=None)
+
+            if infos_callback_function_to_use is not None:
+                module_file_filepath = infos_callback_function_to_use.get("file_filepath_containing_callback").to_str()
+                from os.path import isfile
+                if not isfile(module_file_filepath):
+                    print(f"SERIOUS WARNING ! The module file containing a callback function at filepath  {module_file_filepath} "
+                          f"has not been found. The callback cannot be used. If your interaction that use the callback is not "
+                          f"working, it is because you have issues with the location of your file containing the callback.")
+                else:
+                    import importlib
+                    import importlib.util
+                    module_spec = importlib.util.spec_from_file_location("file_containing_callback", module_file_filepath)
+                    if module_spec is not None:
+                        module_file = importlib.util.module_from_spec(module_spec)
+                        module_spec.loader.exec_module(module_file)
+
+                        callback_function_path_elements = infos_callback_function_to_use.get("callback_function_path").to_str().split(".")
+                        if len(callback_function_path_elements) > 0:
+                            vars_module_file = vars(module_file)
+                            if callback_function_path_elements[0] in vars_module_file:
+                                from inspect import getmembers
+
+                                def get_nested_class_or_function(current_nested_class_or_function, function_path_remaining_elements: list):
+                                    if len(function_path_remaining_elements) > 0:
+                                        class_or_function_name = function_path_remaining_elements[0]
+                                        if class_or_function_name == "<locals>":
+                                            raise Exception(f"A callback function cannot be a nested function of another function ({class_or_function_name}) "
+                                                            "Please make it available from the root of the file or from a class then relaunch the event "
+                                                            "that inserted the function path of the callback function (redo the entire interaction up to"
+                                                            "the point where you set the callback to an event).")
+
+                                        members_nested_class_or_function = getmembers(current_nested_class_or_function)
+                                        for tuple_member in members_nested_class_or_function:
+                                            if tuple_member[0] == class_or_function_name:
+                                                if len(function_path_remaining_elements) > 1:
+                                                    return get_nested_class_or_function(
+                                                        current_nested_class_or_function=tuple_member[1],
+                                                        function_path_remaining_elements=function_path_remaining_elements[1:])
+                                                else:
+                                                    return tuple_member[1]
+                                        return None
+
+                                handler_to_use = get_nested_class_or_function(
+                                    current_nested_class_or_function=vars_module_file[callback_function_path_elements[0]],
+                                    function_path_remaining_elements=callback_function_path_elements[1:])
+                                if handler_to_use is not None:
+                                    handler_is_an_alone_callback_function = True
+
+        # Second, if the invocation is a new session, and a session can be resumed, we resume the last intent of the previous session
+        if self.handler_input.is_invocation_new_session is True and self.handler_input.session_been_resumed is True:
             last_intent_handler_class_key_name = self.handler_input.session_remember("lastIntentHandler")
             if last_intent_handler_class_key_name in self.request_handlers_chain.keys():
                 handler_to_use = self.request_handlers_chain[last_intent_handler_class_key_name]
             elif last_intent_handler_class_key_name in self.state_handlers_chain.keys():
                 handler_to_use = self.state_handlers_chain[last_intent_handler_class_key_name]
 
-        # Second, loading of the then_state in the session
+        # Third, loading of the then_state in the session
         if handler_to_use is None:
             last_then_state_class_name = self.handler_input.remember_session_then_state()
             if last_then_state_class_name is not None:
@@ -163,7 +215,7 @@ class InoftSkill:
                     print(f"Warning ! A thenState class name ({last_then_state_class_name}) was not None"
                           f" and has not been found in the available classes : {self.state_handlers_chain}")
 
-        # Third, classical requests handlers
+        # Fourth, classical requests handlers
         if handler_to_use is None:
             for request_handler in self.request_handlers_chain.values():
                 if request_handler.can_handle() is True:
@@ -175,7 +227,15 @@ class InoftSkill:
 
         output_event = None
         if handler_to_use is not None:
-            if self.handler_input.session_been_resumed is True:
+            if handler_is_an_alone_callback_function is True:
+                output_event = handler_to_use(self.handler_input, self.handler_input.selected_option_identifier)
+                if output_event is not None:
+                    print(f"Successfully resumed by {handler_to_use} which returned {output_event}")
+                else:
+                    print(f"A callback function has been found {handler_to_use}. But nothing was returned,"
+                          f"did you called the return self.to_platform_dict() function ?")
+
+            if output_event is None and self.handler_input.session_been_resumed is True:
                 print(f"Handled and resumed by : {handler_to_use.__class__}")
                 output_event = handler_to_use.handle_resume()
 
@@ -190,87 +250,15 @@ class InoftSkill:
                     output_event = handler_to_use.fallback()
 
         if output_event is not None:
-            self.handler_input.memorize_session_last_intent_handler(handler_class_type_instance_name=handler_to_use)
+            if handler_is_an_alone_callback_function is False:
+                # If the response is handled by a function, we do not save it as the last intent (we cannot actually,
+                # and it would not make sense anyway). So we will keep the previous last intent as the new last intent.
+                self.handler_input.memorize_session_last_intent_handler(handler_class_type_instance_name=handler_to_use)
         else:
             print(f"Handler by default fallback : {self.default_fallback_handler}")
             output_event = self.default_fallback_handler.handle()
 
         self.handler_input.save_attributes_if_need_to()
-
-        dummy = {
-          "payload": {
-            "google": {
-              "expectUserResponse": True,
-              "systemIntent": {
-                "intent": "actions.intent.OPTION",
-                "data": {
-                  "@type": "type.googleapis.com/google.actions.v2.OptionValueSpec",
-                  "listSelect": {
-                    "title": "List Title",
-                    "items": [
-                      {
-                        "optionInfo": {
-                          "key": "SELECTION_KEY_ONE",
-                          "synonyms": [
-                            "synonym 1",
-                            "synonym 2",
-                            "synonym 3"
-                          ]
-                        },
-                        "description": "This is a description of a list item.",
-                        "image": {
-                          "url": "https://storage.googleapis.com/actionsresources/logo_assistant_2x_64dp.png",
-                          "accessibilityText": "Image alternate text"
-                        },
-                        "title": "Title of First List Item"
-                      },
-                      {
-                        "optionInfo": {
-                          "key": "SELECTION_KEY_GOOGLE_HOME",
-                          "synonyms": [
-                            "Google Home Assistant",
-                            "Assistant on the Google Home"
-                          ]
-                        },
-                        "description": "Google Home is a voice-activated speaker powered by the Google Assistant.",
-                        "image": {
-                          "url": "https://storage.googleapis.com/actionsresources/logo_assistant_2x_64dp.png",
-                          "accessibilityText": "Google Home"
-                        },
-                        "title": "Google Home"
-                      },
-                      {
-                        "optionInfo": {
-                          "key": "SELECTION_KEY_GOOGLE_PIXEL",
-                          "synonyms": [
-                            "Google Pixel XL",
-                            "Pixel",
-                            "Pixel XL"
-                          ]
-                        },
-                        "description": "Pixel. Phone by Google.",
-                        "image": {
-                          "url": "https://storage.googleapis.com/actionsresources/logo_assistant_2x_64dp.png",
-                          "accessibilityText": "Google Pixel"
-                        },
-                        "title": "Google Pixel"
-                      }
-                    ]
-                  }
-                }
-              },
-              "richResponse": {
-                "items": [
-                  {
-                    "simpleResponse": {
-                      "textToSpeech": "This is a list example."
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
 
         print(f"output_event = {output_event}")
         wrapped_output_event = LambdaResponseWrapper(response_dict=output_event).get_wrapped(handler_input=self.handler_input)

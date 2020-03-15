@@ -1,3 +1,5 @@
+from collections import Callable
+
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.request import Request
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import Response, Image, ImageDisplayOptions
@@ -22,12 +24,16 @@ class SurfaceCapabilities:
 
 
 class DialogFlowHandlerInput(SurfaceCapabilities):
-    def __init__(self):
+    from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
+
+    def __init__(self, parent_handler_input: HandlerInput):
+        self.parent_handler_input = parent_handler_input
         self.request = Request()
         self.response = Response()
 
         self._user_id = None
         self._session_id = None
+        self._is_new_session = None
         self._simple_session_user_data = None
 
     def _get_user_persistent_stored_data(self):
@@ -59,6 +65,12 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
         if self._session_id is None:
             self._session_id = self.request.session
         return self._session_id
+
+    @property
+    def is_new_session(self) -> bool:
+        if self._is_new_session is None:
+            self._is_new_session = True if self.request.originalDetectIntentRequest.payload.conversation.type == "NEW" else False
+        return self._is_new_session
 
     @property
     def simple_session_user_data(self) -> SafeDict:
@@ -103,7 +115,6 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
         if isinstance(capability_item_or_list, str):
             if (capability_item_or_list not in self.ALL_CAPABILITIES
             or check_if_capability_present_in_request(capability_to_check=capability_item_or_list) is False):
-                pass  # todo: check from the request if the capibility is present
                 return DummyObject()
             else:
                 return self
@@ -117,6 +128,11 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
             raise Exception(f"The variable passed to the need_capabilities function must be of type {list} or {str}"
                             f"but was {capability_item_or_list} of type {type(capability_item_or_list)}")
 
+    def is_option_select_request(self) -> bool:
+        return self.request.is_option_select_request()
+
+    def selected_option_identifier(self) -> str:
+        return self.request.selected_option_identifier()
 
     def is_launch_request(self) -> bool:
         return self.request.is_launch_request()
@@ -157,11 +173,46 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
         self.response.add_item_to_browse_carousel(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
                                                   image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
 
-    def show_interactive_list_item(self, identifier_key: str, title: str, description: str = None,
+
+
+    def _save_interaction_options_callback_function(self, on_select_callback_function: Callable, identifier_key: str, is_first_interactive_element: bool):
+        if is_first_interactive_element is True:
+            # If we just added the first interactive element of the invocation, we forget the potential previous callback functions used
+            # for previous interactions. Then we memorize only the path to our callback function, with the __qualname__ argument.
+            self.parent_handler_input.session_forget(data_key="interactivity_callback_functions")
+            from inspect import getfile
+            self.parent_handler_input.session_memorize(data_key="interactivity_callback_functions",
+                                                       data_value={
+                                                           identifier_key: {"file_filepath_containing_callback": getfile(on_select_callback_function),
+                                                           "callback_function_path": on_select_callback_function.__qualname__}
+                                                       })
+        else:
+            # todo: fix bug where the identifier_key is not the right now if it has been modified because there were only 1 element
+            # But if this is not the first interactive element of the invocation, we remember the current interactivity callback functions dict,
+            # we add the path to our new callback function, also with the __qualname__ argument. Then we memorize our now expanded dict.
+            callback_functions_dict = self.parent_handler_input.session_remember(data_key="interactivity_callback_functions", specific_object_type=dict)
+            from inspect import getfile
+            callback_functions_dict[identifier_key] = {"file_filepath_containing_callback": getfile(on_select_callback_function),
+                                                       "callback_function_path": on_select_callback_function.__qualname__}
+
+            self.parent_handler_input.session_memorize("interactivity_callback_functions", callback_functions_dict)
+
+    def show_interactive_list_item(self, identifier_key: str, on_select_callback: Callable, title: str, description: str = None,
                                    image_url: str = None, image_accessibility_text: str = None):
 
-        self.response.add_interactive_list_item_to_system_intent(identifier_key=identifier_key, item_title=title, item_description=description,
-                                                                 item_image_url=image_url, item_image_accessibility_text=image_accessibility_text)
+        is_first_interactive_element = self.response.add_interactive_list_item_to_system_intent(identifier_key=identifier_key,
+            item_title=title, item_description=description, item_image_url=image_url, item_image_accessibility_text=image_accessibility_text)
+        self._save_interaction_options_callback_function(on_select_callback_function=on_select_callback, identifier_key=identifier_key,
+                                                         is_first_interactive_element=is_first_interactive_element)
+
+    def show_interactive_carousel_item(self, identifier_key: str, on_select_callback: Callable, title: str, description: str,
+                                       image_url: str = None, image_accessibility_text: str = None):
+
+        is_first_interactive_element = self.response.add_interactive_carousel_item_to_system_intent(identifier_key=identifier_key,
+            item_title=title, item_description=description, item_image_url=image_url, item_image_accessibility_text=image_accessibility_text)
+        self._save_interaction_options_callback_function(on_select_callback_function=on_select_callback, identifier_key=identifier_key,
+                                                         is_first_interactive_element=is_first_interactive_element)
+
 
     def play_audio(self, mp3_file_url: str, name: str, description: str = None,
                    icon_image_url: str = None, icon_accessibility_text: str = None):

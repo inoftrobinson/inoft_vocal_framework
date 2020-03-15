@@ -1,30 +1,34 @@
 from inoft_vocal_framework.dummy_object import DummyObject
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
 from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
-from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
-from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
-from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
 from inoft_vocal_framework.skill_builder.skill_settings import get_settings_safedict
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
-    def __init__(self, disable_database: bool, db_table_name: str, db_region_name=None):
+    def __init__(self):
         super().__init__()
-        self.session_users_data_safedict = get_settings_safedict().get("sessions_users_data").to_safedict()
+        self.settings_safedict = get_settings_safedict()
+        self.session_users_data_safedict = self.settings_safedict.get("sessions_users_data").to_safedict()
         self.sessions_users_data_disable_database = self.session_users_data_safedict.get("disable_database").to_bool()
         self.sessions_users_data_db_table_name = self.session_users_data_safedict.get("dynamodb").get("table_name").to_str()
         self.sessions_users_data_db_region_name = self.session_users_data_safedict.get("dynamodb").get("region_name").to_str()
 
         self._session_id = None
-        self._default_session_data_timeout = 60
-        self._session_been_resumed = False
+        self._is_invocation_new_session = None
+        self._default_session_data_timeout = self.settings_safedict.get("default_session_data_timeout").to_int()
+        self._session_been_resumed = None
         self._simple_session_user_data = None
         self._smart_session_user_data = None
         self._persistent_user_id = None
         self._persistent_user_data = None
+        self._interactivity_callback_functions = None
         self.data_for_database_has_been_modified = False
+
+        self._is_option_select_request = None
+        self._selected_option_identifier = None
 
         if (self.sessions_users_data_disable_database is not True
         and (not isinstance(self.sessions_users_data_db_table_name, str) or self.sessions_users_data_db_region_name is None)):
@@ -53,6 +57,17 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._session_id
 
     @property
+    def is_invocation_new_session(self) -> bool:
+        if self._is_invocation_new_session is None:
+            if self.is_alexa_v1 is True:
+                raise
+            elif self.is_dialogflow_v1 is True:
+                self._is_invocation_new_session = self.dialogFlowHandlerInput.is_new_session
+            elif self.is_bixby_v1 is True:
+                raise
+        return self._is_invocation_new_session
+
+    @property
     def default_session_data_timeout(self):
         return self._default_session_data_timeout
 
@@ -65,13 +80,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     @property
     def session_been_resumed(self) -> bool:
+        if self._session_been_resumed is None:
+            self._load_smart_session_user_data()
         return self._session_been_resumed
-
-    @session_been_resumed.setter
-    def session_been_resumed(self, session_been_resumed: bool) -> None:
-        if not isinstance(session_been_resumed, bool):
-            raise Exception(f"session_been_resumed was type {type(session_been_resumed)} which is not valid value for his parameter.")
-        self._session_been_resumed = session_been_resumed
 
     @property
     def simple_session_user_data(self) -> SafeDict:
@@ -90,15 +101,19 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def smart_session_user_data(self) -> SafeDict:
         if self._smart_session_user_data is None:
+            self._load_smart_session_user_data()
+        return self._smart_session_user_data
+
+    def _load_smart_session_user_data(self):
+        if self._smart_session_user_data is None:
             if self.sessions_users_data_disable_database is False:
-                self._smart_session_user_data, self.session_been_resumed = self.dynamodb_adapter.get_smart_session_attributes(
+                self._smart_session_user_data, self._session_been_resumed = self.dynamodb_adapter.get_smart_session_attributes(
                     user_id=self.persistent_user_id, session_id=self.session_id, timeout_seconds=self.default_session_data_timeout)
 
                 if not isinstance(self._smart_session_user_data, SafeDict):
                     self._smart_session_user_data = SafeDict()
             else:
                 self._smart_session_user_data = SafeDict()
-        return self._smart_session_user_data
 
     @property
     def persistent_user_id(self) -> str:
@@ -138,22 +153,52 @@ class HandlerInput(CurrentUsedPlatformInfo):
         print(f"_persistent_user_data = {self._persistent_user_data}")
         return self._persistent_user_data
 
+    @property
+    def interactivity_callback_functions(self) -> SafeDict:
+        if self._interactivity_callback_functions is None:
+            self._interactivity_callback_functions = self.smart_session_user_data.get("interactivity_callback_functions").to_safedict()
+        return self._interactivity_callback_functions
+
     def load_event_and_context(self, event: dict, context: dict) -> None:
         if self.is_alexa_v1 is True:
-            self._alexaHandlerInput = AlexaHandlerInput()
+            from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
+            self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
             self.alexaHandlerInput.load_event_and_context(event=event, context=context)
 
         elif self.is_dialogflow_v1 is True:
-            self._dialogFlowHandlerInput = DialogFlowHandlerInput()
+            from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
+            self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
             NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
                                                                       request_json_dict_stringed_dict_or_list=event,
                                                                       key_names_identifier_objects_to_go_into=["json_key"])
 
         elif self.is_bixby_v1 is True:
-            self._bixbyHandlerInput = BixbyHandlerInput()
+            from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
+            self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
             NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
                                                                       request_json_dict_stringed_dict_or_list=event,
                                                                       key_names_identifier_objects_to_go_into=["json_key"])
+
+    @property
+    def is_option_select_request(self) -> bool:
+        if self._is_option_select_request is None:
+            if self.is_alexa_v1 is True:
+                return False
+            elif self.is_dialogflow_v1 is True:
+                self._is_option_select_request = self.dialogFlowHandlerInput.is_option_select_request()
+            elif self.is_bixby_v1 is True:
+                return False
+        return self._is_option_select_request
+
+    @property
+    def selected_option_identifier(self) -> str:
+        if self.is_alexa_v1:
+            raise
+        elif self.is_dialogflow_v1 is True:
+            self._selected_option_identifier = self.dialogFlowHandlerInput.selected_option_identifier()
+        elif self.is_bixby_v1:
+            raise
+        return self._selected_option_identifier
 
     def is_launch_request(self) -> bool:
         if self.is_alexa_v1 is True:
@@ -371,19 +416,23 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return output_response_dict
 
     @property
-    def alexaHandlerInput(self) -> AlexaHandlerInput:
+    def alexaHandlerInput(self):
         return self._alexaHandlerInput if self._alexaHandlerInput is not None else DummyObject()
 
     @property
-    def dialogFlowHandlerInput(self) -> DialogFlowHandlerInput:
+    def dialogFlowHandlerInput(self):
         return self._dialogFlowHandlerInput if self._dialogFlowHandlerInput is not None else DummyObject()
 
     @property
-    def bixbyHandlerInput(self) -> BixbyHandlerInput:
+    def bixbyHandlerInput(self):
         return self._bixbyHandlerInput if self._bixbyHandlerInput is not None else DummyObject()
 
 
 class HandlerInputWrapper:
+    from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
+    from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
+    from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
+
     def __init__(self, parent_handler=None):
         if parent_handler is None:
             self._handler_input = None
@@ -402,14 +451,6 @@ class HandlerInputWrapper:
         if not isinstance(handler_input, HandlerInput):
             raise Exception(f"handler_input was type {type(handler_input)} which is not valid value for his parameter.")
         self._handler_input = handler_input
-
-    @property
-    def default_session_data_timeout(self):
-        return self.handler_input.default_session_data_timeout
-
-    @default_session_data_timeout.setter
-    def default_session_data_timeout(self, default_session_data_timeout) -> None:
-        self.handler_input.default_session_data_timeout = default_session_data_timeout
 
     @property
     def session_been_resumed(self):

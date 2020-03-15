@@ -28,6 +28,10 @@ class Settings:
     @property
     def _settings_file_validator_schema(self) -> dict:
         return {
+            "default_session_data_timeout": {
+                "required": True,
+                "type": "integer"
+            },
             "sessions_users_data": {
                 "required": True,
                 "type": "dict",

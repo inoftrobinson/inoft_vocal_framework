@@ -1,3 +1,4 @@
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 
@@ -84,19 +85,161 @@ class User:
 
 class Payload:
     json_key = "payload"
+    INPUT_TYPE_OPTION = "OPTION"
 
     def __init__(self):
         self._user = User()
-        self._conversation = None
-        self._inputs = None
+        self._conversation = self.Conversation()
+        self._inputs = self.InputsCustomList()
         self._surface = self.Surface()
         self._availableSurfaces = self.AvailableSurfaces()
         self._isInSandbox = bool()
         self._requestType = str()
 
+    def get_first_input_of_type(self, type_name: str):
+        for input_item in self.inputs:
+            for argument_item in input_item.arguments:
+                if argument_item.name == type_name:
+                    return argument_item
+
     @property
     def user(self) -> User:
         return self._user
+
+    class Conversation:
+        json_key = "conversation"
+
+        def __init__(self):
+            self._conversationId = str()
+            self._type = str()
+
+        @property
+        def conversationId(self) -> str:
+            return self._conversationId
+
+        @conversationId.setter
+        def conversationId(self, conversationId: str) -> None:
+            raise_if_variable_not_expected_type(value=conversationId, expected_type=str, variable_name="conversationId")
+            self._conversationId = conversationId
+
+        @property
+        def type(self) -> str:
+            return self._type
+
+        @type.setter
+        def type(self, type_key: str) -> None:
+            raise_if_variable_not_expected_type(value=type_key, expected_type=str, variable_name="type_key")
+            self._type = type
+
+    @property
+    def conversation(self) -> Conversation:
+        return self._conversation
+
+    class InputsCustomList(list):
+        # todo: make the check that the current device has the capabilities to use an interactive list
+        def __init__(self):
+            super().__init__()
+
+        def append(self, item) -> None:
+            if isinstance(item, dict):
+                input_item_object = self.InputItem()
+                NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=input_item_object,
+                    request_json_dict_stringed_dict_or_list=item, key_names_identifier_objects_to_go_into=["json_key"])
+                super().append(input_item_object)
+
+        def custom_set_from(self, list_object: list) -> None:
+            for item in list_object:
+                self.append(item=item)
+
+        class InputItem:
+            def __init__(self):
+                self._intent = str()
+                self._rawInputs = list()
+                self._arguments = self.ArgumentItemsCustomList()
+
+            @property
+            def intent(self) -> str:
+                return self._intent
+
+            def intent(self, intent: str) -> None:
+                raise_if_variable_not_expected_type(value=intent, expected_type=str, variable_name="intent")
+                self._intent = intent
+
+            @property
+            def rawInputs(self) -> list:
+                return self._rawInputs
+
+            @rawInputs.setter
+            def rawInputs(self, rawInputs: list) -> None:
+                raise_if_variable_not_expected_type(value=rawInputs, expected_type=list, variable_name="rawInputs")
+                self._rawInputs = rawInputs
+
+            class ArgumentItemsCustomList(list):
+                def __init__(self):
+                    super().__init__()
+
+                def append(self, item) -> None:
+                    if isinstance(item, dict):
+                        argument_item_object = self.ArgumentItem()
+                        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=argument_item_object,
+                            request_json_dict_stringed_dict_or_list=item, key_names_identifier_objects_to_go_into=["json_key"])
+                        super().append(argument_item_object)
+
+                def custom_set_from(self, list_object: list) -> None:
+                    for item in list_object:
+                        self.append(item=item)
+
+                class ArgumentItem:
+                    json_key = None
+
+                    def __init__(self):
+                        self._name = str()
+                        self._textValue = str()
+                        self._rawText = str()
+
+                    @property
+                    def name(self) -> str:
+                        return self._name
+
+                    @name.setter
+                    def name(self, name: str) -> None:
+                        raise_if_variable_not_expected_type(value=name, expected_type=str, variable_name="name")
+                        self._name = name
+
+                    @property
+                    def textValue(self) -> str:
+                        return self._textValue
+
+                    @textValue.setter
+                    def textValue(self, textValue: str) -> None:
+                        raise_if_variable_not_expected_type(value=textValue, expected_type=str, variable_name="textValue")
+                        self._textValue = textValue
+
+                    @property
+                    def rawText(self) -> str:
+                        return self._rawText
+
+                    @rawText.setter
+                    def rawText(self, rawText: str) -> None:
+                        raise_if_variable_not_expected_type(value=rawText, expected_type=str, variable_name="rawText")
+                        self._rawText = rawText
+
+            @property
+            def arguments(self) -> list:
+                return self._arguments
+
+            @arguments.setter
+            def arguments(self, arguments: list) -> None:
+                raise_if_variable_not_expected_type(value=arguments, expected_type=list, variable_name="arguments")
+                self._arguments = arguments
+
+        # It validate the syntax in PyCharm, but it cause a debugger error :'(
+        # def __getitem__(self, i) -> InputItem:
+        #    return super().__getitem__(i=i)
+
+    @property
+    def inputs(self) -> InputsCustomList:
+        return self._inputs
 
     class Surface:
         json_key = "surface"
@@ -117,45 +260,6 @@ class Payload:
         @property
         def capabilities(self) -> list:
             return self._capabilities
-
-
-        """"surface": {
-        "capabilities": [
-          {
-            "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
-          },
-          {
-            "name": "actions.capability.AUDIO_OUTPUT"
-          },
-          {
-            "name": "actions.capability.ACCOUNT_LINKING"
-          },
-          {
-            "name": "actions.capability.WEB_BROWSER"
-          },
-          {
-            "name": "actions.capability.SCREEN_OUTPUT"
-          }
-        ]
-      },
-      "isInSandbox": true,
-      "availableSurfaces": [
-        {
-          "capabilities": [
-            {
-              "name": "actions.capability.SCREEN_OUTPUT"
-            },
-            {
-              "name": "actions.capability.WEB_BROWSER"
-            },
-            {
-              "name": "actions.capability.AUDIO_OUTPUT"
-            }
-          ]
-        }
-      ],
-      "requestType": "SIMULATOR"
-    }"""
 
     @property
     def surface(self) -> Surface:
@@ -349,6 +453,14 @@ class Request:
     def process_and_set_json_request_to_object(self, stringed_request_json_dict: str):
         NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self,
                                                                   request_json_dict_stringed_dict_or_list=stringed_request_json_dict)
+
+    def is_option_select_request(self) -> bool:
+        return self.queryResult.queryText == "actions_intent_OPTION"
+
+    def selected_option_identifier(self) -> str:
+        argument_item = self.originalDetectIntentRequest.payload.get_first_input_of_type(self.originalDetectIntentRequest.payload.INPUT_TYPE_OPTION)
+        if isinstance(argument_item, self.originalDetectIntentRequest.payload.InputsCustomList.InputItem.ArgumentItemsCustomList.ArgumentItem):
+            return argument_item.textValue
 
     def is_launch_request(self) -> bool:
         if self.queryResult.intent.displayName == "LaunchIntentRequest":

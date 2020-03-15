@@ -8,7 +8,6 @@ class SafeDict:
                 output_dict[i] = classic_dict[i]
             classic_dict = output_dict
         elif not isinstance(classic_dict, dict):
-            print(type(classic_dict))
             try:
                 classic_dict = dict(classic_dict)
             except Exception:
@@ -35,7 +34,13 @@ class SafeDict:
         self.navigated_dict = self.classic_dict
 
     def retrieve_navigated_dict_object(self, reset_navigated_dict=True):
-        navigated_dict_object = self.navigated_dict
+        if isinstance(self.navigated_dict, dict) or isinstance(self.navigated_dict, list):
+            # A dict or a list will not make a copy of the value, but
+            # point a reference to the object, so we need to copy them.
+            navigated_dict_object = self.navigated_dict.copy()
+        else:
+            navigated_dict_object = self.navigated_dict
+
         if reset_navigated_dict is True:
             self.reset_navigated_dict()
         return navigated_dict_object
@@ -84,7 +89,7 @@ class SafeDict:
         return self
 
     def pop(self, dict_key: str):
-        if isinstance(self.navigated_dict, dict) and isinstance(dict_key, str):
+        if isinstance(self.navigated_dict, dict) and isinstance(dict_key, str) and dict_key in self.navigated_dict.keys():
             self.navigated_dict.pop(dict_key)
         else:
             print(f"Warning ! Tried to pop a key of a dict of a SafeDict, but the current navigated dict was not pointing to a dict object !")
@@ -172,6 +177,9 @@ class SafeDict:
             raise Exception(f"The following type is not supported by the SafeDict object : {type_to_return}."
                             f"If you post a request in the issues section of the GitHub,"
                             f"i will add the object type that you need to the SafeDict class - Robinson")
+
+    def keys(self):
+        return self.navigated_dict.keys()
 
     def copy(self, reset_navigated_dict=True):
         new_safeDict_copy = SafeDict(classic_dict=self.classic_dict, overloaded_navigated_dict=self.navigated_dict)
