@@ -33,6 +33,6 @@ class BixbyHandlerInput:
         self.response.say(text_or_ssml=text_or_ssml)
 
     def reprompt(self, text_or_ssml: str) -> None:
-        self.response.reprompt(text_or_ssml=text_or_ssml)
+        self.response.say_reprompt(text_or_ssml=text_or_ssml)
 
 

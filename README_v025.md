@@ -3,6 +3,10 @@
 
  #### The example do not show how to deploy the skill (in Lambda, API Gateway and the Javascript files for bixby). I'm soon going to make videos in french and english to explain how to use the framework, and deploy a skill accross platforms. Then a bit later on, there will be the CLI for auto-deployment, then the CMS, then the web interface, then the free cloud platform that will host everything for you while giving you access to everything, then the tools on the platform to collaborate between developpers and voice designers extremly efficiently. It's going to be great ;)
 
+ This repo is still under developpement, not everything is implemented. Yet you can see for the dates of releases, it will be soon.
+
+ The main framework is constructed, i have build it so that it will be extremly fast and easy to add or change features in the platforms, or even add new platforms !
+
  #### This code makes an Alexa Skill, a Google Action and a Bixby Capsule, and its Pythonic !
 
  Hello World :
@@ -19,7 +23,7 @@ class LaunchRequestHandler(InoftRequestHandler):
 
 class DefaultFallback(InoftDefaultFallback):
    def handle(self):
-       self.say("I did not understand. Do you want me to say HELLO WORLD ?!")
+       self.say("I did not understand. Do you want for me to say HELLO WORLD ?!")
        return self.to_platform_dict()
 
 def lambda_handler(event, context):
@@ -29,118 +33,7 @@ def lambda_handler(event, context):
    return skill_builder.handle_any_platform(event=event, context=context)
  ```
 
- 
-
-## In depth tutorial
-
-### The 3 classes :
-
-All of the interactions with the framework are done inside of classes and their self object. You need to clearly understand their specificities. I recommand that you take the time to carefully read this section.
-
-### InoftRequestHandler
-
-This is the most basic class, it requires you to implement 2 functions
-
-```
-class LaunchRequestHandler(InoftRequestHandler):
-    def can_handle(self) -> bool:
-       return self.is_launch_request()
-    
-    def handle(self):
-       self.say("Hello world ! Will you marry me ?")
-       return self.to_platform_dict()
-```
-
-The can_handle function contain and return the result of the condition that will define if the handle function of the class, should create the response that will be send back to the vocal assistant.
-
-And the handle function will create the response by using the self object, and return it with the to_platform_dict() function. You can of course call other functions, classes or handle functions from your handle function.
-
-There is an aditionnal function you can use, which is handle_resume(self), that allow to automaticly resume an user to a point of the interaction. We will discover this in the advanced features.
-
-### InoftStateHandler
-
-```
-class MarryMeStateHandler(InoftStateHandler):
-    def handle(self):
-        if YesHandler(self).can_handle():
-            self.say("You said yes ? I love you !")
-            return self.to_platform_dict()
-
-        elif NoHandler(self).can_handle():
-            self.say("What do you mean you said NO ?!!")
-            return self.to_platform_dict()
-
-    def fallback(self):
-        self.say("Well, gotta make your choice, do you want to marry me or no ?")
-        return self.to_platform_dict()
-```
-
-Weeeeell, i gotta explai
-
-### InoftDefaultFallback
-
-It is the last resort to handle any any fallback situation (where the user said or did something not supported by your interaction model). It will not override over the fallback method of a StateHandler class. It is really the last ressort.
-
-You only have one function available, the handle function, like in the two other classes, you will interacte with the framework with the self object, and return with self.to_platform_dict()
-
-```
-class DefaultFallback(InoftDefaultFallback):
-    def handle(self):
-        self.say("You must be clear with what you want in life ! Otherwise i'm going to take"
-        "replace you and take your programmer job that you love so much !")
-        return self.to_platform_dict()
-```
-
-Having a InoftDefaultFallback class is required for every skill. Otherwise it will give you an exception.
-
-### Putting the 3 classes together
-
- ```
-from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
-
-class LaunchRequestHandler(InoftRequestHandler):
-    def can_handle(self) -> bool:
-       return self.is_launch_request()
-    
-    def handle(self):
-       self.say("Hello world ! Will you marry me ?")
-       self.memorize_session_then_state(MarryMeStateHandler)
-       return self.to_platform_dict()
-       
-class MarryMeStateHandler(InoftStateHandler):
-    def handle(self):
-        if YesHandler(self).can_handle():
-            self.say("You said yes ? I love you !")
-            return self.to_platform_dict()
-
-        elif NoHandler(self).can_handle():
-            self.say("What do you mean you said NO ?!!")
-            return self.to_platform_dict()
-
-    def fallback(self):
-        self.say("Well, gotta make your choice, do you want to marry me or no ?")
-        return self.to_platform_dict()
-
-class DefaultFallback(InoftDefaultFallback):
-    def handle(self):
-        self.say("You must be clear with what you want in life ! Otherwise i'm going to take"
-        "replace you and take your programmer job that you love so much !")
-        return self.to_platform_dict()
-
-def lambda_handler(event, context):
-   skill_builder = InoftSkill(disable_database=True)
-   skill_builder.add_request_handler(LaunchRequestHandler)
-   skill_builder.add_state_handler(MarryMeStateHandler)
-   skill_builder.set_default_fallback_handler(DefaultFallback)
-   return skill_builder.handle_any_platform(event=event, context=context)
- ```
-
-
-
- 
-
-
-
+ More sophisticated example :
  ```
 from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
 
@@ -230,8 +123,31 @@ def lambda_handler(event, context):
  ```
 
  ### Roadmap :
- - To finish writing the README file, including the roadmap section ;)
+ - Redo the README file, and remove the roadmap from it ;)
+ - Implement all the available features of Alexa Google Assistant, Samsung Bixby (like all types of cards, carousel, etc)
+ - Allow to create +90% of the skill code (Python code of course) with a cartographic (MindMap) tool like the Alexa SkillFlowBuilder.
+ - Create a CLI that will automaticly create a AWS lambda, an Alexa Skill, a Google Action, an API Gateway, and link everything together in a few seconds.
+ - Create a Content Management/Creation System
+ - Make the simulator better and more useful than just sending dumb requests to the code
+ - Generate the skill/actions schema right from the code
+ - Allow to know on which type of device the user is currently on
+
+ ### Already available (the date are the releases date) :
+ - Message, and speechs objects helpers (pick according to probability, remember automaticly the last interactions of the user, etc) (a long time ago)
+ - Processing and creation of a response (01/28/2020)
+ - SkillBuilder and ResponseHandler object to create the response to the intents and requests (01/29/2020)
+ - Basic response (speech, ssml, card) (01/29/2020)
+ - Processing and manipulating of a request (01/31/2020)
+  - Finish the saving of data accross sessions, and make it work when the code is deployed to the cloud (02/17/2020)
+ - Micro request simulator (02/01/2020)
+ - Identify the intent/request type (like launch, end, and any intent) (02/01/2020)
+ - HandlerInput object to have access to all the features without needing 42 imports in each file (02/01/2020)
+ - Saving and access of user data/interactions in the session and accross sessions (02/07/2020)
+ - StateHandlers (set the user in a state, where he can interacte with multiples intents, and fallback to a specific function if he is not in one of the intents) (02/07/2020)
+ - Support basic options of samsung bixby (03/15/2020)
+ - Easy handlers to have the messages and speechs in the cloud instead of them being harcoded (is linked with the CMS) (03/07/2020)
+ - Allow to have platform specific features in the codebase. For example, in Google Assistant you can have a caroussel, there is no such equivalent in Alexa. (03/08/2020)
 
  #### Credits :
- - The Alexa Python SDK (https://github.com/alexa/alexa-skills-kit-sdk-for-python). I have taken a big inspiration on how they to decided to make the interaction with the framework, for example trough class that have a can_handle and handle function.
- - The Jovo framework (https://github.com/jovotech/jovo-framework) I have taken inspiration of how they handled certains scenarios (like how to save user data accross session in the google assistant). Thank you for having clear docs ! https://github.com/jovotech/jovo-framework
+ - The Amazon Alexa Python SDK. If you look at the class and variables that will be interacted with, i have use the same type of logic than the SDK (like a skill_builder, the requests and intents handlers, the handler_input, etc). I did not use their code, but written everything from scratch, unfortunatly ;) https://github.com/alexa/alexa-skills-kit-sdk-for-python
+ - The jovo framework. I have taken inspiration of how they handled certains scenarios (like how to save user data accross session in the google assistant). Thank you for being open-source and have clear docs ! https://github.com/jovotech/jovo-framework

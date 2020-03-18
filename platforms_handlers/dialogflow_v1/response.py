@@ -802,7 +802,7 @@ class Response:
         output_response.textToSpeech = text_or_ssml
         self.payload.google.richResponse.add_response_item(output_response)
 
-    def reprompt(self, text_or_ssml: str) -> None:
+    def say_reprompt(self, text_or_ssml: str) -> None:
         # todo: finish the reprompt function
         return None
         output_response = SimpleResponse()
@@ -846,14 +846,9 @@ class Response:
 
     def add_interactive_list_item_to_system_intent(self, identifier_key: str, item_title: str, item_description: str = None,
                                                    item_image_url: str = None, item_image_accessibility_text: str = None) -> bool:
-        """
-        :return bool: True if the SystemIntent has been created and so we just set the first interactive element in the invocation and False otherwise
-        """
 
-        is_first_interactive_element_of_invocation = False
         if "systemIntent" not in vars(self.payload.google):
             self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_list_select)
-            is_first_interactive_element_of_invocation = True
         elif self.payload.google.systemIntent.data.listSelect is None:
             # If the listSelect variable is None, it means that the SystemIntent do not represent a ListSelect,
             # and an exception will be thrown (in the data class itself, the below exception will never be called).
@@ -862,7 +857,6 @@ class Response:
 
         self.payload.google.systemIntent.data.listSelect.add_item(identifier_key=identifier_key, title=item_title, description=item_description,
                                                                   image_url=item_image_url, image_accessibility_text=item_image_accessibility_text)
-        return is_first_interactive_element_of_invocation
 
     def add_interactive_carousel_item_to_system_intent(self, identifier_key: str, item_title: str, item_description: str,
                                                        item_image_url: str = None, item_image_accessibility_text: str = None) -> bool:

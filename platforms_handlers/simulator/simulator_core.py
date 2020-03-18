@@ -12,7 +12,7 @@ class Simulator:
         # For the simulator, we want the event and the context to be in the form of
         # strings, not in dicts. So we do not load them by using the json module.
         event = None
-        with open(os.path.join(self.request_samples_folderpath, "google-assistant-v1_start-request.json"), "r") as request_file:
+        with open(os.path.join(self.request_samples_folderpath, "google_select-item.json"), "r") as request_file:
             # "alexa_start.json"
             try:
                 event = json_load(request_file)

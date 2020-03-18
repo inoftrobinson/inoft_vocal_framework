@@ -145,55 +145,18 @@ class InoftSkill:
 
         # First, if the request is an interactive option made by the user
         if self.handler_input.is_option_select_request:
+            # todo: rename is_option_select_request to need_to_be_handled_by_callback
             infos_callback_function_to_use = self.handler_input.interactivity_callback_functions.get(
                 self.handler_input.selected_option_identifier).to_safedict(default=None)
 
             if infos_callback_function_to_use is not None:
-                module_file_filepath = infos_callback_function_to_use.get("file_filepath_containing_callback").to_str()
-                from os.path import isfile
-                if not isfile(module_file_filepath):
-                    print(f"SERIOUS WARNING ! The module file containing a callback function at filepath  {module_file_filepath} "
-                          f"has not been found. The callback cannot be used. If your interaction that use the callback is not "
-                          f"working, it is because you have issues with the location of your file containing the callback.")
-                else:
-                    import importlib
-                    import importlib.util
-                    module_spec = importlib.util.spec_from_file_location("file_containing_callback", module_file_filepath)
-                    if module_spec is not None:
-                        module_file = importlib.util.module_from_spec(module_spec)
-                        module_spec.loader.exec_module(module_file)
+                from inoft_vocal_framework.skill_builder.utils import get_function_from_file_and_path
+                handler_to_use = get_function_from_file_and_path(
+                    file_filepath=infos_callback_function_to_use.get("file_filepath_containing_callback").to_str(),
+                    function_path_qualname=infos_callback_function_to_use.get("callback_function_path").to_str())
 
-                        callback_function_path_elements = infos_callback_function_to_use.get("callback_function_path").to_str().split(".")
-                        if len(callback_function_path_elements) > 0:
-                            vars_module_file = vars(module_file)
-                            if callback_function_path_elements[0] in vars_module_file:
-                                from inspect import getmembers
-
-                                def get_nested_class_or_function(current_nested_class_or_function, function_path_remaining_elements: list):
-                                    if len(function_path_remaining_elements) > 0:
-                                        class_or_function_name = function_path_remaining_elements[0]
-                                        if class_or_function_name == "<locals>":
-                                            raise Exception(f"A callback function cannot be a nested function of another function ({class_or_function_name}) "
-                                                            "Please make it available from the root of the file or from a class then relaunch the event "
-                                                            "that inserted the function path of the callback function (redo the entire interaction up to"
-                                                            "the point where you set the callback to an event).")
-
-                                        members_nested_class_or_function = getmembers(current_nested_class_or_function)
-                                        for tuple_member in members_nested_class_or_function:
-                                            if tuple_member[0] == class_or_function_name:
-                                                if len(function_path_remaining_elements) > 1:
-                                                    return get_nested_class_or_function(
-                                                        current_nested_class_or_function=tuple_member[1],
-                                                        function_path_remaining_elements=function_path_remaining_elements[1:])
-                                                else:
-                                                    return tuple_member[1]
-                                        return None
-
-                                handler_to_use = get_nested_class_or_function(
-                                    current_nested_class_or_function=vars_module_file[callback_function_path_elements[0]],
-                                    function_path_remaining_elements=callback_function_path_elements[1:])
-                                if handler_to_use is not None:
-                                    handler_is_an_alone_callback_function = True
+                if handler_to_use is not None:
+                    handler_is_an_alone_callback_function = True
 
         # Second, if the invocation is a new session, and a session can be resumed, we resume the last intent of the previous session
         if self.handler_input.is_invocation_new_session is True and self.handler_input.session_been_resumed is True:

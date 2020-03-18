@@ -1,3 +1,5 @@
+from collections import Callable
+
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
@@ -60,7 +62,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def is_invocation_new_session(self) -> bool:
         if self._is_invocation_new_session is None:
             if self.is_alexa_v1 is True:
-                raise
+                self._is_invocation_new_session = self.alexaHandlerInput.is_new_session
             elif self.is_dialogflow_v1 is True:
                 self._is_invocation_new_session = self.dialogFlowHandlerInput.is_new_session
             elif self.is_bixby_v1 is True:
@@ -179,6 +181,18 @@ class HandlerInput(CurrentUsedPlatformInfo):
                                                                       request_json_dict_stringed_dict_or_list=event,
                                                                       key_names_identifier_objects_to_go_into=["json_key"])
 
+    def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: str):
+        # todo: fix bug where the identifier_key is not the right now if it has been modified because there were only 1 element
+        # No matter if we already have functions for the different ids in the same key name, we remember the dict of all the
+        # callback functions of the key name (will be an empty dict if was not present), then we add the callback for the
+        # current specified identifier. Finally, we can memorize this new updated list.
+        callback_functions_dict = self.session_remember(data_key=callback_functions_key_name, specific_object_type=dict)
+        from inspect import getfile
+        callback_functions_dict[identifier_key] = {"file_filepath_containing_callback": getfile(callback_function),
+                                                   "callback_function_path": callback_function.__qualname__}
+
+        self.session_memorize(callback_functions_key_name, callback_functions_dict)
+
     @property
     def is_option_select_request(self) -> bool:
         if self._is_option_select_request is None:
@@ -231,6 +245,14 @@ class HandlerInput(CurrentUsedPlatformInfo):
             self.dialogFlowHandlerInput.reprompt(text_or_ssml=text_or_ssml)
         elif self.is_bixby_v1 is True:
             self.bixbyHandlerInput.reprompt(text_or_ssml=text_or_ssml)
+
+    def end_session(self, should_end: bool = True) -> None:
+        if self.is_alexa_v1 is True:
+            self.alexaHandlerInput.end_session(should_end=should_end)
+        elif self.is_dialogflow_v1 is True:
+            raise
+        elif self.is_bixby_v1 is True:
+            raise
 
     def get_intent_arg_value(self, arg_key: str):
         if self.is_alexa_v1 is True:
@@ -475,6 +497,10 @@ class HandlerInputWrapper:
 
     def simple_session_memorize(self, data_key: str, data_value=None):
         self.handler_input.simple_session_memorize(data_key=data_key, data_value=data_value)
+        return self
+
+    def end_session(self, should_end: bool = True):
+        self.handler_input.end_session(should_end=should_end)
         return self
 
     def simple_session_batch_memorize(self, data_dict: dict):
