@@ -8,7 +8,7 @@ class LaunchRequestHandler(InoftRequestHandler):
         return self.is_launch_request()
 
     def handle(self):
-        self.say(MSGS_FIRST_WELCOME.pick())
+        self.say(MSGS_WELCOME.pick())
         self.persistent_memorize("hasLaunchedOnce", True)
         return self.to_platform_dict()
 

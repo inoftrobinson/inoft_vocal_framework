@@ -109,21 +109,11 @@ class Settings:
             Settings.settings_loaded = True
 
 
-    def load_yaml(self, settings_file: str):
-        from yaml import safe_load, YAMLError
-        with open(settings_file, "r") as file_stream:
-            try:
-                self._static_settings_safedict = safe_load(file_stream)
-            except YAMLError as error:
-                raise Exception(f"The yaml file was not valid, and caused an error when loading."
-                                f"Please check the file or recreate it with the cli : {error}")
+    def load_yaml(self, settings_filepath: str):
+        from inoft_vocal_framework.utils.general import load_yaml
+        self._static_settings_safedict = SafeDict(load_yaml(filepath=settings_filepath))
 
-    def load_json(self, settings_file: str):
-        from json import load as json_load
-        with open(settings_file, "r") as file_stream:
-            try:
-                self._static_settings_safedict = json_load(file_stream)
-            except Exception as error:
-                raise Exception(f"The json file was not valid, and caused an error when loading."
-                                f"Please check the file or recreate it with the cli : {error}")
+    def load_json(self, settings_filepath: str):
+        from inoft_vocal_framework.utils.general import load_json
+        self._static_settings_safedict = SafeDict(load_json(filepath=settings_filepath))
 

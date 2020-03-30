@@ -63,9 +63,9 @@ class InoftSkill:
         elif settings_yaml_filepath is None and settings_json_filepath is None:
             raise Exception(f"Please specify a yaml or json settings file with the settings_yaml_filepath arg or settings_json_filepath")
         elif settings_yaml_filepath is not None:
-            self.settings.load_yaml(settings_file=settings_yaml_filepath)
+            self.settings.load_yaml(settings_filepath=settings_yaml_filepath)
         elif settings_json_filepath is not None:
-            self.settings.load_json(settings_file=settings_json_filepath)
+            self.settings.load_json(settings_filepath=settings_json_filepath)
 
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()

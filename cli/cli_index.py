@@ -20,6 +20,10 @@ def copy(src, dst):
         click.echo('move %s to folder %s' % (fn, dst))
 """
 
+@click.command("new")
+def new():
+    from inoft_vocal_framework.cli import new as new_module
+    new_module.new()
 
 @click.group()
 def cli():
@@ -65,7 +69,5 @@ messages_db = DynamoDbMessagesAdapter(is_admin_mode=True, table_name="test_messa
 # messages_db.post_new_category(MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME)
 
 if __name__ == '__main__':
-    push()
-
-    cli()
+    new()
 
