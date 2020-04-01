@@ -1,7 +1,30 @@
 # Inoft Vocal Framework
  ## Create Alexa Skills, Google Actions and Samsung Bixby Capsules with the same codebase. In Python !
 
- #### The example do not show how to deploy the skill (in Lambda, API Gateway and the Javascript files for bixby). I'm soon going to make videos in french and english to explain how to use the framework, and deploy a skill accross platforms. Then a bit later on, there will be the CLI for auto-deployment, then the CMS, then the web interface, then the free cloud platform that will host everything for you while giving you access to everything, then the tools on the platform to collaborate between developpers and voice designers extremly efficiently. It's going to be great ;)
+ ### Installation (Python 3.7 is recommanded. Python 3.6+ is required) :
+ ```
+ pip install inoftvocal
+ ```
+ 
+ ### Usage :
+ 
+ #### After installation, open a terminal (cmd), then start a project with the command
+ ```
+ inoft new
+ ```
+ You will have to select a folderpath in which your project will be created, and select a template to start with.
+ 
+ #### Deploying to AWS
+ ```
+ inoft deploy
+ ```
+ If you have never used AWS on your computer (or do not have an AWS account), you will need one (with the framework, you will be able to do around 200 000 invocations of your skill (depending of its time to execute) per month for free). You will also need to configure the botocore package by indicating your AWS credentials (the framework will point you to the right documentations to do that)
+ 
+ After that, the framework will create an S3 Bucket (to store your code), a Lambda (to host and run your code), an API Gateway (to access your Lambda), and multiple DynamoDB tables (to store your users data, and your dynamic messages).
+ PS : The API Gateway is an API Gateway V2 (its newer, has fewer docs, was longer to code, but is faster and cheaper than V1 !)
+ 
+ # todo: do some redactions on the deployment !
+ 
 
  #### This code makes an Alexa Skill, a Google Action and a Bixby Capsule, and its Pythonic !
 
