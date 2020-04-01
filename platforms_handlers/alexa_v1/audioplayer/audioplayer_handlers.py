@@ -74,8 +74,7 @@ class AlexaAudioPlayerHandlers(InoftHandlersGroup):
                                     "been found in its playing history. This can happen if you have cleared the users data.")
             else:
                 last_played_item = self.alexa.audioplayer.get_last_played_item()
-                self.
-
+                # todo: finish
 
                 raise Exception("NOT IMPLEMENTED - What happens if the user is trying to ask the AudioPlayer to resume, that the"
                                 "AudioPlayer object is found in the request, yet that the last item played by the user has not"

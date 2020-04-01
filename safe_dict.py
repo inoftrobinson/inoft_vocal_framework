@@ -95,6 +95,17 @@ class SafeDict:
             print(f"Warning ! Tried to pop a key of a dict of a SafeDict, but the current navigated dict was not pointing to a dict object !")
         return self
 
+    def process_any_safedicts_in_dict_or_list_to_dict(self, dict_or_list_to_process):
+        if isinstance(dict_or_list_to_process, list):
+            for i in range(len(dict_or_list_to_process)):
+                dict_or_list_to_process[i] = self.process_any_safedicts_in_dict_or_list_to_dict(dict_or_list_to_process[i])
+        elif isinstance(dict_or_list_to_process, dict):
+            for key in dict_or_list_to_process.keys():
+                dict_or_list_to_process[key] = self.process_any_safedicts_in_dict_or_list_to_dict(dict_or_list_to_process[key])
+        elif isinstance(dict_or_list_to_process, SafeDict):
+            return dict_or_list_to_process.to_dict()
+        else:
+            return dict_or_list_to_process
 
     def to_str(self, default="", reset_navigated_dict=True) -> str:
         navigated_dict_values = self.retrieve_navigated_dict_values(reset_navigated_dict=reset_navigated_dict)
@@ -128,6 +139,7 @@ class SafeDict:
 
     def to_list(self, default=[], reset_navigated_dict=True) -> list:
         navigated_dict_values = self.retrieve_navigated_dict_values(reset_navigated_dict=reset_navigated_dict)
+        navigated_dict_values = self.process_any_safedicts_in_dict_or_list_to_dict(dict_or_list_to_process=navigated_dict_values)
         if isinstance(navigated_dict_values, list):
             return navigated_dict_values
         elif isinstance(navigated_dict_values, dict):
@@ -137,6 +149,7 @@ class SafeDict:
 
     def to_dict(self, default={}, reset_navigated_dict=True) -> dict:
         navigated_dict_object = self.retrieve_navigated_dict_object(reset_navigated_dict=reset_navigated_dict)
+        navigated_dict_object = self.process_any_safedicts_in_dict_or_list_to_dict(dict_or_list_to_process=navigated_dict_object)
         if isinstance(navigated_dict_object, dict):
             return navigated_dict_object
         elif isinstance(navigated_dict_object, list):

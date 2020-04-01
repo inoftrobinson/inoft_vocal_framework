@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='inoftvocal',
-    version='0.6.0',
+    version='0.61.0',
     packages=['inoft_vocal_framework', 'inoft_vocal_framework.cli', 'inoft_vocal_framework.utils',
               'inoft_vocal_framework.speechs', 'inoft_vocal_framework.databases',
               'inoft_vocal_framework.databases.dynamodb', 'inoft_vocal_framework.skill_builder',
@@ -21,7 +21,7 @@ setup(
         ],
     },
     url='https://github.com/Robinson04/inoft_vocal_framework',
-    download_url='https://github.com/Robinson04/inoft_vocal_framework/archive/0.38.5.tar.gz',
+    download_url='https://github.com/Robinson04/inoft_vocal_framework/archive/0.6.0.tar.gz',
     license='MIT',
     author='Inoft',
     author_email='robinson@inoft.com',

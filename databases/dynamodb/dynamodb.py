@@ -92,7 +92,6 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
             print(f"Saving attributes : {item_dict}")
             table = self._get_db_table()
             from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dict_to_dynamodb
-            out = dict_to_dynamodb(item_dict)
             table.put_item(Item=dict_to_dynamodb(item_dict))
         except ResourceNotExistsError:
             raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")

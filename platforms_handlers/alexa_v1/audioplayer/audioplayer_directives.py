@@ -1,7 +1,7 @@
 import logging
 
 from inoft_vocal_framework.dummy_object import DummyObject
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list, raise_if_variable_not_expected_type_and_not_none
 from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Response
 from inoft_vocal_framework.safe_dict import SafeDict
 
@@ -105,18 +105,20 @@ class AudioPlayer:
 class AudioItemObject(object):
     # This object is not used for parsing, but for data manipulation
     def __init__(self, identifier: str, audio_item_dict: dict = None):
-        if isinstance(audio_item_dict, dict):
-            audio_item_dict = SafeDict(audio_item_dict)
-        if not isinstance(audio_item_dict, SafeDict):
-            raise Exception(f"The audio_item_dict must be of type dict or SafeDict but was {type(audio_item_dict)}: {audio_item_dict}")
-
         self.identifier = identifier
-        self.mp3_file_url = audio_item_dict.get("url").to_str()
-        self.title = audio_item_dict.get("title").to_str()
-        self.subtitle = audio_item_dict.get("subtitle").to_str()
-        self.offset_in_milliseconds = audio_item_dict.get("offsetInMilliseconds").to_int()
-        self.icon_image_url = audio_item_dict.get("iconImageUrl").to_str()
-        self.background_image_url = audio_item_dict.get("backgroundImageUrl").to_str()
+
+        if audio_item_dict is not None:
+            if isinstance(audio_item_dict, dict):
+                audio_item_dict = SafeDict(audio_item_dict)
+            if not isinstance(audio_item_dict, SafeDict):
+                raise Exception(f"The audio_item_dict must be of type dict or SafeDict but was {type(audio_item_dict)}: {audio_item_dict}")
+
+            self.mp3_file_url = audio_item_dict.get("url").to_str()
+            self.title = audio_item_dict.get("title").to_str()
+            self.subtitle = audio_item_dict.get("subtitle").to_str()
+            self.offset_in_milliseconds = audio_item_dict.get("offsetInMilliseconds").to_int()
+            self.icon_image_url = audio_item_dict.get("iconImageUrl").to_str()
+            self.background_image_url = audio_item_dict.get("backgroundImageUrl").to_str()
 
     def to_dict(self):
         return {
@@ -144,7 +146,7 @@ class AudioItemObject(object):
 
     @mp3_file_url.setter
     def mp3_file_url(self, mp3_file_url: str) -> None:
-        raise_if_variable_not_expected_type(value=mp3_file_url, expected_type=str, variable_name="mp3_file_url")
+        raise_if_variable_not_expected_type_and_not_none(value=mp3_file_url, expected_type=str, variable_name="mp3_file_url")
         self._mp3_file_url = mp3_file_url
 
     @property
@@ -153,7 +155,7 @@ class AudioItemObject(object):
 
     @title.setter
     def title(self, title: str) -> None:
-        raise_if_variable_not_expected_type(value=title, expected_type=str, variable_name="title")
+        raise_if_variable_not_expected_type_and_not_none(value=title, expected_type=str, variable_name="title")
         self._title = title
 
     @property
@@ -162,7 +164,7 @@ class AudioItemObject(object):
 
     @subtitle.setter
     def subtitle(self, subtitle: str) -> None:
-        raise_if_variable_not_expected_type(value=subtitle, expected_type=str, variable_name="subtitle")
+        raise_if_variable_not_expected_type_and_not_none(value=subtitle, expected_type=str, variable_name="subtitle")
         self._subtitle = subtitle
 
     @property
@@ -173,7 +175,7 @@ class AudioItemObject(object):
     def offset_in_milliseconds(self, offset_in_milliseconds: int) -> None:
         if isinstance(offset_in_milliseconds, str) and offset_in_milliseconds.isdigit():
             offset_in_milliseconds = int(offset_in_milliseconds)
-        raise_if_variable_not_expected_type(value=offset_in_milliseconds, expected_type=int, variable_name="offset_in_milliseconds")
+        raise_if_variable_not_expected_type_and_not_none(value=offset_in_milliseconds, expected_type=int, variable_name="offset_in_milliseconds")
         self._offset_in_milliseconds = offset_in_milliseconds
 
     @property
@@ -182,7 +184,7 @@ class AudioItemObject(object):
 
     @icon_image_url.setter
     def icon_image_url(self, icon_image_url: str) -> None:
-        raise_if_variable_not_expected_type(value=icon_image_url, expected_type=str, variable_name="icon_image_url")
+        raise_if_variable_not_expected_type_and_not_none(value=icon_image_url, expected_type=str, variable_name="icon_image_url")
         self._icon_image_url = icon_image_url
 
     @property
@@ -191,7 +193,7 @@ class AudioItemObject(object):
 
     @background_image_url.setter
     def background_image_url(self, background_image_url: str) -> None:
-        raise_if_variable_not_expected_type(value=background_image_url, expected_type=str, variable_name="background_image_url")
+        raise_if_variable_not_expected_type_and_not_none(value=background_image_url, expected_type=str, variable_name="background_image_url")
         self._background_image_url = background_image_url
 
 class AudioPlayerWrapper:
