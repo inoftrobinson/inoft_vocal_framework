@@ -11,11 +11,6 @@ class BixbyHandlerInput:
         self.request = Request()
         self.response = Response()
 
-    def load_event_and_context(self, event: dict, context: dict):
-        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.request,
-                                                                  request_json_dict_stringed_dict_or_list=event,
-                                                                  key_names_identifier_objects_to_go_into=["json_key"])
-
     def is_launch_request(self) -> bool:
         return self.request.is_launch_request()
 

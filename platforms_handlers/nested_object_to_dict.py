@@ -167,6 +167,8 @@ class NestedObjectToDict:
 
     @staticmethod
     def _process_and_set_dict_to_object(object_class_to_set_to, dict_object: dict, key_names_identifier_objects_to_go_into: list):
+        from inoft_vocal_framework.platforms_handlers.alexa_v1.context import Context
+
         unprocessed_vars_dict = vars(object_class_to_set_to)
         from types import MappingProxyType
         if isinstance(unprocessed_vars_dict, MappingProxyType):
@@ -175,10 +177,22 @@ class NestedObjectToDict:
             unprocessed_vars_dict = dict(unprocessed_vars_dict)
 
         vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names = SafeDict()
-        for key_unprocessed_var in unprocessed_vars_dict.keys():
-            processed_current_key_name = NestedObjectToDict.get_json_key_from_variable_name(variable_name=key_unprocessed_var)
-            vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names.put(dict_key=processed_current_key_name,
-                                                                                              value_to_put=key_unprocessed_var)
+        for key_unprocessed_var, value_var_object in unprocessed_vars_dict.items():
+            found_accepted_key_name = False
+
+            for accepted_child_key_name in key_names_identifier_objects_to_go_into:
+                if hasattr(value_var_object, accepted_child_key_name):
+                    # If the object contains an accepted child key name, we use it as the processed variable name. Like that, we have a
+                    # total freedom to respect Python convention for the variable names, and still handle any type of object child name.
+                    vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names.put(
+                        dict_key=getattr(value_var_object, accepted_child_key_name), value_to_put=key_unprocessed_var)
+                    found_accepted_key_name = True
+
+            if found_accepted_key_name is False:
+                # Otherwise we do a bit of processing on the variable name itself (like removing underscores) then we use it.
+                processed_current_key_name = NestedObjectToDict.get_json_key_from_variable_name(variable_name=key_unprocessed_var)
+                vars_safedict_key_processed_keys_names_with_value_unprocessed_variables_names.put(dict_key=processed_current_key_name,
+                                                                                                  value_to_put=key_unprocessed_var)
 
         keys_to_pop_after_loop_finished = list()
         for key_request_element, value_request_element in dict_object.items():
@@ -190,47 +204,47 @@ class NestedObjectToDict:
             if current_unprocessed_variable_name is not None:
                 current_child_element_object = unprocessed_vars_dict[current_unprocessed_variable_name]
 
+                found_accepted_key_name_in_vars_of_current_object = False
                 if current_child_element_object is not None:
-                    found_accepted_key_name_in_vars_of_current_object = False
+                    for accepted_child_key_name in key_names_identifier_objects_to_go_into:
+                        if hasattr(current_child_element_object, accepted_child_key_name):
+                            found_accepted_key_name_in_vars_of_current_object = True
 
-                    if isinstance(value_request_element, dict) or isinstance(value_request_element, list):
-                        for accepted_child_key_name in key_names_identifier_objects_to_go_into:
-                            if hasattr(current_child_element_object, accepted_child_key_name):
-                                found_accepted_key_name_in_vars_of_current_object = True
+                            NestedObjectToDict.process_and_set_json_to_object(
+                                object_class_to_set_to=unprocessed_vars_dict[current_unprocessed_variable_name],
+                                request_json_dict_stringed_dict_or_list=value_request_element,
+                                key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
 
-                                NestedObjectToDict.process_and_set_json_request_to_object(
-                                    object_class_to_set_to=unprocessed_vars_dict[current_unprocessed_variable_name],
-                                    request_json_dict_stringed_dict_or_list=value_request_element,
-                                    key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
+                # Even if the current child element object is None we will try to set a value to it, because a None value is just
+                # a variable not initialized (like how often after an init). It does not means that it should not contain a value.
+                if not found_accepted_key_name_in_vars_of_current_object:
+                    do_not_include_current_item = False
 
-                    if not found_accepted_key_name_in_vars_of_current_object:
-                        do_not_include_current_item = False
+                    if (isinstance(value_request_element, str)
+                    or (type(value_request_element) == type and "str" in value_request_element.__bases__)):
+                        if value_request_element.replace(" ", "") == "":
+                            do_not_include_current_item = True
 
-                        if (isinstance(value_request_element, str)
-                        or (type(value_request_element) == type and "str" in value_request_element.__bases__)):
-                            if value_request_element.replace(" ", "") == "":
-                                do_not_include_current_item = True
+                    elif (isinstance(value_request_element, dict) or isinstance(value_request_element, list)
+                    or (type(value_request_element) == type and ("dict" in value_request_element.__bases__
+                                                                 or "list" in value_request_element.__bases__))):
+                        if not len(value_request_element) > 0:
+                            do_not_include_current_item = True
 
-                        elif (isinstance(value_request_element, dict) or isinstance(value_request_element, list)
-                        or (type(value_request_element) == type and ("dict" in value_request_element.__bases__
-                                                                     or "list" in value_request_element.__bases__))):
-                            if not len(value_request_element) > 0:
-                                do_not_include_current_item = True
+                    if not do_not_include_current_item:
+                        # if (type(value_request_element) == type(current_child_element_object)
+                        # or (((isinstance(value_request_element, float) or isinstance(value_request_element, int))
+                        #     and type(current_child_element_object) in [int, float]))):
+                        # For some variables, we might receive them in int or float, where the framework would store
+                        # them with the other variable type. So we say that if the received variable is an int or a float,
+                        # its considered compatible with the variable in the object if it is also a float or an int.
 
-                        if not do_not_include_current_item:
-                            # if (type(value_request_element) == type(current_child_element_object)
-                            # or (((isinstance(value_request_element, float) or isinstance(value_request_element, int))
-                            #     and type(current_child_element_object) in [int, float]))):
-                            # For some variables, we might receive them in int or float, where the framework would store
-                            # them with the other variable type. So we say that if the received variable is an int or a float,
-                            # its considered compatible with the variable in the object if it is also a float or an int.
-
-                            custom_set_from_function = getattr(current_child_element_object, "custom_set_from", None)
-                            if custom_set_from_function is None:
-                                unprocessed_vars_dict[current_unprocessed_variable_name] = value_request_element
-                            # elif type(value_request_element) in current_child_element_object.__bases__:
-                            else:
-                                custom_set_from_function(value_request_element)
+                        custom_set_from_function = getattr(current_child_element_object, "custom_set_from", None)
+                        if custom_set_from_function is None:
+                            unprocessed_vars_dict[current_unprocessed_variable_name] = value_request_element
+                        # elif type(value_request_element) in current_child_element_object.__bases__:
+                        else:
+                            custom_set_from_function(value_request_element)
 
         for key_to_pop in keys_to_pop_after_loop_finished:
             unprocessed_vars_dict.pop(key_to_pop)
@@ -264,7 +278,7 @@ class NestedObjectToDict:
                                 if hasattr(current_child_element_object, accepted_child_key_name):
                                     found_accepted_key_name_in_vars_of_current_object = True
 
-                                    NestedObjectToDict.process_and_set_json_request_to_object(
+                                    NestedObjectToDict.process_and_set_json_to_object(
                                         object_class_to_set_to=unprocessed_vars_dict[current_unprocessed_variable_name],
                                         request_json_dict_stringed_dict_or_list=value_child_item,
                                         key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
@@ -295,7 +309,7 @@ class NestedObjectToDict:
                                                                    key_names_identifier_objects_to_go_into=key_names_identifier_objects_to_go_into)
 
     @staticmethod
-    def process_and_set_json_request_to_object(object_class_to_set_to, request_json_dict_stringed_dict_or_list, key_names_identifier_objects_to_go_into: list):
+    def process_and_set_json_to_object(object_class_to_set_to, request_json_dict_stringed_dict_or_list, key_names_identifier_objects_to_go_into: list):
         if isinstance(request_json_dict_stringed_dict_or_list, dict):
             NestedObjectToDict._process_and_set_dict_to_object(object_class_to_set_to=object_class_to_set_to,
                                                                dict_object=request_json_dict_stringed_dict_or_list,

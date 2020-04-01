@@ -4,7 +4,7 @@ import click
 
 from inoft_vocal_framework.cli.cli_cache import CliCache
 from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
-from inoft_vocal_framework.speechs.ssml_builder_core import SpeechCategory
+from inoft_vocal_framework.speechs.ssml_builder_core import SpeechsList
 
 """"
 @click.command()
@@ -20,14 +20,19 @@ def copy(src, dst):
         click.echo('move %s to folder %s' % (fn, dst))
 """
 
-@click.command("new")
+@click.group()
+def cli():
+    pass
+
+@cli.command("new")
 def new():
     from inoft_vocal_framework.cli import new as new_module
     new_module.new()
 
-@click.group()
-def cli():
-    pass
+@cli.command("deploy")
+def deploy():
+    from inoft_vocal_framework.cli.deploy import DeployHandler as deployHandler
+    deployHandler().handle()
 
 @cli.group()
 def messages():
@@ -48,10 +53,12 @@ def push(file):
         messages_module_file = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(messages_module_file)
 
+        messages_db = DynamoDbMessagesAdapter(is_admin_mode=True, table_name="test_messages", region_name="eu-west-3")
+
         messages_file_vars_dict = vars(messages_module_file)
         for var_key, var_object in messages_file_vars_dict.items():
-            if isinstance(var_object, SpeechCategory):
-                messages_db.post_new_category(speech_category=var_object)
+            if isinstance(var_object, SpeechsList):
+                messages_db.post_new_speechs_list(speechs_list=var_object)
                 print(f"Posted speech category : {var_key}")
     else:
         if click.confirm("File did not exist, do you want to select a new one ?"):
@@ -62,11 +69,6 @@ def push(file):
 
 def nice_quit():
     CliCache.save_cache_to_json()
-
-
-messages_db = DynamoDbMessagesAdapter(is_admin_mode=True, table_name="test_messages", region_name="eu-west-3")
-
-# messages_db.post_new_category(MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME)
 
 if __name__ == '__main__':
     new()

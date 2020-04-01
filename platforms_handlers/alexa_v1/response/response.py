@@ -102,99 +102,21 @@ class Directives(list):
     def __init__(self):
         super().__init__()
 
-    class AudioPlayer:
-        json_key = None
-        TYPE_PLAY = "AudioPlayer.Play"
-        AVAILABLE_TYPES = [TYPE_PLAY]
-        PLAY_BEHAVIOR_REPLACE_ALL = "REPLACE_ALL"
-        AVAILABLE_PLAY_BEHAVIORS = [PLAY_BEHAVIOR_REPLACE_ALL]
-        # todo: include a warning when using an audio played if the skill do not has the
-        #  audio player setting activated (i lost like 20 minutes on this dumb thing)
-
-        class AudioItem:
-            json_key = "audioItem"
-
-            class Stream:
-                json_key = "stream"
-
-                def __init__(self, token_identifier: str, url: str, offsetInMilliseconds: int = 0):
-                    self.token = token_identifier
-                    self.url = url
-                    self.offsetInMilliseconds = offsetInMilliseconds
-
-                @property
-                def token(self) -> str:
-                    return self._token
-
-                @token.setter
-                def token(self, token: str) -> None:
-                    raise_if_variable_not_expected_type(value=token, expected_type=str, variable_name="token")
-                    self._token = token
-
-                @property
-                def url(self) -> str:
-                    return self._url
-
-                @url.setter
-                def url(self, url: str) -> None:
-                    raise_if_variable_not_expected_type(value=url, expected_type=str, variable_name="url")
-                    self._url = url
-
-                @property
-                def offsetInMilliseconds(self) -> int:
-                    return self._offsetInMilliseconds
-
-                @offsetInMilliseconds.setter
-                def offsetInMilliseconds(self, offsetInMilliseconds: int) -> None:
-                    raise_if_variable_not_expected_type(value=offsetInMilliseconds, expected_type=int, variable_name="offsetInMilliseconds")
-                    self._offsetInMilliseconds = offsetInMilliseconds
-
-            def __init__(self, token_identifier: str, url: str, offsetInMilliseconds: int = 0):
-                self._stream = self.Stream(token_identifier=token_identifier, url=url, offsetInMilliseconds=offsetInMilliseconds)
-
-            @property
-            def stream(self) -> Stream:
-                return self._stream
-
-        def __init__(self, played_type: str, play_behavior: str, token_identifier: str, url: str, offsetInMilliseconds: int = 0):
-            self.type = played_type
-            self._playBehavior = play_behavior
-            self._audioItem = self.AudioItem(token_identifier=token_identifier, url=url, offsetInMilliseconds=offsetInMilliseconds)
-
-        @property
-        def type(self) -> str:
-            return self._type
-
-        @type.setter
-        def type(self, type_value: str) -> None:
-            raise_if_value_not_in_list(value=type_value, list_object=self.AVAILABLE_TYPES, variable_name="type")
-            self._type = type_value
-
-        @property
-        def playBehavior(self) -> str:
-            return self._playBehavior
-
-        @playBehavior.setter
-        def playBehavior(self, playBehavior: str) -> None:
-            raise_if_value_not_in_list(value=playBehavior, list_object=self.AVAILABLE_PLAY_BEHAVIORS, variable_name="playBehavior")
-            self._playBehavior = playBehavior
-
-        @property
-        def audioItem(self) -> AudioItem:
-            return self._audioItem
-
     @property
-    def audioPlayer(self) -> AudioPlayer:
+    def audioPlayer(self):
+        from inoft_vocal_framework.platforms_handlers.alexa_v1.audioplayer.audioplayer_directives import AudioPlayer
         for directive in self:
-            if isinstance(directive, self.AudioPlayer):
+            if isinstance(directive, AudioPlayer):
                 return directive
 
     def add_audio_player(self, played_type: str, play_behavior: str, token_identifier: str, url: str, offsetInMilliseconds: int = 0):
         if self.audioPlayer is not None:
             raise Exception(f"AudioPlayer has already been set and cannot be set twice")
-        self.append(self.AudioPlayer(played_type=played_type, play_behavior=play_behavior,
-                                     token_identifier=token_identifier, url=url,
-                                     offsetInMilliseconds=offsetInMilliseconds))
+
+        from inoft_vocal_framework.platforms_handlers.alexa_v1.audioplayer.audioplayer_directives import AudioPlayer
+        self.append(AudioPlayer(played_type=played_type, play_behavior=play_behavior,
+                                token_identifier=token_identifier, url=url,
+                                offsetInMilliseconds=offsetInMilliseconds))
 
     def do_not_include(self) -> bool:
         return True if len(self) == 0 else False
@@ -281,12 +203,24 @@ class Response:
         else:
             self.reprompt.outputSpeech.text = text_or_ssml
 
+    @property
+    def audioplayer(self):
+        from inoft_vocal_framework.platforms_handlers.alexa_v1.audioplayer.audioplayer_directives import AudioPlayer
+        for directive in self.directives:
+            if isinstance(directive, AudioPlayer):
+                return directive
+
+    # todo: to remove its deprecated (use the audioplayer object)
     def play_audio(self, identifier: str,  mp3_file_url: str,
                    title: str, subtitle: str, icon_image_url: str, background_image_url: str,
-                   milliseconds_start_offset: int = 0,
-                   played_type: str = Directives.AudioPlayer.TYPE_PLAY,
-                   play_behavior: str = Directives.AudioPlayer.PLAY_BEHAVIOR_REPLACE_ALL,
+                   milliseconds_start_offset: int = 0, played_type: str = None, play_behavior: str = None,
                    override_default_end_session: bool = False):
+
+        from inoft_vocal_framework.platforms_handlers.alexa_v1.audioplayer.audioplayer_directives import AudioPlayer
+        if played_type is None:
+            played_type = AudioPlayer.TYPE_PLAY
+        if play_behavior is None:
+            play_behavior = AudioPlayer.PLAY_BEHAVIOR_REPLACE_ALL
 
         # todo: check mp3 file validity
         self.directives.add_audio_player(played_type=played_type, play_behavior=play_behavior,

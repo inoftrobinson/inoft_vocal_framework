@@ -1,0 +1,12 @@
+default_session_data_timeout: 60
+sessions_users_data:
+  database_client: dynamodb
+  dynamodb:
+    table_name: skill_hello-world_users-data
+    region_name: eu-west-3
+messages:
+  use_database_dynamic_messages: True
+  database_client: dynamodb
+  dynamodb:
+    table_name: skill_hello-world_messages
+    region_name: eu-west-3

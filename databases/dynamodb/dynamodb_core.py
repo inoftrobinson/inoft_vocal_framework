@@ -47,10 +47,7 @@ class DynamoDbCoreAdapter:
                             'AttributeType': 'S'
                         }
                     ],
-                    ProvisionedThroughput={
-                        'ReadCapacityUnits': 5,
-                        'WriteCapacityUnits': 5
-                    }
+                    BillingMode='PAY_PER_REQUEST',
                 )
             except Exception as e:
                 if e.__class__.__name__ != "ResourceInUseException":

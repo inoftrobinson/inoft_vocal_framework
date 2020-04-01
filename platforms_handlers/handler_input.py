@@ -1,3 +1,4 @@
+import logging
 from collections import Callable
 
 from inoft_vocal_framework.dummy_object import DummyObject
@@ -6,21 +7,21 @@ from inoft_vocal_framework.platforms_handlers.current_used_platform_info import 
 from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
-from inoft_vocal_framework.skill_builder.skill_settings import get_settings_safedict
+from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
     def __init__(self):
         super().__init__()
-        self.settings_safedict = get_settings_safedict()
-        self.session_users_data_safedict = self.settings_safedict.get("sessions_users_data").to_safedict()
+        self.settings = Settings()
+        self.session_users_data_safedict = self.settings.settings.get("sessions_users_data").to_safedict()
         self.sessions_users_data_disable_database = self.session_users_data_safedict.get("disable_database").to_bool()
         self.sessions_users_data_db_table_name = self.session_users_data_safedict.get("dynamodb").get("table_name").to_str()
         self.sessions_users_data_db_region_name = self.session_users_data_safedict.get("dynamodb").get("region_name").to_str()
 
         self._session_id = None
         self._is_invocation_new_session = None
-        self._default_session_data_timeout = self.settings_safedict.get("default_session_data_timeout").to_int()
+        self._default_session_data_timeout = self.settings.settings.get("default_session_data_timeout").to_int()
         self._session_been_resumed = None
         self._simple_session_user_data = None
         self._smart_session_user_data = None
@@ -107,6 +108,8 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._smart_session_user_data
 
     def _load_smart_session_user_data(self):
+        # We use a separate function to load the smart session user data, and we do not include it in the property itself,
+        # because this function can be called by the smart_session_user_data property or the session_been_resumed property.
         if self._smart_session_user_data is None:
             if self.sessions_users_data_disable_database is False:
                 self._smart_session_user_data, self._session_been_resumed = self.dynamodb_adapter.get_smart_session_attributes(
@@ -116,6 +119,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
                     self._smart_session_user_data = SafeDict()
             else:
                 self._smart_session_user_data = SafeDict()
+        logging.debug(f"_smart_session_user_data = {self._smart_session_user_data}")
 
     @property
     def persistent_user_id(self) -> str:
@@ -136,23 +140,17 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 print(f"user_id {self._persistent_user_id} has been memorized in the database.")
             else:
                 self._persistent_user_id = user_id
-
-        print(f"_persistent_user_id = {self._persistent_user_id}")
+            logging.debug(f"_persistent_user_id = {self._persistent_user_id}")
         return self._persistent_user_id
 
     @property
     def persistent_user_data(self) -> SafeDict:
         if self._persistent_user_data is None:
             if self.sessions_users_data_disable_database is False:
-                persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
-                if isinstance(persistent_user_data, dict):
-                    self._persistent_user_data = SafeDict(persistent_user_data)
-                else:
-                    self._persistent_user_data = SafeDict()
-            else:
+                self._persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
+            if not isinstance(self._persistent_user_data, SafeDict):
                 self._persistent_user_data = SafeDict()
-
-        print(f"_persistent_user_data = {self._persistent_user_data}")
+            logging.debug(f"_persistent_user_data = {self._persistent_user_data}")
         return self._persistent_user_data
 
     @property
@@ -161,25 +159,24 @@ class HandlerInput(CurrentUsedPlatformInfo):
             self._interactivity_callback_functions = self.smart_session_user_data.get("interactivity_callback_functions").to_safedict()
         return self._interactivity_callback_functions
 
-    def load_event_and_context(self, event: dict, context: dict) -> None:
+    def load_event(self, event: dict) -> None:
         if self.is_alexa_v1 is True:
             from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
             self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
-            self.alexaHandlerInput.load_event_and_context(event=event, context=context)
+            NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.alexaHandlerInput,
+                request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
 
         elif self.is_dialogflow_v1 is True:
             from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
             self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
-            NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
-                                                                      request_json_dict_stringed_dict_or_list=event,
-                                                                      key_names_identifier_objects_to_go_into=["json_key"])
+            NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
+                request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
 
         elif self.is_bixby_v1 is True:
             from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
             self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
-            NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
-                                                                      request_json_dict_stringed_dict_or_list=event,
-                                                                      key_names_identifier_objects_to_go_into=["json_key"])
+            NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
+                request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
 
     def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: str):
         # todo: fix bug where the identifier_key is not the right now if it has been modified because there were only 1 element
@@ -442,12 +439,24 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._alexaHandlerInput if self._alexaHandlerInput is not None else DummyObject()
 
     @property
+    def alexa(self):
+        return self.alexaHandlerInput
+
+    @property
     def dialogFlowHandlerInput(self):
         return self._dialogFlowHandlerInput if self._dialogFlowHandlerInput is not None else DummyObject()
 
     @property
+    def google(self):
+        return self.dialogFlowHandlerInput
+
+    @property
     def bixbyHandlerInput(self):
         return self._bixbyHandlerInput if self._bixbyHandlerInput is not None else DummyObject()
+
+    @property
+    def bixby(self):
+        return self.bixbyHandlerInput
 
 
 class HandlerInputWrapper:

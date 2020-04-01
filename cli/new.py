@@ -69,15 +69,14 @@ def new(template_name: str = None, project_folderpath: str = None):
     if project_folderpath is None:
         project_folderpath = click.prompt("To which folder location would like to put the template ?", default=Path(current_folder_path.parent).parent)
 
-    if False:
-        for src_file_path in selected_templates_files_to_copy:
-            from shutil import copy
-            destination_filepath = os.path.join(project_folderpath, Path(src_file_path).name)
-            if os.path.isfile(destination_filepath):
-                if click.confirm(f"A file already exist at {destination_filepath}. Do you wish to keep the existing file and not replace it ?"):
-                    continue
-            click.echo(f"Copying {src_file_path} to {destination_filepath}")
-            copy(src_file_path, destination_filepath)
+    for src_file_path in selected_templates_files_to_copy:
+        from shutil import copy
+        destination_filepath = os.path.join(project_folderpath, Path(src_file_path).name)
+        if os.path.isfile(destination_filepath):
+            if click.confirm(f"A file already exist at {destination_filepath}. Do you wish to keep the existing file and not replace it ?"):
+                continue
+        click.echo(f"Copying {src_file_path} to {destination_filepath}")
+        copy(src_file_path, destination_filepath)
     click.echo("Template copying completed.")
 
     # Detect AWS profiles and regions
@@ -113,28 +112,7 @@ def new(template_name: str = None, project_folderpath: str = None):
         click.echo("S3 buckets must be named according to the following rules:")
         click.echo(BUCKET_NAMING_MSG)
 
-
-    # TODO: Create VPC?
-    # Memory size? Time limit?
-    # Domain? LE keys? Region?
-    # 'Advanced Settings' mode?
-
-    """
-    # Globalize
-    click.echo("\nYou can optionally deploy to " + click.style("all available regions", bold=True)  + " in order to provide fast global service.")
-    click.echo("If you are using Zappa for the first time, you probably don't want to do this!")
-    global_deployment = False
-    while True:
-        global_type = input("Would you like to deploy this application " + click.style("globally", bold=True)  + "? (default 'n') [y/n/(p)rimary]: ")
-        if not global_type:
-            break
-        if global_type.lower() in ["y", "yes", "p", "primary"]:
-            global_deployment = True
-            break
-        if global_type.lower() in ["n", "no"]:
-            global_deployment = False
-            break
-    """
+    # todo: add multi-regions deployement
 
     # The given environment name
     zappa_settings = {
@@ -149,26 +127,8 @@ def new(template_name: str = None, project_folderpath: str = None):
     if profile_region:
         zappa_settings[env]['aws_region'] = profile_region
 
-    """
-    # Global Region Deployment
-    if global_deployment:
-        additional_regions = [r for r in API_GATEWAY_REGIONS if r != profile_region]
-        # Create additional stages
-        if global_type.lower() in ["p", "primary"]:
-            additional_regions = [r for r in additional_regions if '-1' in r]
 
-        for region in additional_regions:
-            env_name = env + '_' + region.replace('-', '_')
-            g_env = {
-                env_name: {
-                    'extends': env,
-                    'aws_region': region
-                }
-            }
-            zappa_settings.update(g_env)
-    """
-
-    import json as json # hjson is fine for loading, not fine for writing.
+    import json as json # json is fine for loading, not fine for writing.
     zappa_settings_json = json.dumps(zappa_settings, sort_keys=True, indent=4)
 
     click.echo("\nOkay, here's your " + click.style("zappa_settings.json", bold=True) + ":\n")
@@ -183,23 +143,10 @@ def new(template_name: str = None, project_folderpath: str = None):
     with open("zappa_settings.json", "w") as zappa_settings_file:
         zappa_settings_file.write(zappa_settings_json)
 
-    if global_deployment:
-        click.echo("\n" + click.style("Done", bold=True) + "! You can also " + click.style("deploy all", bold=True)  + " by executing:\n")
-        click.echo(click.style("\t$ zappa deploy --all", bold=True))
-
-        click.echo("\nAfter that, you can " + click.style("update", bold=True) + " your application code with:\n")
-        click.echo(click.style("\t$ zappa update --all", bold=True))
-    else:
-        click.echo("\n" + click.style("Done", bold=True) + "! Now you can " + click.style("deploy", bold=True)  + " your Zappa application by executing:\n")
-        click.echo(click.style("\t$ zappa deploy %s" % env, bold=True))
-
-        click.echo("\nAfter that, you can " + click.style("update", bold=True) + " your application code with:\n")
-        click.echo(click.style("\t$ zappa update %s" % env, bold=True))
-
-    click.echo("\nTo learn more, check out our project page on " + click.style("GitHub", bold=True) +
-               " here: " + click.style("https://github.com/Miserlou/Zappa", fg="cyan", bold=True))
-    click.echo("\nEnjoy!,")
-    click.echo(" ~ " + click.style("Inoft", bold=True) + "!")
+    click.echo("\nPour en savoir plus sur le framework, rendez-vous sur notre page " + click.style("GitHub", bold=True) +
+               " ici : " + click.style("https://github.com/Robinson04/inoft_vocal_framework", fg="cyan", bold=True))
+    click.echo("\nExcellente journée ! ;)")
+    click.echo(" ~ " + click.style("Robinson Labourdette d'Inoft", bold=True) + "!")
 
     return
 

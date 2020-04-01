@@ -19,14 +19,14 @@ def generate_uuid4() -> str:
     print(f"Generated id : {id_str}")
     return id_str
 
-def load_yaml(filepath: str):
+def load_yaml(filepath: str) -> dict:
     from yaml import safe_load, YAMLError
     with open(filepath, "r") as file_stream:
         try:
             return safe_load(file_stream)
         except YAMLError as error:
-            raise Exception(f"The yaml file at path {filepath} was not valid, and caused an error when loading."
-                            f"Please check the file or recreate it from the cli or from any other way : {error}")
+            raise Exception(f"The yaml file was not valid, and caused an error when loading."
+                            f"Please check the file or recreate it with the cli : {error}")
 
 def load_json(filepath: str) -> dict:
     from json import load as json_load
@@ -34,5 +34,5 @@ def load_json(filepath: str) -> dict:
         try:
             return json_load(file_stream)
         except Exception as error:
-            raise Exception(f"The json file at path {filepath} was not valid, and caused an error when loading."
-                            f"Please check the file or recreate it from the cli or from any other way : {error}")
+            raise Exception(f"The json file was not valid, and caused an error when loading."
+                            f"Please check the file or recreate it with the cli : {error}")

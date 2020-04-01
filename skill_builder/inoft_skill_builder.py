@@ -1,5 +1,9 @@
+import logging
 from abc import abstractmethod
 from json import dumps as json_dumps
+
+from inoft_vocal_framework.dummy_object import DummyObject
+from inoft_vocal_framework.exceptions import raise_if_value_not_in_list
 from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
 from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput, HandlerInputWrapper
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
@@ -17,7 +21,7 @@ class InoftRequestHandler(HandlerInputWrapper):  # (HandlerInput):
         raise NotImplementedError
 
     @abstractmethod
-    def handle(self):
+    def handle(self) -> dict:
         """Handles the Request inside handler input and provides a Response for dispatcher to return.
         :return: Response for the dispatcher to return or None
         :rtype: Union[Response, None]
@@ -25,7 +29,7 @@ class InoftRequestHandler(HandlerInputWrapper):  # (HandlerInput):
         raise NotImplementedError
 
     @abstractmethod
-    def handle_resume(self):
+    def handle_resume(self) -> dict:
         print(f"Resuming an user session, but no logic has been found in the handle_resume function, defaulting to the handle function")
 
 class InoftStateHandler(HandlerInputWrapper):  # (HandlerInput):
@@ -54,6 +58,24 @@ class InoftDefaultFallback(HandlerInputWrapper):
     def handle(self):
         raise NotImplementedError
 
+class InoftHandlersGroup:
+    @abstractmethod
+    def __getattr__(self, item):
+        self_vars = vars(self)
+        if item in self_vars:
+            return self_vars[item]
+        else:
+            return DummyObject()
+
+    def handle(self):
+        for var_key, var_object in vars(self).items():
+            if InoftRequestHandler in list(var_object.__class__.__bases__):
+                if var_object.can_handle() is True:
+                    handler_output = var_object.handle()
+                    if handler_output is not None:
+                        return handler_output
+
+
 class InoftSkill:
     def __init__(self, settings_yaml_filepath=None, settings_json_filepath=None):
 
@@ -63,9 +85,9 @@ class InoftSkill:
         elif settings_yaml_filepath is None and settings_json_filepath is None:
             raise Exception(f"Please specify a yaml or json settings file with the settings_yaml_filepath arg or settings_json_filepath")
         elif settings_yaml_filepath is not None:
-            self.settings.load_yaml(settings_filepath=settings_yaml_filepath)
+            self.settings.load_yaml(settings_file=settings_yaml_filepath)
         elif settings_json_filepath is not None:
-            self.settings.load_json(settings_filepath=settings_json_filepath)
+            self.settings.load_json(settings_file=settings_json_filepath)
 
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()
@@ -136,8 +158,10 @@ class InoftSkill:
                             f"{InoftDefaultFallback.__name__} as its MetaClass : {default_fallback_handler_instance_or_class}")
 
     def process_request(self):
+        output_event = None
         handler_to_use = None
         handler_is_an_alone_callback_function = False
+        handler_is_an_audioplayer_handlers_group = False
         handler_is_a_then_state_handler = False
         handler_is_a_request_handler = False
 
@@ -150,15 +174,47 @@ class InoftSkill:
                 self.handler_input.selected_option_identifier).to_safedict(default=None)
 
             if infos_callback_function_to_use is not None:
-                from inoft_vocal_framework.skill_builder.utils import get_function_from_file_and_path
-                handler_to_use = get_function_from_file_and_path(
+                from inoft_vocal_framework.skill_builder.utils import get_function_or_class_from_file_and_path
+                handler_to_use = get_function_or_class_from_file_and_path(
                     file_filepath=infos_callback_function_to_use.get("file_filepath_containing_callback").to_str(),
-                    function_path_qualname=infos_callback_function_to_use.get("callback_function_path").to_str())
+                    path_qualname=infos_callback_function_to_use.get("callback_function_path").to_str())
 
                 if handler_to_use is not None:
                     handler_is_an_alone_callback_function = True
 
-        # Second, if the invocation is a new session, and a session can be resumed, we resume the last intent of the previous session
+        # Second, Alexa Audio Player
+        if self.handler_input.is_alexa_v1:
+            if self.handler_input.alexaHandlerInput.context.audioPlayer.token is not None:
+                last_used_audioplayer_handlers_group_infos = self.handler_input.alexaHandlerInput.get_last_used_audioplayer_handlers_group()
+                from inoft_vocal_framework.skill_builder.utils import get_function_or_class_from_file_and_path
+                audioplayer_handlers_group_class_type = get_function_or_class_from_file_and_path(
+                    file_filepath=last_used_audioplayer_handlers_group_infos.get("fileFilepathContainingClass").to_str(),
+                    path_qualname=last_used_audioplayer_handlers_group_infos.get("classPath").to_str())
+
+                if audioplayer_handlers_group_class_type is not None:
+                    raise_if_value_not_in_list(value=InoftHandlersGroup, list_object=list(audioplayer_handlers_group_class_type.__bases__),
+                                               variable_name="audioplayer_handlers_group_class_type")
+
+                    class_kwargs = last_used_audioplayer_handlers_group_infos.get("classKwargs").to_dict()
+                    class_kwargs["parent_handler"] = self
+                    handler_to_use = audioplayer_handlers_group_class_type(**class_kwargs)
+
+                    # When using an audioplayer handlers group, we will call its handle function (it will try every one of its
+                    # handler, until he found one that return an output). If the output is None (no function out of every function
+                    # of the audioplayer handlers group has returned something), then we will set back the handler_to_use to None,
+                    # so that the others more traditional handlers can have a chance to be use (if we did not do that, and that
+                    # no event was returned, the response would be the default fallback right away).
+                    # The reason we do all of that, is that if the AudioPlayer object is present, but not in a state that is
+                    # supported by the app trough a can_handle function (like if it is stopped, and no can_handle function of
+                    # any class is triggered by the current state of the AudioPlayer), then we will not be able to give an
+                    # interactive experience with the AudioPlayer, which translate into our output_event being None.
+                    output_event = handler_to_use.handle()
+                    if output_event is not None:
+                        handler_is_an_audioplayer_handlers_group = True
+                    else:
+                        handler_to_use = None
+
+        # Third, if the invocation is a new session, and a session can be resumed, we resume the last intent of the previous session
         if self.handler_input.is_invocation_new_session is True and self.handler_input.session_been_resumed is True:
             last_intent_handler_class_key_name = self.handler_input.session_remember("lastIntentHandler")
             if last_intent_handler_class_key_name in self.request_handlers_chain.keys():
@@ -166,7 +222,7 @@ class InoftSkill:
             elif last_intent_handler_class_key_name in self.state_handlers_chain.keys():
                 handler_to_use = self.state_handlers_chain[last_intent_handler_class_key_name]
 
-        # Third, loading of the then_state in the session
+        # Fourth, loading of the then_state in the session
         if handler_to_use is None:
             last_then_state_class_name = self.handler_input.remember_session_then_state()
             if last_then_state_class_name is not None:
@@ -175,10 +231,10 @@ class InoftSkill:
                     handler_is_a_then_state_handler = True
                     self.handler_input.forget_session_then_state()
                 else:
-                    print(f"Warning ! A thenState class name ({last_then_state_class_name}) was not None"
-                          f" and has not been found in the available classes : {self.state_handlers_chain}")
+                    logging.warning(f"A thenState class name ({last_then_state_class_name}) was not None and has"
+                                    f" not been found in the available classes : {self.state_handlers_chain}")
 
-        # Fourth, classical requests handlers
+        # Fifth, classical requests handlers
         if handler_to_use is None:
             for request_handler in self.request_handlers_chain.values():
                 if request_handler.can_handle() is True:
@@ -186,24 +242,23 @@ class InoftSkill:
                     handler_is_a_request_handler = True
                     break
                 else:
-                    print(f"Not handled by : {request_handler.__class__}")
+                    logging.debug(f"Not handled by : {request_handler.__class__}")
 
-        output_event = None
         if handler_to_use is not None:
             if handler_is_an_alone_callback_function is True:
                 output_event = handler_to_use(self.handler_input, self.handler_input.selected_option_identifier)
                 if output_event is not None:
-                    print(f"Successfully resumed by {handler_to_use} which returned {output_event}")
+                    logging.debug(f"Successfully resumed by {handler_to_use} which returned {output_event}")
                 else:
-                    print(f"A callback function has been found {handler_to_use}. But nothing was returned,"
-                          f"did you called the return self.to_platform_dict() function ?")
+                    logging.info(f"A callback function has been found {handler_to_use}. But nothing was returned,"
+                                 f" did you called the return self.to_platform_dict() function ?")
 
             if output_event is None and self.handler_input.session_been_resumed is True:
-                print(f"Handled and resumed by : {handler_to_use.__class__}")
+                logging.debug(f"Handled and resumed by : {handler_to_use.__class__}")
                 output_event = handler_to_use.handle_resume()
 
             if output_event is None:
-                print(f"Handled classically by : {handler_to_use.__class__}")
+                logging.debug(f"Handled classically by : {handler_to_use.__class__}")
                 output_event = handler_to_use.handle()
                 if handler_is_a_then_state_handler is True and output_event is None:
                     # If the handle function of the a then_state handler do not return anything, we call its fallback
@@ -213,12 +268,13 @@ class InoftSkill:
                     output_event = handler_to_use.fallback()
 
         if output_event is not None:
-            if handler_is_an_alone_callback_function is False:
+            if handler_is_an_alone_callback_function is False and handler_is_an_audioplayer_handlers_group is False:
                 # If the response is handled by a function, we do not save it as the last intent (we cannot actually,
                 # and it would not make sense anyway). So we will keep the previous last intent as the new last intent.
+                # We do the same thing it is handler by an audioplayer handlers group (since it is used to handle interactions too)
                 self.handler_input.memorize_session_last_intent_handler(handler_class_type_instance_name=handler_to_use)
         else:
-            print(f"Handler by default fallback : {self.default_fallback_handler}")
+            logging.debug(f"Handler by default fallback : {self.default_fallback_handler}")
             output_event = self.default_fallback_handler.handle()
 
         self.handler_input.save_attributes_if_need_to()
@@ -236,12 +292,13 @@ class InoftSkill:
         self.check_everything_implemented()
         event_safedict = SafeDict(classic_dict=event)
 
-        if event_safedict.get("resource").to_str() == "/google-assistant-v1":
+        # The 'rawPath' is for ApiGatewayV2, use the key 'resource' (without the comma) if using ApiGatewayV1
+        if event_safedict.get("rawPath").to_str() == "/googleAssistantDialogflowV1":
             # A google-assistant or dialogflow request always pass trough an API gateway
             self.handler_input.is_dialogflow_v1 = True
             event = NestedObjectToDict.get_dict_from_json(event_safedict.get("body").to_str())
 
-        elif event_safedict.get("resource").to_str() == "/samsung-bixby-v1":
+        elif event_safedict.get("rawPath").to_str() == "/samsungBixbyV1":
             # A samsung bixby request always pass trough an API gateway
             self.handler_input.is_bixby_v1 = True
             event = NestedObjectToDict.get_dict_from_json(event_safedict.get("body").to_str())
@@ -253,7 +310,7 @@ class InoftSkill:
             from inoft_vocal_framework.messages import ERROR_PLATFORM_NOT_SUPPORTED
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)
 
-        self.handler_input.load_event_and_context(event=event, context=context)
+        self.handler_input.load_event(event=event)
         return self.process_request()
 
     @property

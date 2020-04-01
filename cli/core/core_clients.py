@@ -1,5 +1,4 @@
 import boto3
-
 from inoft_vocal_framework.cli.core.policies import ATTACH_POLICY, ASSUME_POLICY
 
 
@@ -7,6 +6,8 @@ class CoreClients:
     def __init__(self):
         self.attach_policy = ATTACH_POLICY
         self.assume_policy = ASSUME_POLICY
+
+        self._boto_session = None
 
         self._lambda_client = None
         self._s3_client = None
@@ -17,9 +18,16 @@ class CoreClients:
         east_config = boto3.session.Config(region_name="us-east-1")
         self.acm_client = boto3.client("acm", config=east_config)
         self.iam_client = boto3.client("iam")
-        self.iam = boto3.resource("iam")
+        self.iam_resource = boto3.resource("iam")
+        self.iam = self.boto_session.client("iam")
+        self.cloudformation_client = boto3.client("cloudformation")
         self.cloudwatch = boto3.client("cloudwatch")
-        self.sts_client = boto3.client("sts")
+
+    @property
+    def boto_session(self):
+        if self._boto_session is None:
+            self._boto_session = boto3.Session()
+        return self._boto_session
 
     @property
     def lambda_client(self):

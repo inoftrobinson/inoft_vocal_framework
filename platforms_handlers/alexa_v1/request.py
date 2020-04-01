@@ -64,9 +64,9 @@ class Request:
         self._dialogState = None
         self._intent = Intent()
 
-    def process_and_set_json_request_to_object(self, stringed_request_json_dict: str):
-        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self,
-                                                                  request_json_dict_stringed_dict_or_list=stringed_request_json_dict)
+    def process_and_set_json_to_object(self, stringed_request_json_dict: str):
+        NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self,
+                                                          request_json_dict_stringed_dict_or_list=stringed_request_json_dict)
 
     def is_launch_request(self) -> bool:
         if self.type == self.LaunchRequestKeyName:
@@ -74,7 +74,7 @@ class Request:
         else:
             return False
 
-    def is_in_intent_names(self, intent_names_list):
+    def is_in_intent_names(self, intent_names_list) -> bool:
         if self.type == self.IntentRequestKeyName:
             if isinstance(intent_names_list, list):
                 if self.intent.name in intent_names_list:
@@ -82,6 +82,21 @@ class Request:
             elif isinstance(intent_names_list, str):
                 if self.intent.name == intent_names_list:
                     return True
+            else:
+                raise Exception(f"The intent_names_list must be a list or a str, but it was"
+                                f" a {type(intent_names_list)} object : {intent_names_list}")
+        return False
+
+    def is_in_request_types(self, request_types_list) -> bool:
+        if isinstance(request_types_list, list):
+            if self.type in request_types_list:
+                return True
+        elif isinstance(request_types_list, str):
+            if self.type == request_types_list:
+                return True
+        else:
+            raise Exception(f"The request_types_list must be a list or a str, but it was"
+                            f" a {type(request_types_list)} object : {request_types_list}")
         return False
 
     def get_intent_slot_value(self, slot_key: str, default=None):

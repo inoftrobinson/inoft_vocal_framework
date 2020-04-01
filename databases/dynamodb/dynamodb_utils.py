@@ -1,6 +1,6 @@
 import json
 
-def dynamodb_to_dict(dynamodb_item_value_or_dict_or_list) -> dict:
+def dynamodb_to_python(dynamodb_item_value_or_dict_or_list):
     from decimal import Decimal
     if isinstance(dynamodb_item_value_or_dict_or_list, Decimal):
         if dynamodb_item_value_or_dict_or_list % 1 > 0:
@@ -10,12 +10,12 @@ def dynamodb_to_dict(dynamodb_item_value_or_dict_or_list) -> dict:
 
     elif isinstance(dynamodb_item_value_or_dict_or_list, list):
         for i, item in enumerate(dynamodb_item_value_or_dict_or_list):
-            dynamodb_item_value_or_dict_or_list[i] = dynamodb_to_dict(item)
+            dynamodb_item_value_or_dict_or_list[i] = dynamodb_to_python(item)
         return dynamodb_item_value_or_dict_or_list
 
     elif isinstance(dynamodb_item_value_or_dict_or_list, dict):
         for item_key, item_value in dynamodb_item_value_or_dict_or_list.items():
-            dynamodb_item_value_or_dict_or_list[item_key] = dynamodb_to_dict(item_value)
+            dynamodb_item_value_or_dict_or_list[item_key] = dynamodb_to_python(item_value)
         return dynamodb_item_value_or_dict_or_list
 
     else:

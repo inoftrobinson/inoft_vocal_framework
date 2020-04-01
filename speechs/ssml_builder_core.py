@@ -4,35 +4,41 @@ import re
 
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
-from session_utils import add_new_played_category
-from general_utils import pick_msg
+from inoft_vocal_framework.session_utils import add_new_played_category  # todo: remove this dependance
+from inoft_vocal_framework.general_utils import pick_msg # todo: and remove this dependance too
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 
 
-class SpeechCategory:
-    def __init__(self):
-        self.interaction_type_names_list = None
-        self.speechs_objects = None
-        self.should_register_when_picking = True
+class SpeechsList:
+    def __init__(self, id: str, speechs: list = None):
+        self.id = id
+        self.speechs_list = speechs
+        self._use_database_dynamic_messages = None
 
-    def types(self, interaction_type_names_list):
-        if not isinstance(interaction_type_names_list, list):
-            interaction_type_names_list = [interaction_type_names_list]
-        self.interaction_type_names_list = interaction_type_names_list
-        return self
+    @property
+    def use_database_dynamic_messages(self):
+        if self._use_database_dynamic_messages is None:
+            self._use_database_dynamic_messages = Settings().settings.get("use_database_dynamic_messages").to_bool()
+        return self._use_database_dynamic_messages
 
-    def speechs(self, speechs_objects: list):
-        self.speechs_objects = speechs_objects
+    @property
+    def id(self) -> str:
+        return self._id
+    
+    @id.setter
+    def id(self, id: str) -> None:
+        raise_if_variable_not_expected_type(value=id, expected_type=str, variable_name="id")
+        self._id = id
+
+    def speechs(self, speechs_list: list):
+        self.speechs_list = speechs_list
         return self
 
     def pick(self, ids_messages_to_exclude=None) -> str:
-        # if self.should_register_when_picking:
-        #    add_new_played_category(handler_input=None, new_played_interactions_types=self.interaction_type_names_list)
-
-        if True:  # todo : add setting #Settings.use_messages_from_database_instead_of_local_file is True:
+        if self.use_database_dynamic_messages is True:
             from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
-            self.speechs_objects = DynamoDbMessagesAdapter(table_name="test_messages", region_name="eu-west-3").get_speech_category(
-                category_id=self.interaction_type_names_list[0])
-        return pick_msg(self.speechs_objects)
+            self.speechs_list = DynamoDbMessagesAdapter(table_name="test_messages", region_name="eu-west-3").get_speechs_list(messages_list_id=self.id)
+        return pick_msg(self.speechs_list)
 
     def do_not_register(self):
         self.should_register_when_picking = True

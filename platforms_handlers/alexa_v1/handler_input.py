@@ -1,9 +1,10 @@
 from collections import Callable
 
+from inoft_vocal_framework.platforms_handlers.alexa_v1.audioplayer.audioplayer_directives import AudioPlayerWrapper
+from inoft_vocal_framework.platforms_handlers.alexa_v1.context import Context
 from inoft_vocal_framework.platforms_handlers.alexa_v1.request import Request
 from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Response
 from inoft_vocal_framework.platforms_handlers.alexa_v1.session import Session
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 
 
@@ -13,12 +14,13 @@ class AlexaHandlerInput:
     def __init__(self, parent_handler_input: HandlerInput):
         self.parent_handler_input = parent_handler_input
         self.session = Session()
-        self.context = None
+        self.context = Context()
         self.request = Request()
         self.response = Response()
 
         self._is_new_session = None
         self._session_attributes = None
+        self._audioplayer = None
 
     @property
     def is_new_session(self) -> bool:
@@ -26,28 +28,14 @@ class AlexaHandlerInput:
             self._is_new_session = self.session.new if isinstance(self.session.new, bool) else False
         return self._is_new_session
 
-    def load_event_and_context(self, event: dict, context: dict):
-        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self,
-                                                                  request_json_dict_stringed_dict_or_list=event,
-                                                                  key_names_identifier_objects_to_go_into=["json_key"])
-
-    def _save_audio_on_pause_callback_function(self, on_pause_callback_function: Callable, identifier_key: str):
-        self.parent_handler_input.save_callback_function_to_database(
-            callback_functions_key_name="AudioPlayer_onPause_callbackFunctions",
-            callback_function=on_pause_callback_function, identifier_key=identifier_key)
-
     def is_launch_request(self) -> bool:
         return self.request.is_launch_request()
 
     def is_in_intent_names(self, intent_names_list) -> bool:
-        if not isinstance(intent_names_list, list):
-            if isinstance(intent_names_list, str):
-                intent_names_list = [intent_names_list]
-            else:
-                raise Exception(f"The intent_names_list must be a list or a str in order to be converted to a list,"
-                                f"but it was a {type(intent_names_list)} object : {intent_names_list}")
-
         return self.request.is_in_intent_names(intent_names_list=intent_names_list)
+
+    def is_in_request_types(self, request_types_list: list):
+        return self.request.is_in_request_types(request_types_list=request_types_list)
 
     # todo: create a new function that handle the end of a session (like an optionnal function in each class type ?)
     def say(self, text_or_ssml: str) -> None:
@@ -57,19 +45,27 @@ class AlexaHandlerInput:
         # todo: fix reprompt (for alexa and dialogflow)
         self.response.say_reprompt(text_or_ssml=text_or_ssml)
 
-    def play_audio(self, identifier: str, on_pause_callback: Callable,  # on_end_callback: Callable,
-                   mp3_file_url: str, title: str = None, subtitle: str = None,
-                   icon_image_url: str = None, background_image_url: str = None,
-                   milliseconds_start_offset: int = 0, override_default_end_session: bool = False):
+    @property
+    def audioplayer(self) -> AudioPlayerWrapper:
+        if self._audioplayer is None:
+            self._audioplayer = AudioPlayerWrapper(parent_handler_input=self.parent_handler_input)
+        return self._audioplayer
 
-        # todo: add all the callbacks
+    def save_audioplayer_handlers_group_class(self, handlers_group_class_type: type, group_class_kwargs: dict = None):
+        from inspect import getfile
+        # We use the persistent attributes and not the session, because after launching an audio file with the audio player,
+        # the session of the user will end. Then when interacting with an audio file there will be no session id.
+        # So, if we save this data as session attributes, it would be considered of the same session only if the smart
+        # session timeout has not been exceeded. Which is not at all what we want.
+        self.parent_handler_input.persistent_memorize(data_key="lastUsedAudioPlayerHandlersGroupClass",
+                                                      data_value={
+                                                          "fileFilepathContainingClass": getfile(handlers_group_class_type),
+                                                          "classPath": handlers_group_class_type.__qualname__,
+                                                          "classKwargs": group_class_kwargs,
+                                                      })
 
-        self._save_audio_on_pause_callback_function(on_pause_callback_function=on_pause_callback, identifier_key=identifier)
-        self.response.play_audio(identifier=identifier, mp3_file_url=mp3_file_url,
-                                 title=title, subtitle=subtitle,
-                                 icon_image_url=icon_image_url, background_image_url=background_image_url,
-                                 milliseconds_start_offset=milliseconds_start_offset,
-                                 override_default_end_session=override_default_end_session)
+    def get_last_used_audioplayer_handlers_group(self) -> SafeDict:
+        return SafeDict(self.parent_handler_input.persistent_remember("lastUsedAudioPlayerHandlersGroupClass", specific_object_type=dict))
 
     def show_basic_card(self, title: str, text: str, small_image_url: str = None, large_image_url: str = None) -> None:
         from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Card

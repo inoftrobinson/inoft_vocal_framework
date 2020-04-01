@@ -1,16 +1,17 @@
 import time
 
 from boto3.session import ResourceNotExistsError
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 
 from inoft_vocal_framework.databases.dynamodb.dynamodb_core import DynamoDbCoreAdapter
 from inoft_vocal_framework.safe_dict import SafeDict
-from inoft_vocal_framework.speechs.ssml_builder_core import Speech, SpeechCategory
+from inoft_vocal_framework.speechs.ssml_builder_core import Speech, SpeechsList
 
 
 class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
     def __init__(self, table_name: str, region_name: str, primary_key_name="id", create_table=True,
-                 persistent_attributes_key_name="persistent_attributes", smart_session_attributes_key_name="smart_session_attributes"):
-        super().__init__(table_name, region_name)
+                 persistent_attributes_key_name="persistentAttributes", smart_session_attributes_key_name="smartSessionAttributes"):
+        super().__init__(table_name=table_name, region_name=region_name)
 
         self.persistent_attributes_key_name = persistent_attributes_key_name
         self.smart_session_attributes_key_name = smart_session_attributes_key_name
@@ -26,8 +27,8 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
             table = self.dynamodb.Table(self.table_name)
             response = table.get_item(Key={"id": user_id}, ConsistentRead=True)
             if "Item" in response:
-                from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dynamodb_to_dict
-                return SafeDict(dynamodb_to_dict(response["Item"]))
+                from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dynamodb_to_python
+                return SafeDict(dynamodb_to_python(response["Item"]))
             else:
                 return SafeDict()
         except ResourceNotExistsError:
@@ -121,11 +122,16 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
 
 
 class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
-    def __init__(self, table_name: str, region_name: str, is_admin_mode=False):
+    def __init__(self, table_name: str, region_name: str, is_admin_mode=False,
+                 persistent_attributes_key_name="persistentAttributes", smart_session_attributes_key_name="smartSessionAttributes"):
         super().__init__(table_name=table_name, region_name=region_name)
+
+        self.persistent_attributes_key_name = persistent_attributes_key_name
+        self.smart_session_attributes_key_name = smart_session_attributes_key_name
+
         self.is_admin_mode = is_admin_mode
-        self._fetched_messages_of_last_category = None
-        self._last_category_id = None
+        self._last_fetched_messages_list = None
+        self._last_messages_list_id = None
 
     def _speech_dicts_to_speech_items(self, speech_dicts: list) -> list:
         output_list = list()
@@ -133,55 +139,51 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
             output_list.append(Speech().from_dict(speech_safedict=SafeDict(speech_dict)))
         return output_list
 
-    def _fetch_messages_of_category(self, category_id: str) -> list:
-        try:
-            table = self.dynamodb.Table(self.table_name)
-            response = table.get_item(Key={"id": category_id}, ConsistentRead=True)
-            if "Item" in response and "speechItems" in response["Item"]:
-                from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dynamodb_to_dict
-                return self._speech_dicts_to_speech_items(dynamodb_to_dict(response["Item"]["speechItems"]))
-            else:
-                return list()
-        except ResourceNotExistsError:
-            raise Exception(f"DynamoDb table {self.table_name} do not exist or in the process of "
-                            f"being created. Failed to get messages of category from DynamoDb table.")
-        except Exception as e:
-            raise Exception(f"Failed to retrieve messages of category from DynamoDb table. "
-                            f"Exception of type {type(e).__name__} occurred: {str(e)}")
+    def get_fetched_messages_list(self, messages_list_id: str) -> list:
+        if self._last_fetched_messages_list is None or messages_list_id != self.last_messages_list_id:
+            try:
+                table = self.dynamodb.Table(self.table_name)
+                response = table.get_item(Key={"id": messages_list_id}, ConsistentRead=True)
+                if "Item" in response and "speechItems" in response["Item"]:
+                    from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dynamodb_to_python
+                    self._last_fetched_messages_list = self._speech_dicts_to_speech_items(dynamodb_to_python(response["Item"]["speechItems"]))
+                else:
+                    self._last_fetched_messages_list = list()
+            except ResourceNotExistsError:
+                raise Exception(f"DynamoDb table {self.table_name} do not exist or in the process of "
+                                f"being created. Failed to get messages list from DynamoDb table.")
+            except Exception as e:
+                raise Exception(f"Failed to retrieve messages list from DynamoDb table. "
+                                f"Exception of type {type(e).__name__} occurred: {str(e)}")
+        return self._last_fetched_messages_list
 
-    def get_messages_of_category(self, category_id: str) -> list:
-        if self._fetched_messages_of_last_category is None or category_id != self.last_category_id:
-            self._fetched_messages_of_last_category = self._fetch_messages_of_category(category_id=category_id)
-        return self._fetched_messages_of_last_category
-
-    def get_speech_category(self, category_id: str) -> SpeechCategory:
-        return SpeechCategory().speechs(self.get_messages_of_category(category_id=category_id))
+    def get_speechs_list(self, messages_list_id: str) -> list:
+        return self.get_fetched_messages_list(messages_list_id=messages_list_id)
 
     @staticmethod
     def _speech_item_to_dict(speech_item: Speech) -> dict:
         return {"speech": speech_item.speech, "probability": speech_item.probability_value}
 
-    def _speech_category_object_to_dict(self, speech_category_object: SpeechCategory) -> dict:
+    def _speechs_list_object_to_dict(self, speechs_list_object: SpeechsList) -> dict:
         speech_items_list = list()
-        for speech_item in speech_category_object.speechs_objects:
+        for speech_item in speechs_list_object.speechs_list:
             speech_items_list.append(self._speech_item_to_dict(speech_item=speech_item))
-        return {"id": speech_category_object.interaction_type_names_list[0], "speechItems": speech_items_list}
+        return {"id": speechs_list_object.interaction_type_names_list[0], "speechItems": speech_items_list}
 
-    def post_new_category(self, speech_category: SpeechCategory):
+    def post_new_speechs_list(self, speechs_list: SpeechsList):
         if self.is_admin_mode is not True:
-            raise Exception(f"In order to post a new speech category, the admin mode must be activated but was {self.is_admin_mode}")
+            raise Exception(f"In order to post a new speechs list, the admin mode must be activated but was {self.is_admin_mode}")
         else:
             try:
-                speech_category_dict = self._speech_category_object_to_dict(speech_category_object=speech_category)
-                print(f"Posting category : {speech_category_dict}")
+                speechs_list_dict = self._speechs_list_object_to_dict(speechs_list_object=speechs_list)
+                print(f"Posting speechs list : {speechs_list_dict}")
                 table = self._get_db_table()
                 from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dict_to_dynamodb
-                table.put_item(Item=dict_to_dynamodb(speech_category_dict))
+                table.put_item(Item=dict_to_dynamodb(speechs_list_dict))
             except ResourceNotExistsError:
                 raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
             except Exception as e:
-                raise Exception(f"Failed to save speech category to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
-
+                raise Exception(f"Failed to save speechs list to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
     def save_attributes(self, user_id: str, session_id: str, smart_session_attributes: dict, persistent_attributes: dict) -> None:
         self.last_user_id = user_id
@@ -224,20 +226,19 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
             raise Exception(f"Failed to delete attributes in DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
     @property
-    def last_category_id(self) -> str:
-        return self._last_category_id
+    def last_messages_list_id(self) -> str:
+        return self._last_messages_list_id
+    
+    @last_messages_list_id.setter
+    def last_messages_list_id(self, last_messages_list_id: str) -> None:
+        raise_if_variable_not_expected_type(value=last_messages_list_id, expected_type=str, variable_name="last_messages_list_id")
+        self._last_messages_list_id = last_messages_list_id
 
-    @last_category_id.setter
-    def last_category_id(self, last_category_id: str) -> None:
-        if not isinstance(last_category_id, str):
-            raise Exception(f"last_category_id was type {type(last_category_id)} which is not valid value for his parameter.")
-        self._last_category_id = last_category_id
-
-messages_db = DynamoDbMessagesAdapter(is_admin_mode=True, table_name="test_messages", region_name="eu-west-3")
-
-INTERACTION_TYPE_QUESTION_DO_YOU_WANT_INFOS_ABOUT_THE_GAME = "question_do-you-want-infos-about-the-game"
-MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME = SpeechCategory().types(INTERACTION_TYPE_QUESTION_DO_YOU_WANT_INFOS_ABOUT_THE_GAME).speechs({
-    Speech().add_text("Tant pis, le projet de Polemika est cool, tu veut en savoir plus ?").set_prob(1): 1,
-})
-# messages_db.post_new_category(MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME)
-# print(messages_db.get_messages_of_category(category_id="question_do-you-want-infos-about-the-game").to_dict())
+if __name__ == "__main__":
+    messages_db = DynamoDbMessagesAdapter(is_admin_mode=True, table_name="test_messages", region_name="eu-west-3")
+    INTERACTION_TYPE_QUESTION_DO_YOU_WANT_INFOS_ABOUT_THE_GAME = "question_do-you-want-infos-about-the-game"
+    MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME = SpeechsList().types(INTERACTION_TYPE_QUESTION_DO_YOU_WANT_INFOS_ABOUT_THE_GAME).speechs({
+        Speech().add_text("Tant pis, le projet de Polemika est cool, tu veut en savoir plus ?").set_prob(1): 1,
+    })
+    # messages_db.post_new_speechs_list(MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME)
+    # print(messages_db.get_messages_of_category(category_id="question_do-you-want-infos-about-the-game").to_dict())

@@ -143,7 +143,7 @@ class Payload:
         def append(self, item) -> None:
             if isinstance(item, dict):
                 input_item_object = self.InputItem()
-                NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=input_item_object,
+                NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=input_item_object,
                     request_json_dict_stringed_dict_or_list=item, key_names_identifier_objects_to_go_into=["json_key"])
                 super().append(input_item_object)
 
@@ -181,7 +181,7 @@ class Payload:
                 def append(self, item) -> None:
                     if isinstance(item, dict):
                         argument_item_object = self.ArgumentItem()
-                        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=argument_item_object,
+                        NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=argument_item_object,
                             request_json_dict_stringed_dict_or_list=item, key_names_identifier_objects_to_go_into=["json_key"])
                         super().append(argument_item_object)
 
@@ -450,8 +450,8 @@ class Request:
         self._originalDetectIntentRequest = OriginalDetectIntentRequest()
         self._session = str()
 
-    def process_and_set_json_request_to_object(self, stringed_request_json_dict: str):
-        NestedObjectToDict.process_and_set_json_request_to_object(object_class_to_set_to=self,
+    def process_and_set_json_to_object(self, stringed_request_json_dict: str):
+        NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self,
                                                                   request_json_dict_stringed_dict_or_list=stringed_request_json_dict)
 
     def is_option_select_request(self) -> bool:

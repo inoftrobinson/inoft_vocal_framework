@@ -1,0 +1,38 @@
+{
+    "version": "2.0",
+    "routeKey": "ANY /dialogflow-v1",
+    "rawPath": "/dialogflow-v1",
+    "rawQueryString": "",
+    "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip,deflate,br",
+        "content-length": "3476",
+        "content-type": "application/json",
+        "host": "itacniei7f.execute-api.eu-west-3.amazonaws.com",
+        "user-agent": "Google-Dialogflow",
+        "x-amzn-trace-id": "Root=1-5e81e3e2-9d01f3783290a04d868f2a4b",
+        "x-forwarded-for": "66.249.83.88",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https"
+    },
+    "requestContext": {
+        "accountId": "631258222318",
+        "apiId": "itacniei7f",
+        "domainName": "itacniei7f.execute-api.eu-west-3.amazonaws.com",
+        "domainPrefix": "itacniei7f",
+        "http": {
+            "method": "POST",
+            "path": "/dialogflow-v1",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "66.249.83.88",
+            "userAgent": "Google-Dialogflow"
+        },
+        "requestId": "KNCLZgZziGYEJFw=",
+        "routeKey": "ANY /dialogflow-v1",
+        "stage": "$default",
+        "time": "30/Mar/2020:12:19:46 +0000",
+        "timeEpoch": 1585570786411
+    },
+    "body": "{\n  \"responseId\": \"d1979bfa-da70-47e6-80a0-1da693dfa64d-dd2bbea9\",\n  \"queryResult\": {\n    \"queryText\": \"GOOGLE_ASSISTANT_WELCOME\",\n    \"parameters\": {\n    },\n    \"allRequiredParamsPresent\": true,\n    \"fulfillmentMessages\": [{\n      \"text\": {\n        \"text\": [\"\"]\n      }\n    }],\n    \"outputContexts\": [{\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww/contexts/actions_capability_screen_output\"\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww/contexts/actions_capability_media_response_audio\"\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww/contexts/actions_capability_account_linking\"\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww/contexts/actions_capability_audio_output\"\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww/contexts/google_assistant_input_type_voice\"\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww/contexts/google_assistant_welcome\"\n    }, {\n      \"name\": \"projects/cite-des-sciences/agent/sessions/ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww/contexts/__system_counters__\",\n      \"parameters\": {\n        \"no-input\": 0.0,\n        \"no-match\": 0.0\n      }\n    }],\n    \"intent\": {\n      \"name\": \"projects/cite-des-sciences/agent/intents/6bb349a7-382f-4025-9d8e-6c220b8e9861\",\n      \"displayName\": \"LaunchIntentRequest\"\n    },\n    \"intentDetectionConfidence\": 1.0,\n    \"languageCode\": \"fr\"\n  },\n  \"originalDetectIntentRequest\": {\n    \"source\": \"google\",\n    \"version\": \"2\",\n    \"payload\": {\n      \"user\": {\n        \"locale\": \"fr-CA\",\n        \"lastSeen\": \"2020-03-27T13:16:52Z\",\n        \"userStorage\": \"{\\u0027userId\\u0027: \\u00275dde17b6-3c1a-4458-a702-3a94a5a6e164\\u0027}\",\n        \"userVerificationStatus\": \"VERIFIED\"\n      },\n      \"conversation\": {\n        \"conversationId\": \"ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww\",\n        \"type\": \"NEW\"\n      },\n      \"inputs\": [{\n        \"intent\": \"actions.intent.MAIN\",\n        \"rawInputs\": [{\n          \"inputType\": \"VOICE\",\n          \"query\": \"Parler avec Cité des sciences\"\n        }]\n      }],\n      \"surface\": {\n        \"capabilities\": [{\n          \"name\": \"actions.capability.SCREEN_OUTPUT\"\n        }, {\n          \"name\": \"actions.capability.MEDIA_RESPONSE_AUDIO\"\n        }, {\n          \"name\": \"actions.capability.ACCOUNT_LINKING\"\n        }, {\n          \"name\": \"actions.capability.AUDIO_OUTPUT\"\n        }]\n      },\n      \"isInSandbox\": true,\n      \"availableSurfaces\": [{\n        \"capabilities\": [{\n          \"name\": \"actions.capability.AUDIO_OUTPUT\"\n        }, {\n          \"name\": \"actions.capability.SCREEN_OUTPUT\"\n        }, {\n          \"name\": \"actions.capability.WEB_BROWSER\"\n        }]\n      }],\n      \"requestType\": \"SIMULATOR\"\n    }\n  },\n  \"session\": \"projects/cite-des-sciences/agent/sessions/ABwppHF8FXgV0Rr2F8lZPMzCE-aajv5ecnzclOLutKB63r2MLpE1c91YDkyltDXEkTXLlfkEIJeR71oqmXzfZww\"\n}",
+    "isBase64Encoded": false
+}
