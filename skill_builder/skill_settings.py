@@ -92,15 +92,39 @@ class Settings:
                 }
             },
             "deployment": {
-                "required": True,
                 "type": "dict",
                 "schema": {
                     "api_gateway_id": {
                         "type": "string",
+                    },
+                    "s3_bucket_name": {
+                        "type": "string",
+                    },
+                    "lambda_name": {
+                        "type": "string",
+                    },
+                    "endpoints": {
+                        "type": "dict",
+                        "schema": {
+                            "alexaApiEndpointUrlNotRecommendedToUse": {
+                                "type": "string"
+                            },
+                            "googleAssistantApiEndointUrl": {
+                                "type": "string"
+                            },
+                            "samsungBixbyApiEndointUrl": {
+                                "type": "string"
+                            },
+                            "siriApiEndointUrl": {
+                                "type": "string"
+                            },
+                        }
                     }
                 }
             }
         }
+
+
 
     @property
     def settings(self) -> SafeDict:

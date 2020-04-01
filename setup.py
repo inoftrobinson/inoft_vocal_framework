@@ -2,9 +2,10 @@ from setuptools import setup
 
 setup(
     name='inoftvocal',
-    version='0.61.4',
+    version='0.61.6',
     packages=['inoft_vocal_framework', 'inoft_vocal_framework.cli', 'inoft_vocal_framework.cli.core',
-              'inoft_vocal_framework.utils',
+              'inoft_vocal_framework.utils', "inoft_vocal_framework.templates",
+              'inoft_vocal_framework.templates.hello_world_1', 'inoft_vocal_framework.templates.simple_adventure_game_1',
               'inoft_vocal_framework.speechs', 'inoft_vocal_framework.databases',
               'inoft_vocal_framework.databases.dynamodb', 'inoft_vocal_framework.skill_builder',
               'inoft_vocal_framework.platforms_handlers', 'inoft_vocal_framework.platforms_handlers.alexa_v1',

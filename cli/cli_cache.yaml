@@ -1,3 +1,3 @@
-appProjectRootFolderpath: F:\Inoft\skill_histoire_decryptage
-lambdaName: testlambdacoolose
-s3BucketName: testdeploiementcoolose
+lambdaName: test
+last_app_project_root_folderpath: F:\Inoft\skill_histoire_decryptage_1/dummy
+s3BucketName: test

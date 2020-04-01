@@ -38,10 +38,9 @@ class Core(CoreClients):
     def get_lambda_function_arn(self, function_name: str):
         return SafeDict(self.lambda_client.get_function(FunctionName=function_name)).get("Configuration").get("FunctionArn").to_str()
 
-    def api_gateway_v2_exist(self, api_id: str):
+    def api_gateway_v2_url(self, api_id: str):
         try:
-            response = self.api_gateway_client.get_api(ApiId=api_id)
-            return True
+            return SafeDict(self.api_gateway_client.get_api(ApiId=api_id)).get("ApiEndpoint").to_str(default=None)
         except Exception as e:
             return False
 
@@ -120,7 +119,14 @@ class Core(CoreClients):
                             f"Please delete the api and redo the deployment."
                             f"If the issue persist, create an Issue topic on the github page of the framework.")
 
-        for route_name in ["amazonAlexaV1", "googleAssistantDialogflowV1", "samsungBixbyV1", "appleSiriV1"]:
+        route_names = ["amazonAlexaV1", "googleAssistantDialogflowV1", "samsungBixbyV1", "appleSiriV1"]
+        route_names_to_settings_keys = {"amazonAlexaV1": "alexaApiEndpointUrlNotRecommendedToUse",
+                                        "googleAssistantDialogflowV1": "googleAssistantApiEndointUrl",
+                                        "samsungBixbyV1": "samsungBixbyApiEndointUrl",
+                                        "appleSiriV1": "siriApiEndointUrl"}
+
+        api_gateway_root_url = self.api_gateway_v2_url(api_id=api_id)
+        for route_name in route_names:
             self.boto_session.get_credentials()
             response = self.api_gateway_client.create_route(
                 ApiId=api_id,
@@ -130,7 +136,11 @@ class Core(CoreClients):
                 Target=f"integrations/{integration_id}",
             )
             self.add_lambda_permission_to_call_api_resource(lambda_arn=lambda_arn, api_id=api_id, route_key=route_name)
-            print(f"Api route {click.style(route_name, fg='green')} creation complete")
+            api_route_url = f"{api_gateway_root_url}/{route_name}"
+            print(f"Api route {click.style(route_name, fg='green')} creation complete accessible on {api_route_url}")
+            self.settings.settings.get_set("deployment", {}).get_set("endpoints", {}).put(
+                route_names_to_settings_keys[route_name], api_route_url).reset_navigated_dict()
+            # We reset the navigated dict after a final put
 
     def add_lambda_permission_to_call_api_resource(self, lambda_arn: str, api_id: str, route_key: str):
         response = self.lambda_client.add_permission(
@@ -208,14 +218,14 @@ class Core(CoreClients):
         try:
             self.s3_client.head_bucket(Bucket=bucket_name)
         except ClientError as e:
+            print(f"Trying to create a new S3 Bucket with name {click.style(text=bucket_name, fg='yellow', bold=True)}"
+                  f" in region {click.style(text=region_name, fg='yellow', bold=True)}")
             available_regions_for_s3 = self.boto_session.get_available_regions(service_name="s3")
             if region_name not in available_regions_for_s3:
                 raise Exception(f"The region {region_name} was not available for s3. Here is the available regions : {available_regions_for_s3}")
 
-            self.s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={
-                "LocationConstraint": region_name
-            })
-            click.echo(f"Completed creation of new bucket ({bucket_name}) in region {region_name}")
+            self.s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region_name})
+            print(f"Completed creation of the new bucket.")
 
     def upload_to_s3(self, filepath: str, object_key_name: str, bucket_name: str, region_name: str) -> bool:
         # If an error happen while uploading to S3, then the upload will not be
@@ -225,7 +235,7 @@ class Core(CoreClients):
             self.s3_client.upload_file(Filename=filepath, Bucket=bucket_name, Key=object_key_name)
             return True
         except Exception as e:
-            print(f"Error while uploading to S3 : {e}")
+            print(f"Error while getting/creating/uploading to the S3 bucket : {e}")
             return False
 
     def remove_from_s3(self, file_name: str, bucket_name: str):

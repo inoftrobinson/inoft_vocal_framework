@@ -20,7 +20,7 @@ class DeployHandler(Core):
 
     def handle(self):
         changed_root_folderpath = False
-        app_project_root_folderpath = CliCache.cache().get("appProjectRootFolderpath").to_str(default=None)
+        app_project_root_folderpath = CliCache.cache().get("last_app_project_root_folderpath").to_str(default=None)
 
         def prompt_user_to_select_folderpath():
             return click.prompt(text="What is the root folder path of your project ? "
@@ -40,22 +40,28 @@ class DeployHandler(Core):
                 exit(200)
 
         if changed_root_folderpath is True:
-            CliCache.cache().put("appProjectRootFolderpath", app_project_root_folderpath)
+            CliCache.cache().put("last_app_project_root_folderpath", app_project_root_folderpath)
+            CliCache.save_cache_to_yaml()
+            print(f"Saved the folderpath of your project for {click.style(text='faster load next time ;)', fg='blue')}")
 
-        bucket_name = CliCache.cache().get("s3BucketName").to_str(default=None)
+        self.settings.find_load_settings_file(root_folderpath=app_project_root_folderpath)
+
+        # I cannot create a variable that contain the deployment settings, otherwise it will be hell with the resets of the safedict.
+        bucket_name = self.settings.settings.get_set("deployment", {}).get("s3_bucket_name").to_str(default=None)
         if bucket_name is None:
             bucket_name = click.prompt("What will be your S3 bucket name to host your deployment files ?", type=str)
-            CliCache.cache().put("s3BucketName", bucket_name)
+            self.settings.settings.get_set("deployment", {}).put("s3_bucket_name", bucket_name).reset_navigated_dict()
 
-        lambda_name = CliCache.cache().get("lambdaName").to_str(default=None)
+        lambda_name = self.settings.settings.get_set("deployment", {}).get("lambda_name").to_str(default=None)
         if lambda_name is None:
             lambda_name = click.prompt("What will be your Lambda (which act as the 'server' for your app) name ?", type=str)
-            CliCache.cache().put("lambdaName", lambda_name)
+            self.settings.settings.get_set("deployment", {}).put("lambda_name", lambda_name).reset_navigated_dict()
+
+        self.settings.save_settings()
+        print(f"Saved your settings to your app_settings file at :"
+              f"{click.style(text=str(self.settings.last_settings_filepath), fg='yellow')}")
 
         # todo: ask and check lambda handler file/function path
-
-        CliCache.save_cache_to_yaml()
-
 
         DeployHandler().deploy(
             app_project_root_folderpath=app_project_root_folderpath,
@@ -70,7 +76,8 @@ class DeployHandler(Core):
                lambda_description: str = "Inoft Vocal Framework Deployment",
                lambda_timeout_seconds=30, lambda_memory_size=512, publish=True, runtime="python3.7"):
 
-        self.settings.find_load_settings_file(root_folderpath=app_project_root_folderpath)
+        if self.settings.settings_loaded is False:
+            self.settings.find_load_settings_file(root_folderpath=app_project_root_folderpath)
 
         # Make sure this isn't already deployed.
         """deployed_versions = self.get_lambda_function_versions(lambda_name)
@@ -99,7 +106,12 @@ class DeployHandler(Core):
             upload_success = self.upload_to_s3(filepath=zip_filepath, object_key_name=Path(zip_filepath).name,
                                                bucket_name=bucket_name, region_name="eu-west-3")
             if not upload_success:
-                raise ClickException("Unable to upload to S3. Quitting.")
+                raise ClickException("Unable to upload to S3. Look in the logs what caused the errors,"
+                                     " and modify your app_settings file in order to fix the issue."
+                                     "\nCommon issues include :"
+                                     "\n - Trying to use a S3 bucket name that is not available."
+                                     "\n - Trying to use invalid characters in the bucket name (like - )"
+                                     "\n - Having modified the app_settings file, but not have saved it with CTRL+S")
             click.echo("Uploading completed.")
 
         try:
@@ -132,7 +144,7 @@ class DeployHandler(Core):
         # Create and configure the API Gateway
         need_to_create_api = False
         api_gateway_id = self.settings.settings.get("deployment").get("api_gateway_id").to_str(default=None)
-        if api_gateway_id is None or self.api_gateway_v2_exist(api_gateway_id) is False:
+        if api_gateway_id is None or self.api_gateway_v2_url(api_gateway_id) is not None:
             api_id = self.create_api_gateway(lambda_arn=lambda_arn, lambda_name=lambda_name)
             print(f"Created a new {click.style(text='API Gateway', bold=True)}")
             self.settings.settings.get("deployment").put("api_gateway_id", api_id)

@@ -15,41 +15,42 @@ def _get_from_name_or_ask_to_select_template(selected_template_name: str = None)
 
     available_templates = dict()
     for template_dir_name in os.listdir(templates_folder_path):
-        current_template_dir_path = os.path.join(templates_folder_path, template_dir_name)
-        files_names_in_current_template_dir = os.listdir(current_template_dir_path)
+        if os.path.isdir(os.path.join(templates_folder_path, template_dir_name)):
+            current_template_dir_path = os.path.join(templates_folder_path, template_dir_name)
+            files_names_in_current_template_dir = os.listdir(current_template_dir_path)
 
-        if not len(files_names_in_current_template_dir) > 0:
-            print(f"That's strange. The template folder at {current_template_dir_path} "
-                  f"did not contain any file, and so cannot be used.")
-        else:
-            paths_to_files_to_copy = list()
-            for filename in files_names_in_current_template_dir:
-                if filename not in ["infos.yaml", "infos.json"]:
-                    filepath = os.path.join(current_template_dir_path, filename)
-                    if os.path.isfile(filepath):
-                        paths_to_files_to_copy.append(filepath)
-
-            if not len(paths_to_files_to_copy) > 0:
+            if not len(files_names_in_current_template_dir) > 0:
                 print(f"That's strange. The template folder at {current_template_dir_path} "
-                      f"did not contain any file that could be copied, and so cannot be used.")
+                      f"did not contain any file, and so cannot be used.")
             else:
-                current_template_infos_dict = None
+                paths_to_files_to_copy = list()
+                for filename in files_names_in_current_template_dir:
+                    if filename not in ["infos.yaml", "infos.json"]:
+                        filepath = os.path.join(current_template_dir_path, filename)
+                        if os.path.isfile(filepath):
+                            paths_to_files_to_copy.append(filepath)
 
-                if "infos.yaml" in files_names_in_current_template_dir:
-                    from inoft_vocal_framework.utils.general import load_yaml
-                    current_template_infos_dict = load_yaml(filepath=os.path.join(current_template_dir_path, "infos.yaml"))
-                elif "infos.json" in files_names_in_current_template_dir:
-                    from inoft_vocal_framework.utils.general import load_json
-                    current_template_infos_dict = load_json(filepath=os.path.join(current_template_dir_path, "infos.json"))
+                if not len(paths_to_files_to_copy) > 0:
+                    print(f"That's strange. The template folder at {current_template_dir_path} "
+                          f"did not contain any file that could be copied, and so cannot be used.")
+                else:
+                    current_template_infos_dict = None
 
-                if isinstance(current_template_infos_dict, dict):
-                    if "name" in current_template_infos_dict.keys() and isinstance(current_template_infos_dict["name"], str):
-                        available_templates[current_template_infos_dict["name"]] = {"pathsToFilesToCopy": paths_to_files_to_copy}
-                        continue
+                    if "infos.yaml" in files_names_in_current_template_dir:
+                        from inoft_vocal_framework.utils.general import load_yaml
+                        current_template_infos_dict = load_yaml(filepath=os.path.join(current_template_dir_path, "infos.yaml"))
+                    elif "infos.json" in files_names_in_current_template_dir:
+                        from inoft_vocal_framework.utils.general import load_json
+                        current_template_infos_dict = load_json(filepath=os.path.join(current_template_dir_path, "infos.json"))
 
-                available_templates[template_dir_name] = {"pathsToFilesToCopy": paths_to_files_to_copy}
-                # If the no infos dict has been created or that no name variable has been found in the infos, we will not have
-                # triggered the continue keyword, and so we will reach this stage where we add the template with its folder name.
+                    if isinstance(current_template_infos_dict, dict):
+                        if "name" in current_template_infos_dict.keys() and isinstance(current_template_infos_dict["name"], str):
+                            available_templates[current_template_infos_dict["name"]] = {"pathsToFilesToCopy": paths_to_files_to_copy}
+                            continue
+
+                    available_templates[template_dir_name] = {"pathsToFilesToCopy": paths_to_files_to_copy}
+                    # If the no infos dict has been created or that no name variable has been found in the infos, we will not have
+                    # triggered the continue keyword, and so we will reach this stage where we add the template with its folder name.
 
     if selected_template_name is None:
         selected_template_name = click.prompt("Type the name of the template you would like to use, the followings are available :",
@@ -68,6 +69,7 @@ def new(template_name: str = None, project_folderpath: str = None):
 
     if project_folderpath is None:
         project_folderpath = click.prompt("To which folder location would like to put the template ?", default=Path(current_folder_path.parent).parent)
+    Path(project_folderpath).mkdir(exist_ok=True)
 
     for src_file_path in selected_templates_files_to_copy:
         from shutil import copy
@@ -79,6 +81,7 @@ def new(template_name: str = None, project_folderpath: str = None):
         copy(src_file_path, destination_filepath)
     click.echo("Template copying completed.")
 
+    """
     # Detect AWS profiles and regions
     session = boto3.session.Session()
     profile_names = session.available_profiles
@@ -142,6 +145,7 @@ def new(template_name: str = None, project_folderpath: str = None):
     # Write
     with open("zappa_settings.json", "w") as zappa_settings_file:
         zappa_settings_file.write(zappa_settings_json)
+    """
 
     click.echo("\nPour en savoir plus sur le framework, rendez-vous sur notre page " + click.style("GitHub", bold=True) +
                " ici : " + click.style("https://github.com/Robinson04/inoft_vocal_framework", fg="cyan", bold=True))
@@ -149,6 +153,4 @@ def new(template_name: str = None, project_folderpath: str = None):
     click.echo(" ~ " + click.style("Robinson Labourdette d'Inoft", bold=True) + "!")
 
     return
-
-new(template_name="HelloWorld1", project_folderpath="F:\Inoft\hackaton cite des sciences 1\lambda_project")
 

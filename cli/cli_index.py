@@ -68,7 +68,7 @@ def push(file):
     nice_quit()
 
 def nice_quit():
-    CliCache.save_cache_to_json()
+    CliCache.save_cache_to_yaml()
 
 if __name__ == '__main__':
     new()

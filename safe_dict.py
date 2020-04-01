@@ -99,11 +99,16 @@ class SafeDict:
         if isinstance(dict_or_list_to_process, list):
             for i in range(len(dict_or_list_to_process)):
                 dict_or_list_to_process[i] = self.process_any_safedicts_in_dict_or_list_to_dict(dict_or_list_to_process[i])
+            return dict_or_list_to_process
+
         elif isinstance(dict_or_list_to_process, dict):
             for key in dict_or_list_to_process.keys():
                 dict_or_list_to_process[key] = self.process_any_safedicts_in_dict_or_list_to_dict(dict_or_list_to_process[key])
+            return dict_or_list_to_process
+
         elif isinstance(dict_or_list_to_process, SafeDict):
             return dict_or_list_to_process.to_dict()
+
         else:
             return dict_or_list_to_process
 
