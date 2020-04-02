@@ -144,11 +144,11 @@ class DeployHandler(Core):
 
         # Create and configure the API Gateway
         need_to_create_api = False
-        api_gateway_id = self.settings.settings.get("deployment").get("api_gateway_id").to_str(default=None)
-        if api_gateway_id is None or self.api_gateway_v2_url(api_gateway_id) is not None:
+        api_gateway_id = self.settings.settings.get("deployment").get("apiGatewayId").to_str(default=None)
+        if api_gateway_id is None or self.api_gateway_v2_url(api_gateway_id) is None:
             api_id = self.create_api_gateway(lambda_arn=lambda_arn, lambda_name=lambda_name)
             print(f"Created a new {click.style(text='API Gateway', bold=True)}")
-            self.settings.settings.get("deployment").put("api_gateway_id", api_id)
+            self.settings.settings.get("deployment").put("apiGatewayId", api_id)
             self.settings.save_settings()
         else:
             print(f"Using the existing ApiGatewayV2 with id {click.style(text=api_gateway_id, bold=True, fg='green')}")

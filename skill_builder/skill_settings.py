@@ -94,7 +94,7 @@ class Settings:
             "deployment": {
                 "type": "dict",
                 "schema": {
-                    "api_gateway_id": {
+                    "apiGatewayId": {
                         "type": "string",
                     },
                     "s3_bucket_name": {
