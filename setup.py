@@ -1,9 +1,8 @@
 from setuptools import setup
 
-# todo: fix issue where the app_settings.yaml and "infos.yaml" files of the templates are not included in the package
 setup(
     name="inoftvocal",
-    version="0.62.1",
+    version="0.62.3",
     packages=["inoft_vocal_framework", "inoft_vocal_framework.cli", "inoft_vocal_framework.cli.core",
               "inoft_vocal_framework.utils", "inoft_vocal_framework.templates",
               "inoft_vocal_framework.templates.hello_world_1", "inoft_vocal_framework.templates.simple_adventure_game_1",
@@ -20,6 +19,7 @@ setup(
               "inoft_vocal_framework.platforms_handlers.samsungbixby_v1",
               "inoft_vocal_framework.platforms_handlers.siri",
               "inoft_vocal_framework.platforms_handlers.endpoints_providers"],
+    include_package_data=True,
     install_requires=["PyYAML", "cerberus", "boto3", "click"],
     entry_points={
         "console_scripts": [

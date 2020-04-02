@@ -9,6 +9,7 @@ import click
 from botocore.exceptions import ClientError
 from click import ClickException
 
+import inoft_vocal_framework
 from inoft_vocal_framework.cli.cli_cache import CliCache
 from inoft_vocal_framework.cli.core.core import Core
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
@@ -25,7 +26,7 @@ class DeployHandler(Core):
         def prompt_user_to_select_folderpath():
             return click.prompt(text="What is the root folder path of your project ? "
                                      "This is the default if you do not write anything :",
-                                default=str(Path(os.path.dirname(os.path.abspath(__file__))).parents[1]))
+                                default=Path(os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))).parent)
 
 
         if app_project_root_folderpath is None:
@@ -161,6 +162,8 @@ class DeployHandler(Core):
 
     @staticmethod
     def create_package(app_folder_path: str) -> str:
+        # todo: include the inoft_vocal_framework folder in the archive *-*
+
         archive_destination_filepath = os.path.join(Path(app_folder_path).parent, f"{Path(app_folder_path).name}.zip")
         click.echo(f"Making an archive from all the files and folders in {app_folder_path} to {archive_destination_filepath}")
 
@@ -168,6 +171,7 @@ class DeployHandler(Core):
 
         # Create a ZipFile Object
         with zipfile.ZipFile(archive_destination_filepath, "w") as zip_object:
+            # Include the projects files
             for root_dirpath, dirs, filenames in os.walk(app_folder_path, topdown=True):
                 # The topdown arg allow use to modify the dirs list in the walk, and so we can easily exclude folders.
                 dirs[:] = [dirpath for dirpath in dirs if Path(dirpath).name not in folders_names_to_excludes]
@@ -176,6 +180,22 @@ class DeployHandler(Core):
                 for filename in filenames:
                     zip_object.write(filename=os.path.join(root_dirpath, filename),
                                      arcname=os.path.join(relative_root_dirpath, filename))
+
+            # todo: when doing a redeploy, check that the lambda layer used, is the right layer for the current framework version
+
+            # Then the inoft_vocal_framework himself (he is not included in the lambda layers)
+            # I do not include the framework in the lambda layer, because it would be weird for someone to update the framework,
+            # do a redeploy, and not have upgraded its deploy. Where as we can check if its layer is the right layer for the version
+            # of his framework. And mostly because it would be annoying for me to recreate a new lambda layer on each update of the
+            # framework, and that he is light enough to be included in the package and the increase in upload time to not be noticeable ;)
+            inoft_vocal_framework_folder_path = os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))
+            for root_dirpath, dirs, filenames in os.walk(inoft_vocal_framework_folder_path):
+                relative_dirpath_with_root_included = root_dirpath.replace(str(Path(inoft_vocal_framework_folder_path).parent), "")
+                # We only replace the parent of the framework folder path, because we want it to be in its inoft_vocal_framework folder.
+                for filename in filenames:
+                    zip_object.write(filename=os.path.join(root_dirpath, filename),
+                                     arcname=os.path.join(relative_dirpath_with_root_included, filename))
+
 
         # from shutil import make_archive
         # zip_filepath = make_archive(base_name=archive_destination_filepath_without_extension, format="zip", root_dir=app_folder_path)
