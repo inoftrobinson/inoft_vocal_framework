@@ -46,3 +46,8 @@ class CliCache:
     def save_cache_to_yaml():
         with open(CliCache.get_cli_cache_filepath(), "w+") as cache_file:
             cache_file.write(yaml.safe_dump(CliCache.cache().to_dict()))
+
+    # todo: fix big issue in the situation that 2 project are done with the same framework,
+    #  the cache of the first project will not allow the cache of the second to be create,
+    #  and so, the user will get stuck getting proposed an app settings file that is not the write
+    #  one for his project

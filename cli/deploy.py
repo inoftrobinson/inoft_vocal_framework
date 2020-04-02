@@ -162,7 +162,9 @@ class DeployHandler(Core):
 
     @staticmethod
     def create_package(app_folder_path: str) -> str:
-        # todo: include the inoft_vocal_framework folder in the archive *-*
+        # todo: fix issue where we have the following printed for each single file
+        #  return self._open_to_write(zinfo, force_zip64=force_zip64)
+        #  c:\users\labourdette\anaconda3\lib\zipfile.py:1473: UserWarning: Duplicate name: 'inoft_vocal_framework/utils/__init__.py'
 
         archive_destination_filepath = os.path.join(Path(app_folder_path).parent, f"{Path(app_folder_path).name}.zip")
         click.echo(f"Making an archive from all the files and folders in {app_folder_path} to {archive_destination_filepath}")

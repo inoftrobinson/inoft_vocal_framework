@@ -79,13 +79,16 @@ class SafeDict:
             self.navigated_dict = self.navigated_dict[dict_key]
         return self
 
-    def put(self, dict_key, value_to_put):
+    def put(self, dict_key, value_to_put, reset_navigated_dict=True):
         if isinstance(self.navigated_dict, dict) and dict_key is not None:
             if value_to_put is None:
                 value_to_put = ""
             self.navigated_dict[dict_key] = value_to_put
         else:
             print(f"Warning ! Tried to put a value into a dict of a SafeDict, but the current navigated dict was not pointing to a dict object !")
+
+        if reset_navigated_dict is True:
+            self.reset_navigated_dict()
         return self
 
     def pop(self, dict_key: str):

@@ -10,6 +10,20 @@ from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import Neste
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
+class InoftHandler(HandlerInputWrapper):
+    @abstractmethod
+    def handle(self) -> dict:
+        """Handles the Request inside handler input and provides a Response for dispatcher to return.
+        :return: Response for the dispatcher to return or None
+        :rtype: Union[Response, None]
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def handle_resume(self) -> dict:
+        # todo: make the handle resume function functionnal for the handler (cannot use a chain, but need to
+        # use a class path, that will be saved in the database)
+        print(f"Resuming an user session, but no logic has been found in the handle_resume function, defaulting to the handle function")
 
 class InoftRequestHandler(HandlerInputWrapper):  # (HandlerInput):
     @abstractmethod
@@ -33,8 +47,9 @@ class InoftRequestHandler(HandlerInputWrapper):  # (HandlerInput):
         print(f"Resuming an user session, but no logic has been found in the handle_resume function, defaulting to the handle function")
 
 class InoftStateHandler(HandlerInputWrapper):  # (HandlerInput):
+    # todo: make it possible for a state or request handler to be a nested class inside another one
     @abstractmethod
-    def handle(self):
+    def handle(self) -> dict:
         """Handles the Request inside handler input and provides a Response for dispatcher to return.
         :return: Response for the dispatcher to return or None
         :rtype: Union[Response, None]
@@ -42,7 +57,7 @@ class InoftStateHandler(HandlerInputWrapper):  # (HandlerInput):
         raise NotImplementedError
 
     @abstractmethod
-    def fallback(self):
+    def fallback(self) -> dict:
         """ Handler if no response has been gotten from the handle method.
         :return: Response for the dispatcher to return or None
         :rtype: Union[Response, None]
@@ -55,7 +70,7 @@ class InoftStateHandler(HandlerInputWrapper):  # (HandlerInput):
 
 class InoftDefaultFallback(HandlerInputWrapper):
     @abstractmethod
-    def handle(self):
+    def handle(self) -> dict:
         raise NotImplementedError
 
 class InoftHandlersGroup:
@@ -67,7 +82,7 @@ class InoftHandlersGroup:
         else:
             return DummyObject()
 
-    def handle(self):
+    def handle(self) -> dict:
         for var_key, var_object in vars(self).items():
             if InoftRequestHandler in list(var_object.__class__.__bases__):
                 if var_object.can_handle() is True:

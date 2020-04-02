@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="inoftvocal",
-    version="0.62.3",
+    version="0.62.4",
     packages=["inoft_vocal_framework", "inoft_vocal_framework.cli", "inoft_vocal_framework.cli.core",
               "inoft_vocal_framework.utils", "inoft_vocal_framework.templates",
               "inoft_vocal_framework.templates.hello_world_1", "inoft_vocal_framework.templates.simple_adventure_game_1",
@@ -28,7 +28,7 @@ setup(
         ],
     },
     url="https://github.com/Robinson04/inoft_vocal_framework",
-    download_url="https://github.com/Robinson04/inoft_vocal_framework/archive/0.61.0.tar.gz",
+    download_url="https://github.com/Robinson04/inoft_vocal_framework/archive/0.62.3.tar.gz",
     license="MIT",
     author="Inoft",
     author_email="robinson@inoft.com",
