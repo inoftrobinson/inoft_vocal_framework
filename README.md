@@ -278,4 +278,5 @@ def lambda_handler(event, context):
 #### Credits :
 
 - The Alexa Python SDK (https://github.com/alexa/alexa-skills-kit-sdk-for-python). I have taken a big inspiration on how they to decided to make the interaction with the framework, for example trough class that have a can_handle and handle function.
-- The Jovo framework (https://github.com/jovotech/jovo-framework) I have taken inspiration of how they handled certains scenarios (like how to save user data accross session in the google assistant). Thank you for having clear docs ! https://github.com/jovotech/jovo-framework
+- The Jovo framework (https://github.com/jovotech/jovo-framework) I have taken inspiration of how they handled certains scenarios (like how to save user data accross session in the google assistant).
+- The Zappa package (https://github.com/Miserlou/Zappa). I have used the code of the package as an inspiration and a starting point to create the auto-deployement.
