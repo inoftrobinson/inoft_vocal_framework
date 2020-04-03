@@ -1,35 +1,54 @@
 # Inoft Vocal Framework
- ## Create Alexa Skills, Google Actions and Samsung Bixby Capsules with the same codebase. In Python !
 
- ### Installation (Python 3.7 is recommanded. Python 3.6+ is required) :
- ```
+### Create Alexa Skills, Google Actions, Samsung Bixby Capsules and Siri 'skills', with the same codebase. Then deploy automatically your app to AWS. All that in Python !
+
+#### Requirements :
+
+- An AWS (Amazon Web Services) account (you can create one with your Amazon account) (https://aws.amazon.com/)
+- Python (3.6 minimum, 3.7.+ highly recommanded, the 3.8.X versions might work yet have not been tested) (https://www.python.org/downloads/)
+- (In order to create an Alexa Skill) An Amazon developer account (takes 20 seconds to create) https://developer.amazon.com/fr/
+- (In order to create a Google Assistant Action) A Google Account (you use your regular Google/Gmail account as your developer account) https://developers.google.com/assistant
+
+#### About computing costs :
+
+##### All services used by the framework should not be consequent enough to cross the free monthly ressources while in deployement or even with thousands of users in the month (even if you have finished your 1 year free tier, i'm talking about the free monthly ressources).
+
+##### The framework also use the most performant and cost efficient services. For example, it will auto configure your databases (DynamoDB) to have them using on demand access instead of provisionned capacity. And it will use a newer, faster and cheaper (but still very undocumented) version of the api service of AWS (ApiGatewayV2 instead of ApiGatewayV1).
+
+### Installation (Python 3.7 is recommanded. Python 3.6+ is required) :
+
+```
  pip install inoftvocal
- ```
- 
- ### Usage :
- 
- #### After installation, open a terminal (cmd), then start a project with the command
- ```
+```
+
+### Usage :
+
+#### After installation, open a terminal (cmd), then start a project with the command
+
+```
  inoft new
- ```
- You will have to select a folderpath in which your project will be created, and select a template to start with.
- 
- #### Deploying to AWS
- ```
+```
+
+ You will have to select a folderpath in which your project will be created, and select a template to start with. You can then use your favorite code editor to open the folder containing your newly created project.
+
+#### Deploying to AWS
+
+```
  inoft deploy
- ```
+```
+
  If you have never used AWS on your computer (or do not have an AWS account), you will need one (with the framework, you will be able to do around 200 000 invocations of your skill (depending of its time to execute) per month for free). You will also need to configure the botocore package by indicating your AWS credentials (the framework will point you to the right documentations to do that)
- 
+
  After that, the framework will create an S3 Bucket (to store your code), a Lambda (to host and run your code), an API Gateway (to access your Lambda), and multiple DynamoDB tables (to store your users data, and your dynamic messages).
  PS : The API Gateway is an API Gateway V2 (its newer, has fewer docs, was longer to code, but is faster and cheaper than V1 !)
- 
- # todo: do some redactions on the deployment !
- 
 
- #### This code makes an Alexa Skill, a Google Action and a Bixby Capsule, and its Pythonic !
+# todo: do some redactions on the deployment !
+
+#### This code makes an Alexa Skill, a Google Action and a Bixby Capsule, and its Pythonic !
 
  Hello World :
- ```
+
+```
 from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftDefaultFallback
 
 class LaunchRequestHandler(InoftRequestHandler):
@@ -50,7 +69,7 @@ def lambda_handler(event, context):
    skill_builder.add_request_handler(LaunchRequestHandler)
    skill_builder.set_default_fallback_handler(DefaultFallback)
    return skill_builder.handle_any_platform(event=event, context=context)
- ```
+```
 
  
 
@@ -118,7 +137,7 @@ Having a InoftDefaultFallback class is required for every skill. Otherwise it wi
 
 ### Putting the 3 classes together
 
- ```
+```
 from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
 
 class LaunchRequestHandler(InoftRequestHandler):
@@ -156,7 +175,7 @@ def lambda_handler(event, context):
    skill_builder.add_state_handler(MarryMeStateHandler)
    skill_builder.set_default_fallback_handler(DefaultFallback)
    return skill_builder.handle_any_platform(event=event, context=context)
- ```
+```
 
 
 
@@ -164,7 +183,7 @@ def lambda_handler(event, context):
 
 
 
- ```
+```
 from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
 
 
@@ -250,11 +269,13 @@ def lambda_handler(event, context):
    skill_builder.add_state_handler(LaunchStateHandler)
    skill_builder.set_default_fallback_handler(DefaultFallback)
    return skill_builder.handle_any_platform(event=event, context=context)
- ```
+```
 
- ### Roadmap :
- - To finish writing the README file, including the roadmap section ;)
+### Roadmap :
 
- #### Credits :
- - The Alexa Python SDK (https://github.com/alexa/alexa-skills-kit-sdk-for-python). I have taken a big inspiration on how they to decided to make the interaction with the framework, for example trough class that have a can_handle and handle function.
- - The Jovo framework (https://github.com/jovotech/jovo-framework) I have taken inspiration of how they handled certains scenarios (like how to save user data accross session in the google assistant). Thank you for having clear docs ! https://github.com/jovotech/jovo-framework
+- To finish writing the README file, including the roadmap section ;)
+
+#### Credits :
+
+- The Alexa Python SDK (https://github.com/alexa/alexa-skills-kit-sdk-for-python). I have taken a big inspiration on how they to decided to make the interaction with the framework, for example trough class that have a can_handle and handle function.
+- The Jovo framework (https://github.com/jovotech/jovo-framework) I have taken inspiration of how they handled certains scenarios (like how to save user data accross session in the google assistant). Thank you for having clear docs ! https://github.com/jovotech/jovo-framework
