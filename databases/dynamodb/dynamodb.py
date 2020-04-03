@@ -24,11 +24,9 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
 
     def _fetch_attributes(self, user_id: str) -> SafeDict:
         try:
-            table = self.dynamodb.Table(self.table_name)
-            response = table.get_item(Key={"id": user_id}, ConsistentRead=True)
+            response = self.dynamodb.get_item(TableName=self.table_name, Key={"id": self.utils.python_to_dynamodb(user_id)}, ConsistentRead=True)
             if "Item" in response:
-                from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dynamodb_to_python
-                return SafeDict(dynamodb_to_python(response["Item"]))
+                return SafeDict(self.utils.dynamodb_to_python(response["Item"]))
             else:
                 return SafeDict()
         except ResourceNotExistsError:
@@ -90,9 +88,9 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
 
         try:
             print(f"Saving attributes : {item_dict}")
-            table = self._get_db_table()
-            from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dict_to_dynamodb
-            table.put_item(Item=dict_to_dynamodb(item_dict))
+            # todo: fix issue where bool are converted to int (it happens when the data is send to dynamodb, but the weird stuff is
+            #  that it happens in the framework, but not if i do the same thing and send the same data in a python console... *-*
+            self.dynamodb.put_item(TableName=self.table_name, Item=self.utils.python_to_dynamodb(item_dict))
         except ResourceNotExistsError:
             raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
         except Exception as e:
@@ -102,8 +100,7 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
         """ Deletes attributes from table in Dynamodb resource. """
         self.last_user_id = user_id
         try:
-            table = self._get_db_table()
-            table.delete_item(Key={self.primary_key_name: user_id})
+            self.dynamodb.delete_item(TableName=self.table_name, Key={self.primary_key_name: user_id})
         except ResourceNotExistsError:
             raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to delete attributes from DynamoDb table.")
         except Exception as e:
@@ -141,11 +138,9 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
     def get_fetched_messages_list(self, messages_list_id: str) -> list:
         if self._last_fetched_messages_list is None or messages_list_id != self.last_messages_list_id:
             try:
-                table = self.dynamodb.Table(self.table_name)
-                response = table.get_item(Key={"id": messages_list_id}, ConsistentRead=True)
+                response = self.dynamodb.get_item(TableName=self.table_name, Key={"id": self.utils.python_to_dynamodb(messages_list_id)}, ConsistentRead=True)
                 if "Item" in response and "speechItems" in response["Item"]:
-                    from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dynamodb_to_python
-                    self._last_fetched_messages_list = self._speech_dicts_to_speech_items(dynamodb_to_python(response["Item"]["speechItems"]))
+                    self._last_fetched_messages_list = self._speech_dicts_to_speech_items(self.utils.dynamodb_to_python(response["Item"]["speechItems"]))
                 else:
                     self._last_fetched_messages_list = list()
             except ResourceNotExistsError:
@@ -176,9 +171,7 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
             try:
                 speechs_list_dict = self._speechs_list_object_to_dict(speechs_list_object=speechs_list)
                 print(f"Posting speechs list : {speechs_list_dict}")
-                table = self._get_db_table()
-                from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dict_to_dynamodb
-                table.put_item(Item=dict_to_dynamodb(speechs_list_dict))
+                self.dynamodb.put_item(TableName=self.table_name, Item=self.utils.python_to_dynamodb(speechs_list_dict))
             except ResourceNotExistsError:
                 raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
             except Exception as e:
@@ -204,10 +197,7 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
 
         try:
             print(f"Saving attributes : {item_dict}")
-            table = self._get_db_table()
-            from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import dict_to_dynamodb
-            out = dict_to_dynamodb(item_dict)
-            table.put_item(Item=dict_to_dynamodb(item_dict))
+            self.dynamodb.put_item(TableName=self.table_name, Item=self.utils.python_to_dynamodb(item_dict))
         except ResourceNotExistsError:
             raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
         except Exception as e:
@@ -217,8 +207,7 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
         """ Deletes attributes from table in Dynamodb resource. """
         self.last_user_id = user_id
         try:
-            table = self._get_db_table()
-            table.delete_item(Key={self.primary_key_name: user_id})
+            self.dynamodb.delete_item(TableName=self.table_name, Key={self.primary_key_name: user_id})
         except ResourceNotExistsError:
             raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to delete attributes from DynamoDb table.")
         except Exception as e:

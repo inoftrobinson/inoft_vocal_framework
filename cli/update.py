@@ -15,7 +15,7 @@ from inoft_vocal_framework.cli.core.core import Core
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
 
-class DeployHandler(Core):
+class UpdateHandler(Core):
     def __init__(self):
         super().__init__()
 
@@ -26,7 +26,7 @@ class DeployHandler(Core):
         def prompt_user_to_select_folderpath():
             return click.prompt(text="What is the root folder path of your project ? "
                                      "This is the default if you do not write anything :",
-                                default=str(Path(os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))).parent))
+                                default=Path(os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))).parent)
 
 
         if app_project_root_folderpath is None:
@@ -96,6 +96,7 @@ class DeployHandler(Core):
             if app_project_existing_zip_filepath is None:
                 # Create the Lambda Zip
                 zip_filepath = self.create_package(app_folder_path=app_project_root_folderpath)
+                # todo: do not include any venv or sam folder when deploying
             else:
                 if not os.path.isfile(app_project_existing_zip_filepath):
                     raise Exception(f"Existing app project zip file do not exist at filepath : {app_project_existing_zip_filepath}")
@@ -170,20 +171,12 @@ class DeployHandler(Core):
 
         folders_names_to_excludes = [".aws-sam", ".idea", "__pycache__", "venv"]
 
-        # this is to try to fix the issue of existing names
-        # if os.path.exists(archive_destination_filepath):
-        #    os.remove(archive_destination_filepath)
-
+        # Create a ZipFile Object
         with zipfile.ZipFile(archive_destination_filepath, "w") as zip_object:
-            has_found_framework_in_project_files = False
-
             # Include the projects files
             for root_dirpath, dirs, filenames in os.walk(app_folder_path, topdown=True):
                 # The topdown arg allow use to modify the dirs list in the walk, and so we can easily exclude folders.
                 dirs[:] = [dirpath for dirpath in dirs if Path(dirpath).name not in folders_names_to_excludes]
-
-                if Path(root_dirpath).name == "inoft_vocal_framework":
-                    has_found_framework_in_project_files = True
 
                 relative_root_dirpath = root_dirpath.replace(app_folder_path, "")
                 for filename in filenames:
@@ -192,25 +185,18 @@ class DeployHandler(Core):
 
             # todo: when doing a redeploy, check that the lambda layer used, is the right layer for the current framework version
 
-            if has_found_framework_in_project_files is False:
-                # On the condition that we have not found the framework in the project files. This function exist both for development sake,
-                # where i can deploy with a dev version of the framework without having to publish to pip, while stile using the command line
-                # interface from the pip package. And also since the framework (and its correct version) will be included in the deployment
-                # package, so that if an user download an app deployed in a different version that the current version of the framework he
-                # is using, the version of the framework that will be used will be the one included in its package, not the one installed.
-
-                # We will include the inoft_vocal_framework himself (he is not included in the lambda layers)
-                # I do not include the framework in the lambda layer, because it would be weird for someone to update the framework,
-                # do a redeploy, and not have upgraded its deploy. Where as we can check if its layer is the right layer for the version
-                # of his framework. And mostly because it would be annoying for me to recreate a new lambda layer on each update of the
-                # framework, and that he is light enough to be included in the package and the increase in upload time to not be noticeable ;)
-                inoft_vocal_framework_folder_path = os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))
-                for root_dirpath, dirs, filenames in os.walk(inoft_vocal_framework_folder_path):
-                    relative_dirpath_with_root_included = root_dirpath.replace(str(Path(inoft_vocal_framework_folder_path).parent), "")
-                    # We only replace the parent of the framework folder path, because we want it to be in its inoft_vocal_framework folder.
-                    for filename in filenames:
-                        zip_object.write(filename=os.path.join(root_dirpath, filename),
-                                         arcname=os.path.join(relative_dirpath_with_root_included, filename))
+            # Then the inoft_vocal_framework himself (he is not included in the lambda layers)
+            # I do not include the framework in the lambda layer, because it would be weird for someone to update the framework,
+            # do a redeploy, and not have upgraded its deploy. Where as we can check if its layer is the right layer for the version
+            # of his framework. And mostly because it would be annoying for me to recreate a new lambda layer on each update of the
+            # framework, and that he is light enough to be included in the package and the increase in upload time to not be noticeable ;)
+            inoft_vocal_framework_folder_path = os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))
+            for root_dirpath, dirs, filenames in os.walk(inoft_vocal_framework_folder_path):
+                relative_dirpath_with_root_included = root_dirpath.replace(str(Path(inoft_vocal_framework_folder_path).parent), "")
+                # We only replace the parent of the framework folder path, because we want it to be in its inoft_vocal_framework folder.
+                for filename in filenames:
+                    zip_object.write(filename=os.path.join(root_dirpath, filename),
+                                     arcname=os.path.join(relative_dirpath_with_root_included, filename))
 
 
         # from shutil import make_archive

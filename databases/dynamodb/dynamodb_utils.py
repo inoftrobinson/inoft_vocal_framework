@@ -1,59 +1,45 @@
-import json
+class Utils:
+    from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
+    # The serializer and deserializer can be static, even in a lambda,
+    # since their classes will never change according to the user.
+    _serializer = None
+    _deserializer = None
 
-def dynamodb_to_python(dynamodb_item_value_or_dict_or_list):
-    from decimal import Decimal
-    if isinstance(dynamodb_item_value_or_dict_or_list, Decimal):
-        if dynamodb_item_value_or_dict_or_list % 1 > 0:
-            return float(dynamodb_item_value_or_dict_or_list)
+    @property
+    def serializer(self) -> TypeSerializer:
+        if Utils._serializer is None:
+            Utils._serializer = Utils.TypeSerializer()
+        return Utils._serializer
+    
+    @property
+    def deserializer(self) -> TypeDeserializer:
+        if Utils._deserializer is None:
+            Utils._deserializer = Utils.TypeDeserializer()
+        return Utils._deserializer
+
+    def python_to_dynamodb(self, python_object):
+        dynamodb_dict = self.serializer.serialize(python_object)
+        dynamodb_dict_keys = list(dynamodb_dict.keys())
+        if len(dynamodb_dict_keys) == 1:
+            if dynamodb_dict_keys[0] == "M":
+                # With a dict, DynamoDB is not expecting the first 'M' key (stands for Map)
+                return dynamodb_dict["M"]
+            else:
+                return dynamodb_dict
+        elif len(dynamodb_dict_keys) == 0:
+            return dynamodb_dict
         else:
-            return int(dynamodb_item_value_or_dict_or_list)
+            raise Exception(f"The number of keys of the dynamodb was superior to 1. This is NOT SUPPOSED TO HAPPEN !"
+                            f"\nPlease submit an issue on the GitHub page of the framework right away (https://github.com/Robinson04/inoft_vocal_framework)."
+                            f"\nThere is something really wrong on our side or on AWS side.")
 
-    elif isinstance(dynamodb_item_value_or_dict_or_list, list):
-        for i, item in enumerate(dynamodb_item_value_or_dict_or_list):
-            dynamodb_item_value_or_dict_or_list[i] = dynamodb_to_python(item)
-        return dynamodb_item_value_or_dict_or_list
-
-    elif isinstance(dynamodb_item_value_or_dict_or_list, dict):
-        for item_key, item_value in dynamodb_item_value_or_dict_or_list.items():
-            dynamodb_item_value_or_dict_or_list[item_key] = dynamodb_to_python(item_value)
-        return dynamodb_item_value_or_dict_or_list
-
-    else:
-        return dynamodb_item_value_or_dict_or_list
-
-def dict_to_dynamodb(item_object: dict):
-    from decimal import Decimal
-    if isinstance(item_object, int) or isinstance(item_object, float):
-        return Decimal(item_object)
-
-    elif isinstance(item_object, str) and item_object.replace("'", "").replace("\"", "") == "":
-        return None
-
-    elif isinstance(item_object, list):
-        items_to_remove = list()
-        for i, item in enumerate(item_object):
-            nested_item = dict_to_dynamodb(item)
-            if nested_item is not None:
-                item_object[i] = nested_item
-            else:
-                items_to_remove.append(nested_item)
-
-        for item_to_remove in items_to_remove:
-            item_object.remove(item_to_remove)
-        return item_object
-
-    elif isinstance(item_object, dict):
-        keys_to_pop = list()
-        for item_key, item_value in item_object.items():
-            nested_item = dict_to_dynamodb(item_value)
-            if nested_item is not None:
-                item_object[item_key] = nested_item
-            else:
-                keys_to_pop.append(item_key)
-
-        for key_to_pop in keys_to_pop:
-            item_object.pop(key_to_pop)
-        return item_object
-
-    else:
-        return item_object
+    def dynamodb_to_python(self, dynamodb_object):
+        if isinstance(dynamodb_object, list):
+            for i, item in enumerate(dynamodb_object):
+                dynamodb_object[i] = self.deserializer.deserialize(item)
+        elif isinstance(dynamodb_object, dict):
+            for key, item in dynamodb_object.items():
+                dynamodb_object[key] = self.deserializer.deserialize(item)
+            return dynamodb_object
+        else:
+            return self.deserializer.deserialize(dynamodb_object)

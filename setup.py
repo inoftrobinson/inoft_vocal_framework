@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="inoftvocal",
-    version="0.62.5",
+    version="0.64",
     packages=["inoft_vocal_framework", "inoft_vocal_framework.cli", "inoft_vocal_framework.cli.core",
               "inoft_vocal_framework.utils", "inoft_vocal_framework.templates",
               "inoft_vocal_framework.templates.hello_world_1", "inoft_vocal_framework.templates.simple_adventure_game_1",
