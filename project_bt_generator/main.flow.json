@@ -1,0 +1,120 @@
+{
+  "version": "0.0.1",
+  "catchAll": {},
+  "startNode": "entry",
+  "nodes": [
+    {
+      "id": "df052970ef",
+      "name": "entry",
+      "next": [
+        {
+          "condition": "event.nlu.intent.name === 'yes'",
+          "node": "node-deb1"
+        },
+        {
+          "condition": "event.nlu.intent.name === 'no'",
+          "node": "node-57d5"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_text-lbs0Re",
+        "builtin/removeContext {\"contexts\":\"monkeys,giraffes\"}"
+      ],
+      "onReceive": null
+    },
+    {
+      "id": "e4887b15ba",
+      "type": "skill-call",
+      "skill": "choice",
+      "name": "topic-choices",
+      "flow": "skills/choice-62d44d.flow.json",
+      "next": [
+        {
+          "condition": "temp['skill-choice-ret'] == \"context\"",
+          "node": "contexts.flow.json"
+        },
+        {
+          "condition": "temp['skill-choice-ret'] == \"memory\"",
+          "node": "memory.flow.json"
+        },
+        {
+          "caption": "On failure",
+          "condition": "true",
+          "node": "catch"
+        }
+      ],
+      "onEnter": null,
+      "onReceive": null
+    },
+    {
+      "id": "114b7e7782",
+      "name": "catch",
+      "next": [],
+      "onEnter": [
+        "say #!builtin_text-SKQxXN"
+      ],
+      "onReceive": null
+    },
+    {
+      "id": "f992083f57",
+      "name": "node-57d5",
+      "next": [
+        {
+          "condition": "event.nlu.intent.name === 'yes'",
+          "node": "node-fa51"
+        },
+        {
+          "condition": "event.nlu.intent.name === 'no'",
+          "node": "node-2d79"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_text-uT1TP5"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "0800afbc29",
+      "name": "node-deb1",
+      "next": [
+        {
+          "condition": "event.nlu.intent.name === 'yes'",
+          "node": "node-fa51"
+        },
+        {
+          "condition": "event.nlu.intent.name === 'no'",
+          "node": "node-2d79"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_text--FWw96"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "9eab9cb66f",
+      "name": "node-fa51",
+      "next": [],
+      "onEnter": [],
+      "onReceive": null,
+      "type": "standard"
+    },
+    {
+      "id": "bc8c10a76b",
+      "name": "node-2d79",
+      "next": [
+        {
+          "condition": "true",
+          "node": "node-fa51"
+        }
+      ],
+      "onEnter": [
+        "say #!builtin_text-wqhtNB"
+      ],
+      "onReceive": null,
+      "type": "standard"
+    }
+  ]
+}

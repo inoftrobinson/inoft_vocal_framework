@@ -23,7 +23,7 @@ def _get_from_name_or_ask_to_select_template(selected_template_name: str = None)
                 files_names_in_current_template_dir = os.listdir(current_template_dir_path)
 
                 if not len(files_names_in_current_template_dir) > 0:
-                    print(f"That's strange. The template folder at {current_template_dir_path} "
+                    click.echo(f"That's strange. The template folder at {current_template_dir_path} "
                           f"did not contain any file, and so cannot be used.")
                 else:
                     paths_to_files_to_copy = list()
@@ -34,7 +34,7 @@ def _get_from_name_or_ask_to_select_template(selected_template_name: str = None)
                                 paths_to_files_to_copy.append(filepath)
 
                     if not len(paths_to_files_to_copy) > 0:
-                        print(f"That's strange. The template folder at {current_template_dir_path} "
+                        click.echo(f"That's strange. The template folder at {current_template_dir_path} "
                               f"did not contain any file that could be copied, and so cannot be used.")
                     else:
                         current_template_infos_dict = None
@@ -75,7 +75,7 @@ def new(template_name: str = None, project_folderpath: str = None):
             project_folderpath = click.prompt(text="To which folder location would like to put the template ?",
                                               default=Path(os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))).parent)
             if not os.path.isdir(project_folderpath):
-                print(f"No folder has been found at {click.style(text=project_folderpath, bold=True, fg='blue')}."
+                click.echo(f"No folder has been found at {click.style(text=project_folderpath, bold=True, fg='blue')}."
                       f"\nPlease write a valid folder path, or exit the CLI by using CTRL+C")
             else:
                 break
@@ -90,7 +90,7 @@ def new(template_name: str = None, project_folderpath: str = None):
                     selected_template_dict = _get_from_name_or_ask_to_select_template()
                     selected_templates_files_to_copy = selected_template_dict["pathsToFilesToCopy"]
                 else:
-                    print("We do not know how to help you."
+                    click.echo("We do not know how to help you."
                           "\nIf you have questions on how the framework works, please visit or GitHub page : " +
                           click.style("https://github.com/Robinson04/inoft_vocal_framework", fg="cyan", bold=True))"""
 

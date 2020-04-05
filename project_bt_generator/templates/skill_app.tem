@@ -1,0 +1,15 @@
+from inoft_vocal_framework import InoftSkill{% if request_handlers|length > 0 %}, InoftRequestHandler{% endif %}{% if state_handlers|length > 0 %}, InoftStateHandler{% endif %}, InoftDefaultFallback
+import os
+
+
+{% for state_handler in state_handlers -%}
+    {{state_handler.code}}
+{% endfor -%}
+
+def lambda_handler(event, context):
+    skill_builder = InoftSkill(settings_yaml_filepath=os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_settings.yaml"))
+    {% for state_handler in state_handlers -%}
+        skill_builder.add_state_handler({{state_handler.class_name}})
+    {% endfor -%}
+    skill_builder.set_default_fallback_handler(DefaultFallback)
+    return skill_builder.handle_any_platform(event=event, context=context)

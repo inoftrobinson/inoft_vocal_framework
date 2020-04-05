@@ -143,32 +143,36 @@ class Settings:
             Settings.settings_loaded = True
 
     def find_load_settings_file(self, root_folderpath: str):
-        def list_settings_filepaths(dirpath: str) -> list:
-            found_settings_filepaths = []
-            for root_dirpath, dirs, filenames in os.walk(dirpath):
-                if "\\inoft_vocal_framework\\templates" not in root_dirpath:
-                    # The app_settings file of the templates of the framework
-                    # are not considered as valid app_settings file.
-                    for filename in filenames:
-                        if Path(filename).stem == "app_settings":
-                            found_settings_filepaths.append(os.path.join(root_dirpath, filename))
-            return found_settings_filepaths
+        print("Searching for your app_settings file...")
 
-        found_files = list_settings_filepaths(root_folderpath)
+        found_settings_filepaths = []
+        for filename in os.listdir(root_folderpath):
+            if filename in ["app_settings.yaml", "app_settings.json"]:
+                found_settings_filepaths.append(os.path.join(root_folderpath, filename))
 
         file_path_object = None
-        while file_path_object is None:
-            print(f"Found {len(found_files)} settings file at following paths :")
-            for i_file, file in enumerate(found_files):
-                print(f"{i_file + 1} - {file}")
-            file_index = str(click.prompt("What is the number of the file you wish to use ?"))
-            if not file_index.isdigit() or int(file_index) > len(found_files) or int(file_index) < 0:
-                print("Please write a valid file index in the form of an int like 1 or 3")
-            else:
-                selected_filepath = found_files[int(file_index) - 1]
-                print(f"Selected settings filepath : {click.style(text=selected_filepath, fg='blue')}")
-                file_path_object = Path(selected_filepath)
-
+        if len(found_settings_filepaths) == 0:
+            raise Exception("Did not found an app_settings.yaml or app_settings.json file."
+                            "\nDid you renamed your settings file ?"
+                            "\nOr did you not navigated to the directory of your project ?"
+                            "\nTry to run the command cd 'C:/folder/subfolder/myproject'."
+                            "\nIf your project is on an external hard-drive (like F:), you must run the cd command, and also the letter name of your hard-drive."
+                            "\nSo if your project is in F:/folder/subfolder/myproject, in your command line, run   F:   then run   cd F:/folder/subfolder/myproject")
+        elif len(found_settings_filepaths) == 1:
+            print(f"Using setting file {found_settings_filepaths[0]}")
+            file_path_object = Path(found_settings_filepaths[0])
+        elif len(found_settings_filepaths) > 1:
+            while file_path_object is None:
+                print(f"Found {len(found_settings_filepaths)} settings file at following paths :")
+                for i_file, file in enumerate(found_settings_filepaths):
+                    print(f"{i_file + 1} - {file}")
+                file_index = str(click.prompt("What is the number of the file you wish to use ?"))
+                if not file_index.isdigit() or int(file_index) > len(found_settings_filepaths) or int(file_index) < 0:
+                    print("Please write a valid file index in the form of an int like 1 or 3")
+                else:
+                    selected_filepath = found_settings_filepaths[int(file_index) - 1]
+                    print(f"Selected settings filepath : {click.style(text=selected_filepath, fg='blue')}")
+                    file_path_object = Path(selected_filepath)
 
         if file_path_object.suffix == ".yaml":
             self.load_yaml(file_path_object)

@@ -1,6 +1,8 @@
 import inspect
 import os
+import time
 import zipfile
+from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
 
 import boto3
@@ -10,6 +12,7 @@ from botocore.exceptions import ClientError
 from click import ClickException
 
 import inoft_vocal_framework
+from inoft_vocal_framework.cli.aws_utils import raise_if_bucket_name_not_valid
 from inoft_vocal_framework.cli.cli_cache import CliCache
 from inoft_vocal_framework.cli.core.core import Core
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
@@ -17,7 +20,16 @@ from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
 class DeployHandler(Core):
     def __init__(self):
+        click.echo("Initializing AWS clients... (this can take a few seconds)")
+        start_time = time.time()
         super().__init__()
+        click.echo(f"Took {click.style(text=f'{round(time.time() - start_time, 2)}s', fg='white')} to initiate AWS clients")
+        # todo: make the initialization even more asynchronous, by calling the handle function while the AWS ressources are initializing.
+        #  Right now, the initialization of the resources are async, but we must wait for their completion in order to call the handle function.
+
+    """def handle(self):
+        # result = self.pool.submit(super().__init__, {"pool": self.pool})
+        self._handle()"""
 
     def handle(self):
         changed_root_folderpath = False
@@ -28,10 +40,14 @@ class DeployHandler(Core):
                                      "This is the default if you do not write anything :",
                                 default=str(Path(os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))).parent))
 
-
         if app_project_root_folderpath is None:
             app_project_root_folderpath = prompt_user_to_select_folderpath()
             changed_root_folderpath = True
+        else:
+            if not click.confirm(f"Do you want to deploy the project that is present in the following folder : {app_project_root_folderpath}"):
+                app_project_root_folderpath = prompt_user_to_select_folderpath()
+                changed_root_folderpath = True
+
         while not os.path.exists(app_project_root_folderpath):
             if click.confirm(text="The root folder path of the project has not been found."
                                   "Do you want to select a new folderpath ? Otherwise the CLI will close."):
@@ -43,7 +59,7 @@ class DeployHandler(Core):
         if changed_root_folderpath is True:
             CliCache.cache().put("last_app_project_root_folderpath", app_project_root_folderpath)
             CliCache.save_cache_to_yaml()
-            print(f"Saved the folderpath of your project for {click.style(text='faster load next time ;)', fg='blue')}")
+            click.echo(f"Saved the folderpath of your project for {click.style(text='faster load next time ;)', fg='blue')}")
 
         self.settings.find_load_settings_file(root_folderpath=app_project_root_folderpath)
 
@@ -52,6 +68,7 @@ class DeployHandler(Core):
         if bucket_name is None:
             bucket_name = click.prompt("What will be your S3 bucket name to host your deployment files ?", type=str)
             self.settings.settings.get_set("deployment", {}).put("s3_bucket_name", bucket_name).reset_navigated_dict()
+        raise_if_bucket_name_not_valid(bucket_name=bucket_name)
 
         lambda_name = self.settings.settings.get_set("deployment", {}).get("lambda_name").to_str(default=None)
         if lambda_name is None:
@@ -59,18 +76,12 @@ class DeployHandler(Core):
             self.settings.settings.get_set("deployment", {}).put("lambda_name", lambda_name).reset_navigated_dict()
 
         self.settings.save_settings()
-        print(f"Saved your settings to your app_settings file at :"
-              f"{click.style(text=str(self.settings.last_settings_filepath), fg='yellow')}")
+        click.echo(f"Saved your settings to your app_settings file at : {click.style(text=str(self.settings.last_settings_filepath), fg='yellow')}")
 
         # todo: ask and check lambda handler file/function path
 
-        DeployHandler().deploy(
-            app_project_root_folderpath=app_project_root_folderpath,
-            bucket_name=bucket_name,
-            lambda_name=lambda_name,
-            lambda_handler="app.lambda_handler",
-            upload_zip=True,
-        )
+        self.deploy( app_project_root_folderpath=app_project_root_folderpath, bucket_name=bucket_name,
+                     lambda_name=lambda_name, lambda_handler="app.lambda_handler", upload_zip=True)
 
     def deploy(self, app_project_root_folderpath: str, bucket_name: str, lambda_name: str, lambda_handler: str,
                upload_zip: bool = True, app_project_existing_zip_filepath: str = None,
@@ -83,11 +94,11 @@ class DeployHandler(Core):
         # Make sure this isn't already deployed.
         """deployed_versions = self.get_lambda_function_versions(lambda_name)
         if len(deployed_versions) > 0:
-            print(f"This lambda function for this application is {click.style('already deployed', fg='green')}" +
+            click.echo(f"This lambda function for this application is {click.style('already deployed', fg='green')}" +
                   f" If some part of the full deployment failed or you changed some resource name, and you want to do it again, type Y."
                   f" Otherwise, use the {click.style('inoft update', bold=True)} command")
             if not click.confirm("Do you want to redo the deployment ?"):
-                print(f"Ok ! Remember to use the {click.style('inoft update', bold=True)} command !")
+                click.echo(f"Ok ! Remember to use the {click.style('inoft update', bold=True)} command !")
                 exit()
         """
 
@@ -109,14 +120,14 @@ class DeployHandler(Core):
                 raise ClickException("Unable to upload to S3. Look in the logs what caused the errors,"
                                      " and modify your app_settings file in order to fix the issue."
                                      "\nCommon issues include :"
+                                     "\n - Not having setup your credentials correctly (run the command : aws configure)"
                                      "\n - Trying to use a S3 bucket name that is not available."
-                                     "\n - Trying to use invalid characters in the bucket name (like - )"
                                      "\n - Having modified the app_settings file, but not have saved it with CTRL+S")
             click.echo("Uploading completed.")
 
         try:
             lambda_arn = self.get_lambda_function_arn(function_name=lambda_name)
-            print(f"Using the existing lambda function {lambda_name}")
+            click.echo(f"Using the existing lambda function {lambda_name}")
             if upload_success is True:
                 self.update_lambda_function_code(lambda_arn=lambda_arn, object_key_name=Path(zip_filepath).name, bucket_name=bucket_name)
                 click.echo(f"Updated the code of the lambda with arn {lambda_arn}")
@@ -127,9 +138,9 @@ class DeployHandler(Core):
                                                          handler=lambda_handler, description=lambda_description,
                                                          timeout=lambda_timeout_seconds, memory_size=lambda_memory_size,
                                                          runtime=runtime, publish=publish)
-                print(f"Created the lambda function : {lambda_name}")
+                click.echo(f"Created the lambda function : {lambda_name}")
             except Exception as e:
-                print(f"Error while updating the function by giving it a S3 path. Trying to update the"
+                click.echo(f"Error while updating the function by giving it a S3 path. Trying to update the"
                       f"function with a byte_stream of the zip file of the deployment package : {e}")
 
                 with open(zip_filepath, mode="rb") as file_stream:
@@ -139,18 +150,18 @@ class DeployHandler(Core):
                                                          handler=lambda_handler, description=lambda_description,
                                                          timeout=lambda_timeout_seconds, memory_size=lambda_memory_size,
                                                          runtime=runtime, publish=publish)
-                print(f"Created the lambda function : {lambda_name}")
+                click.echo(f"Created the lambda function : {lambda_name}")
 
         # Create and configure the API Gateway
         need_to_create_api = False
         api_gateway_id = self.settings.settings.get("deployment").get("apiGatewayId").to_str(default=None)
         if api_gateway_id is None or self.api_gateway_v2_url(api_gateway_id) is None:
             api_id = self.create_api_gateway(lambda_arn=lambda_arn, lambda_name=lambda_name)
-            print(f"Created a new {click.style(text='API Gateway', bold=True)}")
+            click.echo(f"Created a new {click.style(text='API Gateway', bold=True)}")
             self.settings.settings.get("deployment").put("apiGatewayId", api_id)
             self.settings.save_settings()
         else:
-            print(f"Using the existing ApiGatewayV2 with id {click.style(text=api_gateway_id, bold=True, fg='green')}")
+            click.echo(f"Using the existing ApiGatewayV2 with id {click.style(text=api_gateway_id, bold=True, fg='green')}")
 
         return True
 
@@ -169,10 +180,6 @@ class DeployHandler(Core):
         click.echo(f"Making an archive from all the files and folders in {app_folder_path} to {archive_destination_filepath}")
 
         folders_names_to_excludes = [".aws-sam", ".idea", "__pycache__", "venv"]
-
-        # this is to try to fix the issue of existing names
-        # if os.path.exists(archive_destination_filepath):
-        #    os.remove(archive_destination_filepath)
 
         with zipfile.ZipFile(archive_destination_filepath, "w") as zip_object:
             has_found_framework_in_project_files = False
@@ -215,7 +222,7 @@ class DeployHandler(Core):
 
         # from shutil import make_archive
         # zip_filepath = make_archive(base_name=archive_destination_filepath_without_extension, format="zip", root_dir=app_folder_path)
-        print(f"Archive completed at {click.style(text=archive_destination_filepath, bold=True)}")
+        click.echo(f"Archive completed at {click.style(text=archive_destination_filepath, bold=True)}")
 
         # Warn if this is too large for Lambda.
         file_stats = os.stat(archive_destination_filepath)

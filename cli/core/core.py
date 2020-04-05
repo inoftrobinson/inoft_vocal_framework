@@ -1,12 +1,13 @@
 import json
 import os
 import time
+from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
 import logging
 import boto3
 import botocore
 import click
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, NoCredentialsError
 
 from inoft_vocal_framework.cli.cli_cache import CliCache
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
@@ -18,7 +19,7 @@ from inoft_vocal_framework.safe_dict import SafeDict
 
 
 class Core(CoreClients):
-    def __init__(self):
+    def __init__(self):  # , pool: ThreadPoolExecutor):
         super().__init__()
         self.settings = Settings()
         self.tags = {"framework": "InoftVocalFramework"}
@@ -49,7 +50,7 @@ class Core(CoreClients):
             response = self.lambda_client.list_versions_by_function(FunctionName=function_name)
             return response.get('Versions', list())
         except Exception as e:
-            print(f"Lambda function {function_name} not found. Error : {e}")
+            click.echo(f"Lambda function {function_name} not found. Error : {e}")
             return list()
 
     def create_lambda_function(self, bucket=None, s3_key: str = None, local_zip: bytes = None, function_name: str = None, handler=None,
@@ -87,7 +88,7 @@ class Core(CoreClients):
         lambda_arn = response["FunctionArn"]
         version = response['Version']
 
-        print(f"Created new lambda function {function_name} with arn of {lambda_arn}")
+        click.echo(f"Created new lambda function {function_name} with arn of {lambda_arn}")
         return lambda_arn
 
     def update_lambda_function_code(self, lambda_arn: str, object_key_name: str, bucket_name: str):
@@ -137,7 +138,7 @@ class Core(CoreClients):
             )
             self.add_lambda_permission_to_call_api_resource(lambda_arn=lambda_arn, api_id=api_id, route_key=route_name)
             api_route_url = f"{api_gateway_root_url}/{route_name}"
-            print(f"Api route {click.style(route_name, fg='green')} creation complete accessible on {api_route_url}")
+            click.echo(f"Api route {click.style(route_name, fg='green')} creation complete accessible on {api_route_url}")
             self.settings.settings.get_set("deployment", {}).get_set("endpoints", {}).put(
                 route_names_to_settings_keys[route_name], api_route_url).reset_navigated_dict()
             # We reset the navigated dict after a final put
@@ -218,14 +219,14 @@ class Core(CoreClients):
         try:
             self.s3_client.head_bucket(Bucket=bucket_name)
         except ClientError as e:
-            print(f"Trying to create a new S3 Bucket with name {click.style(text=bucket_name, fg='yellow', bold=True)}"
+            click.echo(f"Trying to create a new S3 Bucket with name {click.style(text=bucket_name, fg='yellow', bold=True)}"
                   f" in region {click.style(text=region_name, fg='yellow', bold=True)}")
             available_regions_for_s3 = self.boto_session.get_available_regions(service_name="s3")
             if region_name not in available_regions_for_s3:
                 raise Exception(f"The region {region_name} was not available for s3. Here is the available regions : {available_regions_for_s3}")
 
             self.s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region_name})
-            print(f"Completed creation of the new bucket.")
+            click.echo(f"Completed creation of the new bucket.")
 
     def upload_to_s3(self, filepath: str, object_key_name: str, bucket_name: str, region_name: str) -> bool:
         # If an error happen while uploading to S3, then the upload will not be
@@ -234,8 +235,28 @@ class Core(CoreClients):
             self.create_s3_bucket_if_missing(bucket_name=bucket_name, region_name=region_name)
             self.s3_client.upload_file(Filename=filepath, Bucket=bucket_name, Key=object_key_name)
             return True
+        except NoCredentialsError as e:
+            click.echo(f"Almost there ! You just need to configure your AWS credentials."
+                  f"\nYou can follow the official documentation (you will need to install the awscli by running pip install awscli) "
+                  f"then go to https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration"
+                  f"\nOr you can follow a video made by Robinson Labourdette from Inoft, as a guide to configure your credentials.")
+            if click.confirm("Press Y to access the video."):
+                selected_language = click.prompt("Type the language in which you would like the video. The followings are available :", type=click.Choice(["English", "French"]))
+                if selected_language == "English":
+                    click.echo("English here you go !")
+                elif selected_language == "French":
+                    click.echo("Français la voila !")
+                click.echo("Follow the instructions that is available in the video, then when you are all set up, redo the command you just tried")
+                while True:
+                    if click.confirm("Press y to exit"):
+                        exit(201)
+                        break
+                        # A little break, just to make sure that if the exit do not work, we do not stay stuck in this loop.
+            else:
+                click.echo("Ok, then follow the boto documentation, and once you have configured your credentials, relaunch the cli command that you were trying to use"
+                      " (https://boto3.amazonaws.com/v1/documentation/api/latest/guide/quickstart.html#configuration)")
         except Exception as e:
-            print(f"Error while getting/creating/uploading to the S3 bucket : {e}")
+            click.echo(f"Error while getting/creating/uploading to the S3 bucket : {e}")
             return False
 
     def remove_from_s3(self, file_name: str, bucket_name: str):

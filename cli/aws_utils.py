@@ -15,7 +15,7 @@ you do not use periods (".") in bucket names when using virtual hosted–style b
 """
 
 # https://github.com/Miserlou/Zappa/issues/1688
-def is_valid_bucket_name(name):
+def is_valid_bucket_name(name) -> bool:
     """
     Checks if an S3 bucket name is valid according to https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html#bucketnamingrules
     """
@@ -49,4 +49,11 @@ def is_valid_bucket_name(name):
         return False
 
     return True
+
+def raise_if_bucket_name_not_valid(bucket_name: str):
+    if not is_valid_bucket_name(bucket_name):
+        print(BUCKET_NAMING_MSG)
+        raise Exception(f"Your bucket_name : {bucket_name} is not valid."
+                        f"\nPlease read the above naming rules, and change the name accordingly.")
+
 

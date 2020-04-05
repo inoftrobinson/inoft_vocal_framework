@@ -59,7 +59,7 @@ def push(file):
         for var_key, var_object in messages_file_vars_dict.items():
             if isinstance(var_object, SpeechsList):
                 messages_db.post_new_speechs_list(speechs_list=var_object)
-                print(f"Posted speech category : {var_key}")
+                click.echo(f"Posted speech category : {var_key}")
     else:
         if click.confirm("File did not exist, do you want to select a new one ?"):
             filepath = click.prompt("Filepath of the file")

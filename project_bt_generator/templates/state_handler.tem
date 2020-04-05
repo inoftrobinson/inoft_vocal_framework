@@ -1,0 +1,13 @@
+class {{class_name}}StateHandler(InoftStateHandler):
+    def handle(self):
+        {% for path in paths -%}
+        {% if loop.index > 1 %}elif {{path.condition_intent_name}}Handler(self).can_handle():
+            return self.to_platform_dict()
+        {% else %}if {{path.condition_intent_name}}Handler(self).can_handle():
+            return self.to_platform_dict()
+        {% endif %}
+        {% endfor %}
+    def fallback(self):
+        self.say("You can say Yes or No and that's it")
+        return self.to_platform_dict()
+
