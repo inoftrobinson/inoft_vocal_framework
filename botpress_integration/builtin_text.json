@@ -1,0 +1,354 @@
+[
+  {
+    "id": "builtin_text-pSsHWg",
+    "formData": {
+      "text$en": "👋, {{user.nickname}}!",
+      "variations$en": [
+        "Hello, {{user.nickname}}!",
+        "Welcome to Botpress, {{user.nickname}}!"
+      ],
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2018-05-14T00:57:36.026Z",
+    "modifiedOn": "2020-04-04T13:40:24.523Z"
+  },
+  {
+    "id": "builtin_text-AY5SSW",
+    "formData": {
+      "text$en": "This is the first time we speak 🤖",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2018-05-14T00:59:51.118Z",
+    "modifiedOn": "2020-04-04T13:40:24.541Z"
+  },
+  {
+    "id": "builtin_text-bFsOmf",
+    "formData": {
+      "text$en": "We already spoke {{temp.$r}} times!",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2018-05-14T01:00:37.593Z",
+    "modifiedOn": "2020-04-04T13:40:24.561Z"
+  },
+  {
+    "id": "builtin_text-TtzrCV",
+    "formData": {
+      "text$en": "Alright, I have forgotten your name.",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2018-05-14T01:06:41.963Z",
+    "modifiedOn": "2020-04-04T13:40:24.575Z"
+  },
+  {
+    "id": "builtin_text-z0J9qh",
+    "formData": {
+      "text$en": "May I know your name please?",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2018-05-14T01:08:41.241Z",
+    "modifiedOn": "2020-04-04T13:40:24.591Z"
+  },
+  {
+    "id": "builtin_text-X069Le",
+    "formData": {
+      "text$en": "Try saying something like \"forget my name\"!",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2018-05-14T01:16:53.227Z",
+    "modifiedOn": "2020-04-04T13:40:24.604Z"
+  },
+  {
+    "id": "builtin_text-kKQ8C3",
+    "formData": {
+      "text$en": "(To see how this works, double-click anywhere on the flow and go to the \"Transitions\" panel)",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2018-05-14T01:17:55.317Z",
+    "modifiedOn": "2020-04-04T13:40:24.620Z"
+  },
+  {
+    "id": "builtin_text-lbs0Re",
+    "formData": {
+      "text$en": "* Ambience...* *Enorme alarme et une personne gueulant dans une radio* C'est pas le jour pour dormir ! Réveiller-vous, j'attend tout le monde sur le au centre du camp dans 3 minutes !\n* Tu te lève et tu commence à t'habiller * Hey Léo, bien dormi ?",
+      "typing$en": true,
+      "markdown$en": true,
+      "variations$en": []
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T16:41:48.068Z",
+    "modifiedOn": "2020-04-06T17:19:16.692Z"
+  },
+  {
+    "id": "builtin_text-sRxAPP",
+    "formData": {
+      "text$en": "Bot Memory is used by the bot to store information about a conversation. Here's an example.",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T16:55:01.413Z",
+    "modifiedOn": "2020-04-04T13:40:24.648Z"
+  },
+  {
+    "id": "builtin_text-6RY1f5",
+    "formData": {
+      "text$en": "A bot could ask questions that are similar but have different meanings. To differentiate between the meanings of these questions, we use Contexts.",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T17:02:32.795Z",
+    "modifiedOn": "2020-04-04T13:40:24.663Z"
+  },
+  {
+    "id": "builtin_text-UP2ozm",
+    "formData": {
+      "text$en": "Please pick an animal from the choices, I'm not a Zoologist.",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T18:05:07.711Z",
+    "modifiedOn": "2020-04-04T13:40:24.913Z"
+  },
+  {
+    "id": "builtin_text-lALv5x",
+    "formData": {
+      "text$en": "Please ask questions about that animal, like its life span or its habitat.",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T18:14:48.625Z",
+    "modifiedOn": "2020-04-04T13:40:25.068Z"
+  },
+  {
+    "id": "builtin_text-bOU5xw",
+    "formData": {
+      "text$en": "Please refer to our [documentation](https://botpress.com/docs/build/memory) to learn more about Bot Memory.",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T18:29:05.998Z",
+    "modifiedOn": "2020-04-04T13:40:25.090Z"
+  },
+  {
+    "id": "builtin_text-SKQxXN",
+    "formData": {
+      "text$en": "Ask me something thats included in the choices. Let's try again.",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T18:40:32.874Z",
+    "modifiedOn": "2020-04-04T13:40:25.109Z"
+  },
+  {
+    "id": "builtin_text-T8Oa8M",
+    "formData": {
+      "text$en": "To learn more about how to setup a Contextual FAQ, please refer to our [tutorial](https://botpress.com/docs/tutorials/contextual-faq)",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T19:53:14.411Z",
+    "modifiedOn": "2020-04-04T13:40:25.133Z"
+  },
+  {
+    "id": "builtin_text-yFOIFD",
+    "formData": {
+      "text$en": "Tell me if you need help!",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-03-25T22:02:33.058Z",
+    "modifiedOn": "2020-04-04T13:40:25.156Z"
+  },
+  {
+    "id": "builtin_text-error",
+    "formData": {
+      "text$en": "😯 Oops! We've got a problem. Please try something else while we're fixing it 🔨",
+      "typing$en": true
+    },
+    "createdBy": "admin",
+    "createdOn": "2019-09-03T18:58:10.702Z",
+    "modifiedOn": "2020-04-04T13:40:25.178Z"
+  },
+  {
+    "id": "builtin_text-uT1TP5",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "Pareil, j'ai à peine dormi. T'était pareil lors de ta première fois ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-04T20:27:07.329Z",
+    "modifiedOn": "2020-04-06T16:00:26.369Z"
+  },
+  {
+    "id": "builtin_text--FWw96",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "T'a de la chance. J'ai à peine dormi, t'était pareil avant ta première fois ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-04T20:29:00.282Z",
+    "modifiedOn": "2020-04-06T15:59:58.648Z"
+  },
+  {
+    "id": "builtin_text-wqhtNB",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "Ouai....* sigh* Bon de toute façon, c'est pour le bien, hein. La ont plus vraiment le choix de toute façon * laughing * C'est bon t'est prêt ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-04T20:32:11.041Z",
+    "modifiedOn": "2020-04-06T16:06:35.840Z"
+  },
+  {
+    "id": "builtin_text-VOcldO",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "Quoi ? Je suis vraiment mal réveillé. J'ai pas réussi à dormir, c'était pareil ta première fois ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:02:17.002Z",
+    "modifiedOn": "2020-04-06T16:02:17.002Z"
+  },
+  {
+    "id": "builtin_text-GZ5Lmt",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "On vraiment pas le temps Léo, aller viens. ** walking ** Tout le monde est là ? ** à plusieurs ** Oui Chef ! ** en criant ** J'ai rien entendu !"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:07:37.970Z",
+    "modifiedOn": "2020-04-06T16:15:00.878Z"
+  },
+  {
+    "id": "builtin_text-NiVD2C",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "Ok super, allons-y. ** walking ** Tout le monde est là ? ** à plusieurs ** Oui Chef ! ** en criant ** J'ai rien entendu !"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:08:09.585Z",
+    "modifiedOn": "2020-04-06T16:13:57.991Z"
+  },
+  {
+    "id": "builtin_text-Clawq0",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "De toute façon, faut qu'y aille. ** walking ** Tout le monde est là ? ** à plusieurs ** Oui Chef ! ** en criant ** J'ai rien entendu !"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:08:29.889Z",
+    "modifiedOn": "2020-04-06T16:15:11.357Z"
+  },
+  {
+    "id": "builtin_text-LHJgU5",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "T'essais de faire le malin Leo ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:21:14.802Z",
+    "modifiedOn": "2020-04-06T16:21:14.802Z"
+  },
+  {
+    "id": "builtin_text-0McHoo",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "Tu te fous de moi ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:28:16.900Z",
+    "modifiedOn": "2020-04-06T16:28:16.900Z"
+  },
+  {
+    "id": "builtin_text-aMlZRX",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "C'est bien ce que je croyait. ** ton pote ** Léo, arrête de déconner ! Ok ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:28:50.288Z",
+    "modifiedOn": "2020-04-06T17:08:09.601Z"
+  },
+  {
+    "id": "builtin_text-gQuBnb",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "** gant te fouette * C'est pas le jour pour déconner, reprend toi en main ! ** (le pote) ** Léo, arrête de déconner ! Ok ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:33:44.639Z",
+    "modifiedOn": "2020-04-06T17:06:02.921Z"
+  },
+  {
+    "id": "builtin_text-dJKP2N",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "Vous jouerez Léo Major, éclaireur des forces canadiennes agé de toute juste 23 ans. Votre histoire commençeras durant la bataille de l'Escaut, qui c'est produite du 2 octobre jusqu'au 8 novembre 1944. 135 000 soldats canadien, français britannique, polandais, américain, belges, néérlendais, et norvègien sont opposé a 90 000 soldats allemands. Cette opération à comme objectif d'ouvrir une route de ravitaillement vers la ville belge d'Anvers, pour pouvoir ravitailler en armes, hommes et ressources les forces alliés dans tout le reste du nord-ouest de l'Europe. Cette histoire raconte des faits réels, les choix auxquelles vont serez confrontés, ont réelement vécu été vécu par Léo Major en 1944. Etes-vous prêt à jouer ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T16:58:43.765Z",
+    "modifiedOn": "2020-04-06T17:18:51.091Z"
+  },
+  {
+    "id": "builtin_text-mvdSF5",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "* général * Cela fait 8 jours que nous avançons. Certains d'entre vous ne le savent pas, mais depuis hier ces salauds de nazis innonde tous les endroits pratiquables autour de la rivière d'Anvers. Seulement nos véhicules amphibiques peuvent avancer, cependant plus de 230 hommes ont déjà été perdu à essayer ça. Nous avons besoin d'éclaireurs agile pour identifier les véhicules qu'ils utilisent pour transporter l'eau. Nous avons besoin de 2 personnes. Des volontaires ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T17:18:23.367Z",
+    "modifiedOn": "2020-04-06T17:26:32.212Z"
+  },
+  {
+    "id": "builtin_text-9jHdux",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "** ton pote ** Léo et moi sommes prêt ! Pas vrai Léo ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T17:29:05.095Z",
+    "modifiedOn": "2020-04-06T17:29:05.095Z"
+  },
+  {
+    "id": "builtin_text-podcGV",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "Très bien Léo ! Je suppose que ** nom de pote ** t'accompegneras ? * ton pote * Oui chef ! Très bien, c'est décidé, vous partirez dans 30 minutes."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T17:30:48.130Z",
+    "modifiedOn": "2020-04-06T17:32:57.015Z"
+  },
+  {
+    "id": "builtin_text-H7Of88",
+    "formData": {
+      "markdown$en": true,
+      "typing$en": true,
+      "text$en": "* chef * Très bien, c'est décidé. Vous partirez dans 30 minutes."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-04-06T17:32:00.003Z",
+    "modifiedOn": "2020-04-06T17:32:00.003Z"
+  }
+]

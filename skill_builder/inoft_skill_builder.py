@@ -93,7 +93,6 @@ class InoftHandlersGroup:
 
 class InoftSkill:
     def __init__(self, settings_yaml_filepath=None, settings_json_filepath=None):
-
         self.settings = Settings()
         if settings_yaml_filepath is not None and settings_json_filepath is not None:
             raise Exception(f"You cannot specify multiple settings files. Please specify only one")
@@ -173,6 +172,10 @@ class InoftSkill:
                             f"{InoftDefaultFallback.__name__} as its MetaClass : {default_fallback_handler_instance_or_class}")
 
     def process_request(self):
+        # todo: find what is making the init of the app ultra slow, when the app size start to increase to a few
+        #  hundred lines of codes and messages. Maybe it is the messages import * ? Or maybe by mistake i'm initializing
+        #  all the handlers classes when adding them to their respective chains ?
+
         output_event = None
         handler_to_use = None
         handler_is_an_alone_callback_function = False

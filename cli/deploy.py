@@ -17,6 +17,7 @@ from inoft_vocal_framework.cli.cli_cache import CliCache
 from inoft_vocal_framework.cli.core.core import Core
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
+# todo: fix issue where when deploying we do not check if the api with the id found in the settings file do exit
 
 class DeployHandler(Core):
     def __init__(self):

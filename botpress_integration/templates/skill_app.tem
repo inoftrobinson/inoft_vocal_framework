@@ -1,0 +1,19 @@
+from inoft_vocal_framework import InoftSkill{% if has_request_handlers is true %}, InoftRequestHandler{% endif %}{% if has_state_handlers is true %}, InoftStateHandler{% endif %}, InoftDefaultFallback
+from messages import *
+import os
+
+
+{% for handler in handlers_list -%}
+    {{handler.code}}
+{% endfor -%}
+
+
+def lambda_handler(event, context):
+    skill_builder = InoftSkill(settings_yaml_filepath=os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_settings.yaml"))
+    {% for handler in handlers_list -%}
+        {% if handler.CLASS_TYPE == "StateHandler" %}skill_builder.add_state_handler({{handler.class_name}}StateHandler)
+        {%- elif handler.CLASS_TYPE == "RequestHandler" %}skill_builder.add_request_handler({{handler.class_name}}RequestHandler){% endif %}
+    {% endfor -%}
+    skill_builder.set_default_fallback_handler(DefaultFallback)
+    return skill_builder.handle_any_platform(event=event, context=context)
+

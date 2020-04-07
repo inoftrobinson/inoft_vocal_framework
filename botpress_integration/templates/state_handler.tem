@@ -1,13 +1,20 @@
 class {{class_name}}StateHandler(InoftStateHandler):
-    def handle(self):
+    def handle(self) -> dict:
         {% for path in paths -%}
         {% if loop.index > 1 %}elif {{path.condition_intent_name}}Handler(self).can_handle():
+            {%- if path.code is not none %}
+            {{path.code}}{% endif %}
+            self.memorize_session_then_state({{path.target_node_class}})
             return self.to_platform_dict()
         {% else %}if {{path.condition_intent_name}}Handler(self).can_handle():
+            {%- if path.code is not none %}
+            {{path.code}}{% endif %}
+            self.memorize_session_then_state({{path.target_node_class}})
             return self.to_platform_dict()
         {% endif %}
-        {% endfor %}
-    def fallback(self):
+        {% endfor %}{%- if paths|length == 0 %}pass
+        {% endif %}
+    def fallback(self) -> dict:
         self.say("You can say Yes or No and that's it")
         return self.to_platform_dict()
 

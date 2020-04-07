@@ -1,0 +1,9 @@
+class {{class_name}}RequestHandler(InoftRequestHandler):
+    def can_handle(self) -> bool:
+        return self.is_launch_request()
+
+    def handle(self) -> dict:
+        {{handler_logic_code}}
+        {% if next_state_handler_class is not none %}self.memorize_session_then_state({{next_state_handler_class}}){% endif %}
+        return self.to_platform_dict()
+

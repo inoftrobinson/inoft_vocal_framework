@@ -100,6 +100,7 @@ class Core(CoreClients):
         )
 
     def create_api_gateway(self, lambda_arn: str, lambda_name: str, description: str = None) -> str:
+        # todo: fix bug if id of api gateway is present in file, but the api has been deleted, it will not try to recreate it
         api_name = lambda_name or lambda_arn.split(":")[-1]
 
         api_creation_response = SafeDict(self.api_gateway_client.create_api(Name=api_name,

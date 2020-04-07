@@ -20,7 +20,7 @@ setup(
               "inoft_vocal_framework.platforms_handlers.siri",
               "inoft_vocal_framework.platforms_handlers.endpoints_providers"],
     include_package_data=True,
-    install_requires=["PyYAML", "cerberus", "boto3", "click"],
+    install_requires=["PyYAML", "cerberus", "boto3", "click", "inflect"],
     entry_points={
         "console_scripts": [
             "inoft = inoft_vocal_framework.cli.cli_index:cli",
