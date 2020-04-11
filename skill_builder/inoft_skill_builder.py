@@ -10,6 +10,8 @@ from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import Neste
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
+# todo: Add a class with only a CanHandle function (for cases like the Yes and No classical handlers=
+
 class InoftHandler(HandlerInputWrapper):
     @abstractmethod
     def handle(self) -> dict:
@@ -319,7 +321,9 @@ class InoftSkill:
         elif event_safedict.get("rawPath").to_str() == "/samsungBixbyV1":
             # A samsung bixby request always pass trough an API gateway
             self.handler_input.is_bixby_v1 = True
-            event = NestedObjectToDict.get_dict_from_json(event_safedict.get("body").to_str())
+            from urllib import parse
+            event = {"context": NestedObjectToDict.get_dict_from_json(stringed_json_dict=event_safedict.get("body").to_str())["$vivContext"],
+                     "parameters": dict(parse.parse_qsl(event_safedict.get("rawQueryString").to_str()))}
 
         elif "amzn1." in event_safedict.get("context").get("System").get("application").get("applicationId").to_str():
             # Alexa always go last, since it do not pass trough an api resource, its a less robust identification than the other platforms.

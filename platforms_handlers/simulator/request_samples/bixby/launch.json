@@ -1,0 +1,44 @@
+{
+    "version": "2.0",
+    "routeKey": "ANY /samsungBixbyV1",
+    "rawPath": "/samsungBixbyV1",
+    "rawQueryString": "intent=launch",
+    "headers": {
+        "accept": "application/json",
+        "accept-charset": "UTF-8",
+        "accept-encoding": "gzip",
+        "cache-control": "no-cache",
+        "content-length": "558",
+        "content-type": "application/json",
+        "host": "779cmrwtm2.execute-api.eu-west-3.amazonaws.com",
+        "pragma": "no-cache",
+        "user-agent": "Mozilla/5.0 (compatible) gzip",
+        "x-amzn-trace-id": "Root=1-5e905534-a8afbc334c37d1a1c5d3b1a0",
+        "x-forwarded-for": "18.219.154.73",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https"
+    },
+    "queryStringParameters": {
+        "intent": "launch"
+    },
+    "requestContext": {
+        "accountId": "631258222318",
+        "apiId": "779cmrwtm2",
+        "domainName": "779cmrwtm2.execute-api.eu-west-3.amazonaws.com",
+        "domainPrefix": "779cmrwtm2",
+        "http": {
+            "method": "POST",
+            "path": "/samsungBixbyV1",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "18.219.154.73",
+            "userAgent": "Mozilla/5.0 (compatible) gzip"
+        },
+        "requestId": "KxJANg_-CGYEPEA=",
+        "routeKey": "ANY /samsungBixbyV1",
+        "stage": "$default",
+        "time": "10/Apr/2020:11:15:00 +0000",
+        "timeEpoch": 1586517300409
+    },
+    "body": "{\"$vivContext\":{\"clientAppVersion\":null,\"is24HourFormat\":false,\"timezone\":\"America/Los_Angeles\",\"screenLocked\":false,\"sessionId\":\"84093b33b0f810a91d9d5e99b60fc5e46c61d5a7beb47de2ae377ec5eb84d93c\",\"locale\":\"fr-FR\",\"clientAppId\":null,\"userId\":\"cb1ce0d2f3fd8def7dbf5f8071ff72656f84172a052f4105d2114c77a06e8ac2\",\"canTypeId\":\"bixby-mobile-fr-FR\",\"handsFree\":false,\"bixbyUserId\":\"LBQ3uiP7veM0Qjos1z5V6LrsjVODK4lfUwJj2D1o8bU\",\"grantedPermissions\":{\"bixby-user-id-access\":true,\"device-location-access\":true},\"device\":\"bixby-mobile\",\"allowLockScreenExecution\":false}}",
+    "isBase64Encoded": false
+}

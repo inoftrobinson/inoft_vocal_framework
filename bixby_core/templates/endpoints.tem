@@ -1,0 +1,12 @@
+endpoints {
+  action-endpoints {
+  {%- for intent_name, intent_values in intents.items() %}
+    action-endpoint ({{intent_name}}) {
+      accepted-inputs ($vivContext)
+        remote-endpoint ("{remote.url}?intent={{intent_name}}") {
+        method (POST)
+      }
+    }
+  {%- endfor %}
+  }
+}

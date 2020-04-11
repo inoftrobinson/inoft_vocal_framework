@@ -1,5 +1,9 @@
+import time
+
+print(f"Start {time.time()}")
 from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
-from messages import *
+from messages_real import *
+print(f"End imports {time.time()}")
 import os
 
 
@@ -8,7 +12,8 @@ class NodeLeostorystartRequestHandler(InoftRequestHandler):
         return self.is_launch_request()
 
     def handle(self) -> dict:
-        self.say(BUILTIN_TEXT_DJKP2N.pick())
+        # self.say(BUILTIN_TEXT_DJKP2N.pick())
+        self.say("Dummy")
         self.memorize_session_then_state(NodeLeostorystartStateHandler)
         return self.to_platform_dict()
 
@@ -315,6 +320,7 @@ class DefaultFallback(InoftDefaultFallback):
         return self.to_platform_dict()
 
 def lambda_handler(event, context):
+    print(f"Lambda start {time.time()}")
     skill_builder = InoftSkill(settings_yaml_filepath=os.path.join(os.path.dirname(os.path.abspath(__file__)), "app_settings.yaml"))
     skill_builder.add_request_handler(NodeLeostorystartRequestHandler)
     skill_builder.add_state_handler(NodeLeostorystartStateHandler)
@@ -339,4 +345,12 @@ def lambda_handler(event, context):
     skill_builder.add_request_handler(YesHandler)
     skill_builder.add_request_handler(NoHandler)
     skill_builder.set_default_fallback_handler(DefaultFallback)
-    return skill_builder.handle_any_platform(event=event, context=context)
+    print(f"Lambda end config {time.time()}")
+    out = skill_builder.handle_any_platform(event=event, context=context)
+    print(f"Lambda end process {time.time()}")
+    return out
+
+if __name__ == "__main__":
+    from inoft_vocal_framework.platforms_handlers.simulator.simulator_core import Simulator
+    event_, context_ = Simulator(event_type="google/start").get_event_and_context()
+    print(f"\n\nFinal Output : {lambda_handler(event=event_, context=context_)}")

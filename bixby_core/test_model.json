@@ -1,0 +1,16 @@
+{
+  "intents": {
+    "Yes": {
+      "phrases": [
+        "Oui",
+        "Ok"
+      ]
+    },
+    "No": {
+      "phrases": [
+        "Non",
+        "Nop"
+      ]
+    }
+  }
+}

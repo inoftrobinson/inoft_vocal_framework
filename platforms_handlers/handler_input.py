@@ -52,7 +52,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             elif self.is_dialogflow_v1 is True:
                 self._session_id = self.dialogFlowHandlerInput.session_id
             elif self.is_bixby_v1 is True:
-                self._session_id = self.bixbyHandlerInput.request.sessionId
+                self._session_id = self.bixbyHandlerInput.request.context.sessionId
 
             if not isinstance(self._session_id, str):
                 self._session_id = str(self._session_id)
@@ -67,7 +67,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
             elif self.is_dialogflow_v1 is True:
                 self._is_invocation_new_session = self.dialogFlowHandlerInput.is_new_session
             elif self.is_bixby_v1 is True:
-                raise
+                last_session_id = self.persistent_remember("lastSessionId", str)
+                if last_session_id is None or last_session_id == "":
+                    self._is_invocation_new_session = True
+                elif self.bixbyHandlerInput.context.sessionId != last_session_id:
+                    self._is_invocation_new_session = True
         return self._is_invocation_new_session
 
     @property
@@ -129,7 +133,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             elif self.is_dialogflow_v1 is True:
                 user_id = self.dialogFlowHandlerInput.user_id
             elif self.is_bixby_v1 is True:
-                user_id = self.bixbyHandlerInput.request.userId
+                user_id = self.bixbyHandlerInput.request.context.userId
 
             if not isinstance(user_id, str) or user_id.replace(" ", "") == "":
                 from inoft_vocal_framework.utils.general import generate_uuid4
@@ -175,8 +179,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
         elif self.is_bixby_v1 is True:
             from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
             self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
+
+            NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request.context,
+                request_json_dict_stringed_dict_or_list=event["context"], key_names_identifier_objects_to_go_into=["json_key"])
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
-                request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
+                request_json_dict_stringed_dict_or_list=event["parameters"], key_names_identifier_objects_to_go_into=["json_key"])
 
     def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: str):
         # todo: fix bug where the identifier_key is not the right now if it has been modified because there were only 1 element
