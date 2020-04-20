@@ -11,6 +11,14 @@ from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
 # todo: Add a class with only a CanHandle function (for cases like the Yes and No classical handlers=
+class InoftCondition(HandlerInputWrapper):
+    @abstractmethod
+    def can_handle(self) -> bool:
+        """ Returns true if Request Handler can handle the Request inside Handler Input.
+        :return: Boolean value that tells the dispatcher if the current request can be handled by this handler.
+        :rtype: bool
+        """
+        raise NotImplementedError
 
 class InoftHandler(HandlerInputWrapper):
     @abstractmethod
@@ -27,7 +35,7 @@ class InoftHandler(HandlerInputWrapper):
         # use a class path, that will be saved in the database)
         print(f"Resuming an user session, but no logic has been found in the handle_resume function, defaulting to the handle function")
 
-class InoftRequestHandler(HandlerInputWrapper):  # (HandlerInput):
+class InoftRequestHandler(HandlerInputWrapper):
     @abstractmethod
     def can_handle(self) -> bool:
         """ Returns true if Request Handler can handle the Request inside Handler Input.
@@ -48,7 +56,7 @@ class InoftRequestHandler(HandlerInputWrapper):  # (HandlerInput):
     def handle_resume(self) -> dict:
         print(f"Resuming an user session, but no logic has been found in the handle_resume function, defaulting to the handle function")
 
-class InoftStateHandler(HandlerInputWrapper):  # (HandlerInput):
+class InoftStateHandler(HandlerInputWrapper):
     # todo: make it possible for a state or request handler to be a nested class inside another one
     @abstractmethod
     def handle(self) -> dict:
@@ -64,7 +72,7 @@ class InoftStateHandler(HandlerInputWrapper):  # (HandlerInput):
         :return: Response for the dispatcher to return or None
         :rtype: Union[Response, None]
         """
-        raise NotImplementedError
+        return self.handle()
 
     @abstractmethod
     def handle_resume(self):
@@ -174,10 +182,6 @@ class InoftSkill:
                             f"{InoftDefaultFallback.__name__} as its MetaClass : {default_fallback_handler_instance_or_class}")
 
     def process_request(self):
-        # todo: find what is making the init of the app ultra slow, when the app size start to increase to a few
-        #  hundred lines of codes and messages. Maybe it is the messages import * ? Or maybe by mistake i'm initializing
-        #  all the handlers classes when adding them to their respective chains ?
-
         output_event = None
         handler_to_use = None
         handler_is_an_alone_callback_function = False

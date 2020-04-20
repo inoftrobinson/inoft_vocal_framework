@@ -94,6 +94,9 @@ class Settings:
             "deployment": {
                 "type": "dict",
                 "schema": {
+                    "handlerFunctionPath": {
+                        "type": "string",
+                    },
                     "apiGatewayId": {
                         "type": "string",
                     },

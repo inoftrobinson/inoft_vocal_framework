@@ -60,9 +60,19 @@ class DeployHandler(Core):
         if changed_root_folderpath is True:
             CliCache.cache().put("last_app_project_root_folderpath", app_project_root_folderpath)
             CliCache.save_cache_to_yaml()
-            click.echo(f"Saved the folderpath of your project for {click.style(text='faster load next time ;)', fg='blue')}")
+            click.echo(f"Saved the folderpath of your project for {click.style(text='faster load next time', fg='blue')}")
 
         self.settings.find_load_settings_file(root_folderpath=app_project_root_folderpath)
+
+        handler_function_path = self.settings.settings.get_set("deployment", {}).get("handlerFunctionPath").to_str(default=None)
+        if handler_function_path is not None and handler_function_path != "":
+            if not click.confirm(f"Do you wish to keep using the following path to your lambda handler function ? : {handler_function_path}"):
+                handler_function_path = None
+        if handler_function_path is None:
+            handler_function_path = click.prompt("Please write a valid file and function path to your lambda handler, relative to your project directory."
+                                               "\nBy default with the all the templates, the path should be app.lambda_handler", type=str, default="app.lambda_handler")
+            self.settings.settings.get_set("deployment", {}).put("handlerFunctionPath", handler_function_path).reset_navigated_dict()
+
 
         # I cannot create a variable that contain the deployment settings, otherwise it will be hell with the resets of the safedict.
         bucket_name = self.settings.settings.get_set("deployment", {}).get("s3_bucket_name").to_str(default=None)
@@ -82,7 +92,7 @@ class DeployHandler(Core):
         # todo: ask and check lambda handler file/function path
 
         self.deploy( app_project_root_folderpath=app_project_root_folderpath, bucket_name=bucket_name,
-                     lambda_name=lambda_name, lambda_handler="app.lambda_handler", upload_zip=True)
+                     lambda_name=lambda_name, lambda_handler=handler_function_path, upload_zip=True)
 
     def deploy(self, app_project_root_folderpath: str, bucket_name: str, lambda_name: str, lambda_handler: str,
                upload_zip: bool = True, app_project_existing_zip_filepath: str = None,
@@ -131,6 +141,7 @@ class DeployHandler(Core):
             click.echo(f"Using the existing lambda function {lambda_name}")
             if upload_success is True:
                 self.update_lambda_function_code(lambda_arn=lambda_arn, object_key_name=Path(zip_filepath).name, bucket_name=bucket_name)
+                self.update_lambda_function_configuration(function_name=lambda_arn, handler_function_path=lambda_handler)
                 click.echo(f"Updated the code of the lambda with arn {lambda_arn}")
 
         except botocore.exceptions.ClientError:
@@ -173,10 +184,6 @@ class DeployHandler(Core):
 
     @staticmethod
     def create_package(app_folder_path: str) -> str:
-        # todo: fix issue where we have the following printed for each single file (most likely come from the fact that i do not delete the old zip before creating a new one)
-        #  return self._open_to_write(zinfo, force_zip64=force_zip64)
-        #  c:\users\labourdette\anaconda3\lib\zipfile.py:1473: UserWarning: Duplicate name: 'inoft_vocal_framework/utils/__init__.py'
-
         archive_destination_filepath = os.path.join(Path(app_folder_path).parent, f"{Path(app_folder_path).name}.zip")
         click.echo(f"Making an archive from all the files and folders in {app_folder_path} to {archive_destination_filepath}")
 

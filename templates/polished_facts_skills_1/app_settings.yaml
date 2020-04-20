@@ -1,0 +1,12 @@
+default_session_data_timeout: 0
+messages:
+  database_client: dynamodb
+  dynamodb:
+    region_name: eu-west-3
+    table_name: skill_polished-facts_messages
+  use_database_dynamic_messages: true
+sessions_users_data:
+  database_client: dynamodb
+  dynamodb:
+    region_name: eu-west-3
+    table_name: skill_polished-facts_users-data

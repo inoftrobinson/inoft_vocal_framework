@@ -8,7 +8,6 @@ from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.speechs.ssml_builder_core import Speech, SpeechsList
 
 
-# todo: make static
 class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
     def __init__(self, table_name: str, region_name: str, primary_key_name="id", create_table=True,
                  persistent_attributes_key_name="persistentAttributes", smart_session_attributes_key_name="smartSessionAttributes"):

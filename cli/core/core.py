@@ -99,6 +99,16 @@ class Core(CoreClients):
             Publish=True,
         )
 
+    def update_lambda_function_configuration(self, function_name: str, handler_function_path: str = None, lambda_layers_arns: list = None):
+        kwargs = dict(FunctionName=function_name)
+        if handler_function_path is not None:
+            kwargs["Handler"] = handler_function_path
+        if lambda_layers_arns is not None and len(lambda_layers_arns) > 0:
+            kwargs["Layers"] = lambda_layers_arns
+
+        response = self.lambda_client.update_function_configuration(**kwargs)
+
+
     def create_api_gateway(self, lambda_arn: str, lambda_name: str, description: str = None) -> str:
         # todo: fix bug if id of api gateway is present in file, but the api has been deleted, it will not try to recreate it
         api_name = lambda_name or lambda_arn.split(":")[-1]
