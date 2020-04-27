@@ -1,0 +1,9 @@
+
+{% if path.code_elements is not none %}
+    {% for code_element in path.code_elements %}
+{{code_element}}
+    {% endfor %}
+{% endif %}
+self.memorize_session_then_state({{path.target_node_class}})
+return self.to_platform_dict()
+

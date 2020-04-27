@@ -1,4 +1,7 @@
-from inoft_vocal_framework import InoftSkill{% if has_condition_classes is true %}, InoftCondition{% endif %}{% if has_request_handlers is true %}, InoftRequestHandler{% endif %}{% if has_state_handlers is true %}, InoftStateHandler{% endif %}, InoftDefaultFallback
+from inoft_vocal_framework import InoftSkill
+{%- if has_condition_classes is true %}, InoftCondition{% endif %}
+{%- if has_request_handlers is true %}, InoftRequestHandler{% endif %}
+{%- if has_state_handlers is true %}, InoftStateHandler{% endif %}, InoftDefaultFallback
 from messages import *
 import os
 
