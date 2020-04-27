@@ -201,3 +201,7 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
 
         if override_default_end_session is False:
             self.parent_handler_input.end_session()
+
+    def request_push_notifications_permission_if_missing(self) -> None:
+        if self.request.originalDetectIntentRequest.payload.user.PERMISSION_UPDATE_TYPE not in self.request.originalDetectIntentRequest.payload.user.permissions:
+            self.response.request_push_notifications_permission()

@@ -13,6 +13,9 @@ class Settings:
     last_settings_filepath = None
     last_settings_file_extension_type = None
 
+    def __init__(self, raise_if_not_loaded: bool = True):
+        self.raise_if_not_loaded = raise_if_not_loaded
+
     class ExtendedValidator(Validator):
         def _validate_check_database_field_present(self, check_database_field_present: bool, field: str, value):
             """ {'type': 'boolean'} """
@@ -132,7 +135,10 @@ class Settings:
     @property
     def settings(self) -> SafeDict:
         if Settings.settings_loaded is not True:
-            raise Exception(f"The settings have not yet been loaded and are : {Settings.settings}")
+            if self.raise_if_not_loaded is True:
+                raise Exception(f"The settings have not yet been loaded and are : {Settings.settings}")
+            else:
+                Settings._settings = SafeDict()
         return Settings._settings
 
     @settings.setter

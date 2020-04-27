@@ -1,0 +1,38 @@
+{
+    "version": "2.0",
+    "routeKey": "ANY /googleAssistantDialogflowV1",
+    "rawPath": "/googleAssistantDialogflowV1",
+    "rawQueryString": "",
+    "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip,deflate,br",
+        "content-length": "3841",
+        "content-type": "application/json",
+        "host": "779cmrwtm2.execute-api.eu-west-3.amazonaws.com",
+        "user-agent": "Google-Dialogflow",
+        "x-amzn-trace-id": "Root=1-5ea73310-d049aa31812e5ba5768397ae",
+        "x-forwarded-for": "66.249.88.168",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https"
+    },
+    "requestContext": {
+        "accountId": "631258222318",
+        "apiId": "779cmrwtm2",
+        "domainName": "779cmrwtm2.execute-api.eu-west-3.amazonaws.com",
+        "domainPrefix": "779cmrwtm2",
+        "http": {
+            "method": "POST",
+            "path": "/googleAssistantDialogflowV1",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "66.249.88.168",
+            "userAgent": "Google-Dialogflow"
+        },
+        "requestId": "LqTqmjlviGYEMBg=",
+        "routeKey": "ANY /googleAssistantDialogflowV1",
+        "stage": "$default",
+        "time": "27/Apr/2020:19:31:28 +0000",
+        "timeEpoch": 1588015888575
+    },
+    "body": "{\n  \"responseId\": \"70db8717-8a06-4fa4-9f9b-f38994861c01-eec93b43\",\n  \"queryResult\": {\n    \"queryText\": \"Oui\",\n    \"parameters\": {\n    },\n    \"allRequiredParamsPresent\": true,\n    \"fulfillmentMessages\": [{\n      \"text\": {\n        \"text\": [\"\"]\n      }\n    }],\n    \"outputContexts\": [{\n      \"name\": \"projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo/contexts/actions_capability_media_response_audio\"\n    }, {\n      \"name\": \"projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo/contexts/actions_capability_audio_output\"\n    }, {\n      \"name\": \"projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo/contexts/actions_capability_screen_output\"\n    }, {\n      \"name\": \"projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo/contexts/actions_capability_account_linking\"\n    }, {\n      \"name\": \"projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo/contexts/google_assistant_input_type_voice\"\n    }, {\n      \"name\": \"projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo/contexts/sessiondata\",\n      \"lifespanCount\": 998\n    }, {\n      \"name\": \"projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo/contexts/__system_counters__\",\n      \"parameters\": {\n        \"no-input\": 0.0,\n        \"no-match\": 0.0\n      }\n    }],\n    \"intent\": {\n      \"name\": \"projects/jeu-seconde-guerre-mondiale/agent/intents/75d86c75-fe49-45ea-9c9a-839544901d89\",\n      \"displayName\": \"Yes\"\n    },\n    \"intentDetectionConfidence\": 1.0,\n    \"languageCode\": \"fr\"\n  },\n  \"originalDetectIntentRequest\": {\n    \"source\": \"google\",\n    \"version\": \"2\",\n    \"payload\": {\n      \"user\": {\n        \"permissions\": [\"UPDATE\"],\n        \"locale\": \"fr-CA\",\n        \"lastSeen\": \"2020-04-27T19:31:23Z\",\n        \"userStorage\": \"{\\u0027userId\\u0027: \\u00272baf1767-3648-4710-8d89-8e4ca554ed97\\u0027}\",\n        \"userVerificationStatus\": \"VERIFIED\"\n      },\n      \"conversation\": {\n        \"conversationId\": \"ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo\",\n        \"type\": \"ACTIVE\",\n        \"conversationToken\": \"[\\\"sessiondata\\\"]\"\n      },\n      \"inputs\": [{\n        \"intent\": \"actions.intent.TEXT\",\n        \"rawInputs\": [{\n          \"inputType\": \"VOICE\",\n          \"query\": \"Oui\"\n        }],\n        \"arguments\": [{\n          \"name\": \"text\",\n          \"rawText\": \"Oui\",\n          \"textValue\": \"Oui\"\n        }]\n      }],\n      \"surface\": {\n        \"capabilities\": [{\n          \"name\": \"actions.capability.MEDIA_RESPONSE_AUDIO\"\n        }, {\n          \"name\": \"actions.capability.AUDIO_OUTPUT\"\n        }, {\n          \"name\": \"actions.capability.SCREEN_OUTPUT\"\n        }, {\n          \"name\": \"actions.capability.ACCOUNT_LINKING\"\n        }]\n      },\n      \"isInSandbox\": true,\n      \"availableSurfaces\": [{\n        \"capabilities\": [{\n          \"name\": \"actions.capability.SCREEN_OUTPUT\"\n        }, {\n          \"name\": \"actions.capability.WEB_BROWSER\"\n        }, {\n          \"name\": \"actions.capability.AUDIO_OUTPUT\"\n        }]\n      }],\n      \"requestType\": \"SIMULATOR\"\n    }\n  },\n  \"session\": \"projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHE_-jPKwzLhwzVXf0WjI1kdRaE2D1ZDqJ_6Kv9Vvgtiqo2u_GwM6Wv-TK7pULs04BtMirV7oBQt51EiBvfEj1iHjbpc8Ufo\"\n}",
+    "isBase64Encoded": false
+}

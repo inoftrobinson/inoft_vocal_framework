@@ -8,4 +8,5 @@ from inoft_vocal_framework.speechs.ssml_builder_core import Speech, SpeechsList
 """).set_prob(1),
     {% endfor %}
 ])
+
 {% endfor %}

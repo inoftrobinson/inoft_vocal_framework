@@ -1,19 +1,82 @@
 class {{class_name}}StateHandler(InoftStateHandler):
     def handle(self) -> dict:
         {% for path in paths -%}
-        {% if loop.index > 1 %}elif {{path.condition_intent_name}}Handler(self).can_handle():
-            {%- if path.code is not none %}
-            {{path.code}}{% endif %}
+            {%- if loop.index == 1 %}
+                {%- if path.condition_type == "intent_name" %}
+                    {%- if counts_used_condition_intent_names[path.condition_intent_name] < threshold_of_intent_use_to_create_a_condition %}
+        if self.is_in_intent_names("{{path.condition_intent_name}}"):
+                    {% else %}
+        if {{path.condition_intent_name}}Condition(self).can_handle():
+                    {% endif %}
+                    {% if path.code_elements is not none %}
+                        {% for code_element in path.code_elements %}
+            {{code_element}}
+                        {% endfor %}
+                    {% endif %}
             self.memorize_session_then_state({{path.target_node_class}})
             return self.to_platform_dict()
-        {% else %}if {{path.condition_intent_name}}Handler(self).can_handle():
-            {%- if path.code is not none %}
-            {{path.code}}{% endif %}
+
+                {% elif path.condition_type == "data" %}
+        if self.persistent_remember("{{path.condition_data_key}}") {{path.condition_statement}}:
+                    {% if path.code_elements is not none %}
+                        {% for code_element in path.code_elements %}
+            {{code_element}}
+                        {% endfor %}
+                    {% endif %}
             self.memorize_session_then_state({{path.target_node_class}})
             return self.to_platform_dict()
+
+                {% elif path.condition_type == "always" %}
+                    {% if path.code_elements is not none %}
+                            {% for code_element in path.code_elements %}
+        {{code_element}}
+                            {% endfor %}
+                    {% endif %}
+        self.memorize_session_then_state({{path.target_node_class}})
+        return self.to_platform_dict()
+                {% endif %}
+
+            {%- else %}
+                {% if path.condition_type == "intent_name" %}
+                    {%- if counts_used_condition_intent_names[path.condition_intent_name] < threshold_of_intent_use_to_create_a_condition %}
+        elif self.is_in_intent_names("{{path.condition_intent_name}}"):
+                    {% else %}
+        if {{path.condition_intent_name}}Condition(self).can_handle():
+                    {% endif %}
+                    {% if path.code_elements is not none %}
+                        {% for code_element in path.code_elements %}
+            {{code_element}}
+                        {% endfor %}
+                    {% endif %}
+            self.memorize_session_then_state({{path.target_node_class}})
+            return self.to_platform_dict()
+
+                {% elif path.condition_type == "data" %}
+        elif self.persistent_remember("{{path.condition_data_key}}") {{path.condition_statement}}:
+                    {% if path.code_elements is not none %}
+                        {% for code_element in path.code_elements %}
+            {{code_element}}
+                        {% endfor %}
+                    {% endif %}
+            self.memorize_session_then_state({{path.target_node_class}})
+            return self.to_platform_dict()
+
+                {% elif path.condition_type == "always" %}
+        else:
+                    {% if path.code_elements is not none %}
+                        {% for code_element in path.code_elements %}
+            {{code_element}}
+                        {% endfor %}
+                    {% endif %}
+            self.memorize_session_then_state({{path.target_node_class}})
+            return self.to_platform_dict()
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% if paths|length == 0 %}
+        pass
         {% endif %}
-        {% endfor %}{%- if paths|length == 0 %}pass
-        {% endif %}
+
     def fallback(self) -> dict:
         self.say("You can say Yes or No and that's it")
         return self.to_platform_dict()

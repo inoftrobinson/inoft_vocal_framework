@@ -410,13 +410,22 @@ class MediaResponse:
 class SystemIntent:
     json_key = "systemIntent"
     intent_type_option = "actions.intent.OPTION"
-    available_intent_keys_types = [intent_type_option]
+    intent_type_permission = "actions.intent.PERMISSION"
+    available_intent_keys_types = [intent_type_option, intent_type_permission]
     element_type_list_select = "ListSelect"
     element_type_carousel_select = "CarouselSelect"
-    available_elements_types_keys = [element_type_list_select, element_type_carousel_select]
+    element_type_ask_permission = "AskPermission"
+    option_elements_types_keys = [element_type_list_select, element_type_carousel_select]
+    permission_elements_types_keys = [element_type_ask_permission]
 
     def __init__(self, element_type: str):
-        self.intent = self.intent_type_option
+        if element_type in self.option_elements_types_keys:
+            self.intent = self.intent_type_option
+        elif element_type in self.permission_elements_types_keys:
+            self.intent = self.intent_type_permission
+        else:
+            raise Exception(f"The element_type '{element_type}' for the SystemIntent as not been recognized.")
+
         self._data = self.Data(element_type=element_type)
 
     @property
@@ -439,6 +448,10 @@ class SystemIntent:
             elif element_type == SystemIntent.element_type_carousel_select:
                 self._type = "type.googleapis.com/google.actions.v2.OptionValueSpec"
                 self._carouselSelect = self.CarouselSelect()
+            elif element_type == SystemIntent.element_type_ask_permission:
+                self._type = "type.googleapis.com/google.actions.v2.PermissionValueSpec"
+                self._permissions = ["UPDATE"]
+                self._updatePermissionValueSpec = self.UpdatePermissionValueSpec(intent="actions.intent.MAIN")
             else:
                 raise Exception(f"The element_type {element_type} is not a supported element type.")
 
@@ -650,6 +663,34 @@ class SystemIntent:
             else:
                 return self._carouselSelect
 
+        @property
+        def permissions(self) -> list:
+            if "_permissions" not in vars(self):
+                raise Exception(f"The SystemIntent did not have a permissions variable. Did you tried to show different types"
+                                f"of elements that run with a SystemIntent, in the same execution of your app ?")
+            else:
+                return self._permissions
+
+        class UpdatePermissionValueSpec:
+            json_key = "updatePermissionValueSpec"
+
+            def __init__(self, intent: str):
+                self._intent = intent
+
+            @property
+            def intent(self) -> str:
+                return self._intent
+
+
+
+        @property
+        def updatePermissionValueSpec(self) -> UpdatePermissionValueSpec:
+            if "_updatePermissionValueSpec" not in vars(self):
+                raise Exception(f"The SystemIntent did not have a updatePermissionValueSpec variable. Did you tried to show "
+                                f"different types of elements that run with a SystemIntent, in the same execution of your app ?")
+            else:
+                return self._updatePermissionValueSpec
+
     @property
     def data(self) -> Data:
         return self._data
@@ -695,10 +736,10 @@ class RichResponseInPayload:
     def items(self):
         return self._items
 
-    def add_response_item(self, response_item_object):
-        response_item_dict = NestedObjectToDict.get_dict_from_nested_object(
-            object_to_process=response_item_object, key_names_identifier_objects_to_go_into=["json_key"])
-        self._items.append(response_item_dict)
+    def add_response_item(self, response_item_object) -> int:
+        """:return Length of the list containing all the response items"""
+        self._items.append(response_item_object)
+        return len(self._items) - 1
 
     def add_suggestion_chip(self, title: str):
         # todo: add external link suggestion chip (cannot be used on platforms without the actions.capability.WEB_BROWSER capability
@@ -708,6 +749,12 @@ class RichResponseInPayload:
             raise Exception(f"A suggestion chip title can have a maximum of 25 chars but {title} was {len(title)} chars")
 
         self.suggestions.append({"title": title})
+
+    def return_transformations(self):
+        for i in range(len(self.items)):
+            self.items[i] = NestedObjectToDict.get_dict_from_nested_object(object_to_process=self.items[i],
+                                                                           key_names_identifier_objects_to_go_into=["json_key"])
+
 
 class GoogleInPayload:
     json_key = "google"
@@ -795,12 +842,25 @@ class Response:
     def __init__(self):
         self.payload = Payload()
         self.outputContexts = list()
+        self._first_say_rich_response_list_id = None
+        self._second_say_rich_response_list_id = None
 
     def say(self, text_or_ssml: str) -> None:
-        # todo: allow to have 2 differents response in the same one, not just one
-        output_response = SimpleResponse()
-        output_response.textToSpeech = text_or_ssml
-        self.payload.google.richResponse.add_response_item(output_response)
+        # todo: allow to have 2 differents response in the same one, not just one (the textToSpeech and the displayText)
+        if self._first_say_rich_response_list_id is None:
+            output_response = SimpleResponse()
+            output_response.textToSpeech = text_or_ssml
+            self._first_say_rich_response_list_id = self.payload.google.richResponse.add_response_item(output_response)
+        else:
+            self.payload.google.richResponse.items[self._first_say_rich_response_list_id].textToSpeech += ("\n" + text_or_ssml)
+
+    def second_say(self, text_or_ssml: str) -> None:
+        if self._second_say_rich_response_list_id is None:
+            output_response = SimpleResponse()
+            output_response.textToSpeech = text_or_ssml
+            self._second_say_rich_response_list_id = self.payload.google.richResponse.add_response_item(output_response)
+        else:
+            self.payload.google.richResponse.items[self._second_say_rich_response_list_id].textToSpeech += ("\n" + text_or_ssml)
 
     def say_reprompt(self, text_or_ssml: str) -> None:
         # todo: finish the reprompt function
@@ -892,6 +952,10 @@ class Response:
             self.payload.google.richResponse.items.append(media_response_instance)
         media_response_instance.add_audio_content(mp3_file_url=mp3_file_url, name=name, description=description,
                                                   icon_image_url=icon_image_url, icon_accessibility_text=icon_accessibility_text)
+
+    def request_push_notifications_permission(self) -> None:
+        self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_ask_permission)
+
 
     def to_dict(self) -> dict:
         return NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,

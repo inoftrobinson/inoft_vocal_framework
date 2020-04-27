@@ -140,6 +140,10 @@ class OutputSpeech:
         else:
             return True
 
+    def reset(self):
+        self._text = None
+        self._ssml = None
+
     @property
     def text(self):
         return self._text
@@ -193,15 +197,29 @@ class Response:
 
     def say(self, text_or_ssml: str):
         if is_text_ssml(text_or_ssml=text_or_ssml) is True:
-            self.outputSpeech.ssml = text_or_ssml
+            new_speech = ("\n" if self.outputSpeech.ssml is not None else "") + text_or_ssml
+            if self.outputSpeech.ssml is None:
+                self.outputSpeech.ssml = new_speech
+            else:
+                self.outputSpeech.ssml += new_speech
         else:
-            self.outputSpeech.text = text_or_ssml
+            new_speech = ("\n" if self.outputSpeech.text is not None else "") + text_or_ssml
+            if self.outputSpeech.text is None:
+                self.outputSpeech.text = new_speech
+            else:
+                self.outputSpeech.text += new_speech
+
+    def clear_speech(self):
+        self.outputSpeech.reset()
 
     def say_reprompt(self, text_or_ssml: str):
         if is_text_ssml(text_or_ssml=text_or_ssml) is True:
-            self.reprompt.outputSpeech.ssml = text_or_ssml
+            self.reprompt.outputSpeech.ssml += ("\n" if self.reprompt.outputSpeech.ssml is not None else "" + text_or_ssml)
         else:
-            self.reprompt.outputSpeech.text = text_or_ssml
+            self.reprompt.outputSpeech.text += ("\n" if self.reprompt.outputSpeech.text is not None else "" + text_or_ssml)
+
+    def clear_reprompt_speech(self):
+        self.reprompt.outputSpeech.reset()
 
     @property
     def audioplayer(self):

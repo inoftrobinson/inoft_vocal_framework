@@ -36,11 +36,23 @@ class User:
     VERIFICATION_NAME_GUEST = "GUEST"
     VERIFICATION_NAME_VERIFIED = "VERIFIED"
 
+    PERMISSION_UPDATE_TYPE = "UPDATE"
+
     def __init__(self):
-        self._locale = str()
-        self._lastSeen = str()
-        self._userStorage = str()
-        self._userVerificationStatus = str()
+        self._permissions = None
+        self._locale = None
+        self._lastSeen = None
+        self._userStorage = None
+        self._userVerificationStatus = None
+
+    @property
+    def permissions(self) -> list:
+        return self._permissions
+
+    @permissions.setter
+    def permissions(self, permissions: list) -> None:
+        raise_if_variable_not_expected_type(value=permissions, expected_type=list, variable_name="permissions")
+        self._permissions = permissions
 
     @property
     def locale(self) -> str:
@@ -48,8 +60,7 @@ class User:
 
     @locale.setter
     def locale(self, locale: str) -> None:
-        if not isinstance(locale, str):
-            raise Exception(f"locale was type {type(locale)} which is not valid value for his parameter.")
+        raise_if_variable_not_expected_type(value=locale, expected_type=str, variable_name="locale")
         self._locale = locale
 
     @property
@@ -58,8 +69,7 @@ class User:
 
     @lastSeen.setter
     def lastSeen(self, lastSeen: str) -> None:
-        if not isinstance(lastSeen, str):
-            raise Exception(f"lastSeen was type {type(lastSeen)} which is not valid value for his parameter.")
+        raise_if_variable_not_expected_type(value=lastSeen, expected_type=str, variable_name="lastSeen")
         self._lastSeen = lastSeen
 
     @property
@@ -68,8 +78,7 @@ class User:
 
     @userStorage.setter
     def userStorage(self, userStorage: str) -> None:
-        if not isinstance(userStorage, str):
-            raise Exception(f"userStorage was type {type(userStorage)} which is not valid value for his parameter.")
+        raise_if_variable_not_expected_type(value=userStorage, expected_type=str, variable_name="userStorage")
         self._userStorage = userStorage
 
     @property
@@ -78,8 +87,7 @@ class User:
 
     @userVerificationStatus.setter
     def userVerificationStatus(self, userVerificationStatus: str) -> None:
-        if not isinstance(userVerificationStatus, str):
-            raise Exception(f"userVerificationStatus was type {type(userVerificationStatus)} which is not valid value for his parameter.")
+        raise_if_variable_not_expected_type(value=userVerificationStatus, expected_type=str, variable_name="userVerificationStatus")
         self._userVerificationStatus = userVerificationStatus
 
 
@@ -452,7 +460,7 @@ class Request:
 
     def process_and_set_json_to_object(self, stringed_request_json_dict: str):
         NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self,
-                                                                  request_json_dict_stringed_dict_or_list=stringed_request_json_dict)
+                                                          request_json_dict_stringed_dict_or_list=stringed_request_json_dict)
 
     def is_option_select_request(self) -> bool:
         return self.queryResult.queryText == "actions_intent_OPTION"
@@ -463,7 +471,7 @@ class Request:
             return argument_item.textValue
 
     def is_launch_request(self) -> bool:
-        if self.queryResult.intent.displayName == "LaunchIntentRequest":
+        if self.queryResult.queryText == "GOOGLE_ASSISTANT_WELCOME":
             return True
         else:
             return False

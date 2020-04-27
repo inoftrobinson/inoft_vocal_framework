@@ -11,17 +11,24 @@ from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
-    def __init__(self):
+    def __init__(self, use_default_settings_if_missing: bool = False):
         super().__init__()
-        self.settings = Settings()
+        self.settings = Settings(raise_if_not_loaded=use_default_settings_if_missing)
         self.session_users_data_safedict = self.settings.settings.get("sessions_users_data").to_safedict()
-        self.sessions_users_data_disable_database = self.session_users_data_safedict.get("disable_database").to_bool()
-        self.sessions_users_data_db_table_name = self.session_users_data_safedict.get("dynamodb").get("table_name").to_str()
-        self.sessions_users_data_db_region_name = self.session_users_data_safedict.get("dynamodb").get("region_name").to_str()
+
+        self.sessions_users_data_db_table_name = self.session_users_data_safedict.get("dynamodb").get("table_name").to_str(default=None)
+        self.sessions_users_data_db_region_name = self.session_users_data_safedict.get("dynamodb").get("region_name").to_str(default=None)
+        if self.sessions_users_data_db_table_name is not None:
+            # If the user do not specify that the database should be disable, then we set it to False
+            self.sessions_users_data_disable_database = self.session_users_data_safedict.get("disable_database").to_bool(default=False)
+        else:
+            # Yet, if the table_name has not been found, we disable the database (yet we do not raise, since
+            # in some cases, it could be normal to not specify a table_name, for example for our unit tests)
+            self.sessions_users_data_disable_database = True
 
         self._session_id = None
         self._is_invocation_new_session = None
-        self._default_session_data_timeout = self.settings.settings.get("default_session_data_timeout").to_int()
+        self._default_session_data_timeout = self.settings.settings.get("default_session_data_timeout").to_int(default=60)
         self._session_been_resumed = None
         self._simple_session_user_data = None
         self._smart_session_user_data = None
@@ -37,6 +44,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         and (not isinstance(self.sessions_users_data_db_table_name, str) or self.sessions_users_data_db_region_name is None)):
             raise Exception(f"The disable_database argument on the initialization of the InoftSkill has not been"
                             f"specified or set to True, yet the database table name or region name are missing.")
+
         self.dynamodb_adapter = (DynamoDbAttributesAdapter(table_name=self.sessions_users_data_db_table_name,
                                                            region_name=self.sessions_users_data_db_region_name,
                                                            primary_key_name="id", create_table=True)
@@ -184,6 +192,27 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 request_json_dict_stringed_dict_or_list=event["context"], key_names_identifier_objects_to_go_into=["json_key"])
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
                 request_json_dict_stringed_dict_or_list=event["parameters"], key_names_identifier_objects_to_go_into=["json_key"])
+
+    def _force_load_alexa(self):
+        self.is_dialogflow_v1 = False
+        self.is_bixby_v1 = False
+        self.is_alexa_v1 = True
+        from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
+        self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
+
+    def _force_load_dialogflow(self):
+        self.is_alexa_v1 = False
+        self.is_bixby_v1 = False
+        self.is_dialogflow_v1 = True
+        from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
+        self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
+
+    def _force_load_bixby(self):
+        self.is_alexa_v1 = False
+        self.is_dialogflow_v1 = False
+        self.is_bixby_v1 = True
+        from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
+        self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
     def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: str):
         # todo: fix bug where the identifier_key is not the right now if it has been modified because there were only 1 element
@@ -409,7 +438,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self.session_forget("lastIntentHandler")
 
     def save_attributes_if_need_to(self):
-        if self.data_for_database_has_been_modified:
+        if self.data_for_database_has_been_modified is True:
             if self.sessions_users_data_disable_database is False:
                 self.dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
                                                       smart_session_attributes=self.smart_session_user_data.to_dict(),
