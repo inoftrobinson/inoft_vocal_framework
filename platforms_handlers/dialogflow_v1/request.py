@@ -477,7 +477,7 @@ class Request:
             return False
 
     def is_in_intent_names(self, intent_names_list: list):
-        if self.queryResult.intent.displayName in intent_names_list:
+        if self.queryResult.intent.displayName.lower() in [name.lower() for name in intent_names_list]:
             return True
         return False
 

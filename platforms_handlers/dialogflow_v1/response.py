@@ -850,6 +850,7 @@ class Response:
         if self._first_say_rich_response_list_id is None:
             output_response = SimpleResponse()
             output_response.textToSpeech = text_or_ssml
+            output_response.displayText = "displayText"
             self._first_say_rich_response_list_id = self.payload.google.richResponse.add_response_item(output_response)
         else:
             self.payload.google.richResponse.items[self._first_say_rich_response_list_id].textToSpeech += ("\n" + text_or_ssml)

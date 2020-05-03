@@ -55,10 +55,10 @@ class Request:
 
     def is_in_intent_names(self, intent_names_list):
         if isinstance(intent_names_list, list):
-            if self.intent in intent_names_list:
+            if self.intent.lower() in [name.lower() for name in intent_names_list]:
                 return True
         elif isinstance(intent_names_list, str):
-            if self.intent == intent_names_list:
+            if self.intent.lower() == intent_names_list.lower():
                 return True
         return False
 

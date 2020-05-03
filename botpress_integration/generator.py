@@ -267,8 +267,8 @@ class StateHandler:
                                                                              parent_core.node_values_dict[self.node_name]["next"]))
 
     def render(self, parent_core: Core) -> list:
-        self.code = TemplatesAccess().state_handler_template.render(class_name=self.class_name, paths=self.next_paths,
-            counts_used_condition_intent_names=parent_core.counts_used_condition_intent_names,
+        self.code = TemplatesAccess().state_handler_template.render(class_name=self.class_name, node_name=self.node_name,
+            paths=self.next_paths, counts_used_condition_intent_names=parent_core.counts_used_condition_intent_names,
             threshold_of_intent_use_to_create_a_condition=parent_core.threshold_of_intent_use_to_create_a_condition)
         return [self]
 
@@ -300,13 +300,14 @@ class LaunchRequestHandler:
             created_classes.append(state_handler)
             next_state_handler_class = f"{self.class_name}StateHandler"
 
-        self.code = TemplatesAccess().launch_request_handler_template.render(class_name=self.class_name, next_state_handler_class=next_state_handler_class,
-                                                                             code_elements=parent_core.process_on_enter(self.node_safedict.get("onEnter").to_list()))
+        self.code = TemplatesAccess().launch_request_handler_template.render(class_name=self.class_name, node_name=self.node_name,
+            next_state_handler_class=next_state_handler_class, code_elements=parent_core.process_on_enter(self.node_safedict.get("onEnter").to_list()))
 
         created_classes.insert(0, self)
         # We always want for the request handler to be the first element in the classes.
         return created_classes
 
+# todo: fix issue with double node without text (for example ""node_name: node-bc35""")
 class Messages:
     def __init__(self, messages_items: dict):
         self.input_messages_items = messages_items

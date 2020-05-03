@@ -1,4 +1,5 @@
 class {{class_name}}StateHandler(InoftStateHandler):
+    """node_name: {{node_name}}"""
     def handle(self) -> dict:
         {%- for path in paths %}
             {%- if loop.index == 1 %}

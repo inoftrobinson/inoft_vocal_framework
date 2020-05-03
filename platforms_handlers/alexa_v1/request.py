@@ -77,10 +77,10 @@ class Request:
     def is_in_intent_names(self, intent_names_list) -> bool:
         if self.type == self.IntentRequestKeyName:
             if isinstance(intent_names_list, list):
-                if self.intent.name in intent_names_list:
+                if self.intent.name.lower() in [name.lower() for name in intent_names_list]:
                     return True
             elif isinstance(intent_names_list, str):
-                if self.intent.name == intent_names_list:
+                if self.intent.name.lower() == [name.lower() for name in intent_names_list]:
                     return True
             else:
                 raise Exception(f"The intent_names_list must be a list or a str, but it was"
