@@ -1,3 +1,4 @@
+{% set ns = namespace(cannot_include_else_statement=false) %}
 class {{class_name}}StateHandler(InoftStateHandler):
     """node_name: {{node_name}}"""
     def handle(self) -> dict:
@@ -7,7 +8,7 @@ class {{class_name}}StateHandler(InoftStateHandler):
                     {%- if counts_used_condition_intent_names[path.condition_intent_name] < threshold_of_intent_use_to_create_a_condition %}
 
         if self.is_in_intent_names("{{path.condition_intent_name}}"):
-                    {% else %}
+                    {%- else %}
 
         if {{path.condition_intent_name}}Condition(self).can_handle():
                     {%- endif %}
@@ -18,22 +19,25 @@ class {{class_name}}StateHandler(InoftStateHandler):
                     {%- filter indent(width=12) %}{% include "child_state_handler_condition.tem" %}{% endfilter %}
                 {% elif path.condition_type == "always" %}
                     {%- filter indent(width=8) %}{% include "child_state_handler_condition.tem" %}{% endfilter %}
+                    {% set ns.cannot_include_else_statement = true %}
                 {% endif %}
             {% else %}
+                {% if ns.cannot_include_else_statement is not true %}
 
-                {% if path.condition_type == "intent_name" %}
-                    {%- if counts_used_condition_intent_names[path.condition_intent_name] < threshold_of_intent_use_to_create_a_condition %}
+                    {% if path.condition_type == "intent_name" %}
+                        {%- if counts_used_condition_intent_names[path.condition_intent_name] < threshold_of_intent_use_to_create_a_condition %}
         elif self.is_in_intent_names("{{path.condition_intent_name}}"):
-                    {% else %}
+                        {%- else %}
         elif {{path.condition_intent_name}}Condition(self).can_handle():
-                    {%- endif %}
-                    {%- filter indent(width=12) %}{% include "child_state_handler_condition.tem" %}{% endfilter %}
-                {% elif path.condition_type == "data" %}
+                        {%- endif %}
+                        {%- filter indent(width=12) %}{% include "child_state_handler_condition.tem" %}{% endfilter %}
+                    {% elif path.condition_type == "data" %}
         elif self.persistent_remember("{{path.condition_data_key}}") {{path.condition_statement}}:
-                    {%- filter indent(width=12) %}{% include "child_state_handler_condition.tem" %}{% endfilter %}
-                {% elif path.condition_type == "always" %}
+                        {%- filter indent(width=12) %}{% include "child_state_handler_condition.tem" %}{% endfilter %}
+                    {% elif path.condition_type == "always" %}
         else:
-                    {%- filter indent(width=12) %}{% include "child_state_handler_condition.tem" %}{% endfilter %}
+                        {%- filter indent(width=12) %}{% include "child_state_handler_condition.tem" %}{% endfilter %}
+                    {% endif %}
                 {% endif %}
             {% endif %}
         {% endfor %}

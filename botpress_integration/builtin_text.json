@@ -2653,5 +2653,621 @@
     "createdBy": "admin",
     "createdOn": "2020-04-23T11:20:28.039Z",
     "modifiedOn": "2020-04-23T11:20:28.039Z"
+  },
+  {
+    "id": "builtin_text-v38GwD",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Léo* Ok, ont devrais avoir une vue complète d'ici, c'est le moment de regarder ce qu'il y aux alentours. *Willie* Ok, je sors les jumelles *sort les jumelles* ... alors... à 2 kilomètres ily à un petit avant poste, il devrait pas y avoir plus de 3 ou 4 boschs, à et il y à je vois une antenne radio. Ensuite à 500 mètres de l'avant-poste, il y à 2 voitures, et un camion, probablement de transport. Et finalement, à l'opposé des voitures, il y à deux grands réservoirs, probablement d'eau... *bruits d'oiseaux*. Ca m'as plutôt isoler, tu pense qu'ont pourrais saboter quelque chose ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-01T10:07:47.476Z",
+    "modifiedOn": "2020-05-01T10:07:47.476Z"
+  },
+  {
+    "id": "builtin_text-SavYR-",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Pourquoi tu pense ça ? *Léo* Je sais pas, il y à quelque chose que je sens mal... *Willie* Rien du tout sens bon en ce moment, mais c'est notre mission, reprends-toi Léo ! *Léo* ... Oui, excuse-moi. *Willie* Donc, il faut qu'ont choissise par quoi ont commence, tu veut mon avis ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-01T10:11:04.242Z",
+    "modifiedOn": "2020-05-01T10:12:42.575Z"
+  },
+  {
+    "id": "builtin_text-ulQ2qv",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Menu* Choissisez-vous de saboter les réservoires, les voitures ou bien le poste de communication ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-01T10:12:07.202Z",
+    "modifiedOn": "2020-05-01T10:12:07.202Z"
+  },
+  {
+    "id": "builtin_text-S08PBO",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Par contre, il faut qu'ont choissise par quoi commencer. Décidons ensemble, tu veut que je te donne mon avis sur l'avant poste ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-01T10:13:12.520Z",
+    "modifiedOn": "2020-05-01T10:14:43.582Z"
+  },
+  {
+    "id": "builtin_text-iMLE65",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Pour l'avant poste, je pense que si ont commence par ça, si ont peut désactiver toutes communications, si ont se retrouve face à des Bosch, ils pourront pas demander des renforts. Sauf s'ils ont une radio bien sur, mais j'ai entendu dire qu'ils en ont quasiment plus. Je te dis ce que je pense de saboter les véhicules ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-01T10:14:09.800Z",
+    "modifiedOn": "2020-05-01T14:46:06.250Z"
+  },
+  {
+    "id": "builtin_text-QtIPFY",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ok, t'as raison, c'est assez évident. Par contre, je te donne mon avis sur le sabotage des véhicules ? Oui ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-01T14:47:32.366Z",
+    "modifiedOn": "2020-05-01T14:47:45.359Z"
+  },
+  {
+    "id": "builtin_text-7v_tu1",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Bon comme tu veut. Ont parle tout de même du sabotage de l'eau ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-01T14:49:19.654Z",
+    "modifiedOn": "2020-05-01T14:49:19.654Z"
+  },
+  {
+    "id": "builtin_text-h6kiwZ",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Si ont coupe les fils d'alimentations, ont peut rendre les véhicules inutilisable, ont sais que si tombe sur des Bosch ils vont pas pouvoir s'enfuir jusqu'à la ville, et quand les forces arriveront, ils pourront pas s'enfuir. Par contre... ont pourrais aussi faire l'inverse, genre couper la boite de freins, et espérer qu'ils utilisent les voitures... Je doute, pour toi ça te parrais con ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T09:38:11.693Z",
+    "modifiedOn": "2020-05-02T09:40:32.351Z"
+  },
+  {
+    "id": "builtin_text-n1I2j-",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ouf, tu me rassure que mon idée n'étais horrible."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T09:57:14.684Z",
+    "modifiedOn": "2020-05-02T09:57:14.684Z"
+  },
+  {
+    "id": "builtin_text-zqvjEJ",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Donc, tu pense qu'ont devrais saboter quoi en premier ? Le poste de communication, leurs véhicules, ou les résevoirs d'eau ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T09:58:22.625Z",
+    "modifiedOn": "2020-05-02T09:58:22.625Z"
+  },
+  {
+    "id": "builtin_text-dgEY8M",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* T'as raison, mon idée étais pas terrible. Enfin, ça empêche pas qu'ont peut toujours juste couper les fils d'alimentation..."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T09:58:56.526Z",
+    "modifiedOn": "2020-05-02T09:58:56.526Z"
+  },
+  {
+    "id": "builtin_text-qfTDyi",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Alors, ont pars sur quoi ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:01:52.333Z",
+    "modifiedOn": "2020-05-02T10:04:25.924Z"
+  },
+  {
+    "id": "builtin_text-hn88TZ",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "Le premier qui est le poste de communication, le deuxième les véhicules, ou le troisième les résevoirs d'eau ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:04:33.674Z",
+    "modifiedOn": "2020-05-02T10:04:33.674Z"
+  },
+  {
+    "id": "builtin_text-08DE9m",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Si tu sais pas vraiment, je peut prendre la décision tout seul. Ont fait ça ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:05:04.302Z",
+    "modifiedOn": "2020-05-02T10:05:35.701Z"
+  },
+  {
+    "id": "builtin_text-ZFx-QE",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ok, alors commençons par le poste de communication."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:07:40.630Z",
+    "modifiedOn": "2020-05-02T10:11:19.951Z"
+  },
+  {
+    "id": "builtin_text-zO2dxw",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Tout est prêt ? Peut-être il faudras juste informer la base par radio qu'ont s'occupe de ça, non ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:08:33.245Z",
+    "modifiedOn": "2020-05-02T10:08:33.245Z"
+  },
+  {
+    "id": "builtin_text-yduLRJ",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Choisi alors ! Ont à pas énormément de temps."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:09:03.299Z",
+    "modifiedOn": "2020-05-02T10:09:03.299Z"
+  },
+  {
+    "id": "builtin_text-Ioe0k-",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* J'ai l'impression que c'est si ils appellaient des renforts est ce qui nous mettrais le plus dans le pétrin."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:11:32.496Z",
+    "modifiedOn": "2020-05-02T10:11:32.496Z"
+  },
+  {
+    "id": "builtin_text-bcqeo9",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ont à plus le temps, je choisi tout seul. Commencons par le poste de communication."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:12:17.523Z",
+    "modifiedOn": "2020-05-02T10:12:17.523Z"
+  },
+  {
+    "id": "builtin_text-QqVN8r",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ok, commencons par le poste de communication. T'as raison c'est la meilleur chose à faire pour s'assurer qu'ils n'appelleront pas de renforts."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:19:52.198Z",
+    "modifiedOn": "2020-05-02T10:19:52.198Z"
+  },
+  {
+    "id": "builtin_text-tz4KZI",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ok, commencons par le sabotage des véhicules. Faudras juste qu'ont fasse bien attention à ce qu'ont ne soit pas vu."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:21:22.806Z",
+    "modifiedOn": "2020-05-02T10:23:41.674Z"
+  },
+  {
+    "id": "builtin_text-PzWn9Z",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ok, commençons par les réservoirs d'eau. Faudras juste qu'ont fasse bien attention à ce qu'ont ne soit pas vu."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:23:06.070Z",
+    "modifiedOn": "2020-05-02T10:23:58.069Z"
+  },
+  {
+    "id": "builtin_text-Cxmpx9",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ok, tu peut me passer la radio ? *bruit gros objet* *allumage radio* *Willie* Base ? Ici Willy Arsenault, vous me recevez ? Terminé *voix basse qualité venant de la radio* Ont vois reçois, qu'elle est la situation ? Terminé *Willie* Nous sommes en train de nettoyer les vitres à deux, nous nous appretons à poser des oeufs a 400 mètres au nord de l'antre du fermier. Terminé. *voix basse qualité venant de la radio* Bien reçu. Je demande à l'écureil. *silence d'une seconde avec bruits de la radio* L'écureil confirme que le ciel est bleu, bonne chance. Terminé. *Willy* Terminé. *radio qui s'éteins*. "
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:30:09.219Z",
+    "modifiedOn": "2020-05-02T10:33:57.893Z"
+  },
+  {
+    "id": "builtin_text-dPdryG",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willy* Oui t'as raison, même si ont parle de manière coder, les Boschs pourrait écouter. Allons-y maintenant."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:31:53.959Z",
+    "modifiedOn": "2020-05-02T10:31:53.959Z"
+  },
+  {
+    "id": "builtin_text-35Rd1-",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* C'est bon, aucune attaque n'est prévu pour le moment, ont à le feu vert. Allons-y."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T10:32:43.862Z",
+    "modifiedOn": "2020-05-02T10:32:43.862Z"
+  },
+  {
+    "id": "builtin_text-G_5o3e",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*bruit de fusils pris sur le dos* *bruits de pas cautieux avec bruits d'oiseaux* *Willie chuchottant* Ont commence à être très proche, je vois aucun personnes, tu pense qu'ont devrais y aller en rampant ou tout d'un coup en courant ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T11:43:51.842Z",
+    "modifiedOn": "2020-05-02T11:43:51.842Z"
+  },
+  {
+    "id": "builtin_text-172rgE",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Si t'arrive pas à décider, dis-moi, je peut décider. Mais je te fait plus confiance qu'à moi pour décider, soit ont prend la première option et ont y vas en rampant, ou la seconde et ont y vas en courant. Ont fait quoi ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T11:46:56.379Z",
+    "modifiedOn": "2020-05-02T11:48:04.366Z"
+  },
+  {
+    "id": "builtin_text-fcRffG",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Pas de soucis, allons-y en rampant, je pense que c'est plus sûr au cas ou il y ai des Boschs quelque part."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T11:50:06.034Z",
+    "modifiedOn": "2020-05-02T11:50:06.034Z"
+  },
+  {
+    "id": "builtin_text-gXU1ND",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Je range juste les jumelles *range les jumelles*. Restons à coté, si ont voit un Bosch, ont se cache, si il y en à un, ont sais pas combien il peut y en avoir. Tu est prêt ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-02T11:59:21.225Z",
+    "modifiedOn": "2020-05-03T11:07:33.022Z"
+  },
+  {
+    "id": "builtin_text-QEqnIu",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* 3, 2, 1 *bruits de courses* *bruits qui s'arrête brusquement* *Willie à voix basse* Léo *Menu* Vous apercevez un soldat allemand en face de vous à une cinquantaine de mètre de distance, il ne regarde pas dans votre direction, voulez-vous continuer à courrir, tiré sur le soldat ou vous cacher en vous allongeant par terre ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T10:57:54.585Z",
+    "modifiedOn": "2020-05-03T11:06:14.460Z"
+  },
+  {
+    "id": "builtin_text-CIIcsg",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Allons-y doucement... *bruit de deux personnes s'allongeant et rampant pendant 3 secondes* *Willie chuchottant* Léo, stop... il y à un nazi à 160 dégrée. *Menu* Vous apercevez un soldat allemand en face de vous et légèrement à votre gauche. Voulez-vous vous continuer à avancer, tiré sur le soldat ou essayer de rester caché en ne bougeant plus ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T11:04:29.186Z",
+    "modifiedOn": "2020-05-03T11:07:13.361Z"
+  },
+  {
+    "id": "builtin_text-gZVFCH",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Léo chuchottant* Continuons à avancer. *Willie chuchottant* Il pourrait se retourner, t'est sûr ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T11:11:25.405Z",
+    "modifiedOn": "2020-05-03T11:11:25.405Z"
+  },
+  {
+    "id": "builtin_text-VzbY_t",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie chuchotant* Ok... *2 personnes continuent à ramper pendant plusieurs secondes* *Willie chuchotant* Il se retourne, il vas regarder dans notre direction ! Qu'est-ce qu'ont fais ? *Menu* Voulez-vous attendre ou tiré sur le soldat avant qu'il se retourne ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T11:16:27.025Z",
+    "modifiedOn": "2020-05-03T11:16:27.025Z"
+  },
+  {
+    "id": "builtin_text-S5UDIx",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Léo chuchottant* Ont attends *bruits d'oiseaux et bruits d'une personne au loin qui s'en vas* *Léo chuchottant* Il est partis, avançons... *2 personnes rampant* "
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T11:20:10.574Z",
+    "modifiedOn": "2020-05-03T11:20:15.880Z"
+  },
+  {
+    "id": "builtin_text-7R6-_L",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ont est arrivé a la tente du poste de communication. Tu passe devant ou c'est moi ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T11:58:50.780Z",
+    "modifiedOn": "2020-05-03T11:58:50.780Z"
+  },
+  {
+    "id": "builtin_text-Cz9INJ",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie chuchottant* T'est sérieux ? *Léo chuchottant* C'est toi qui à pris le fusil à pompe après tout. *Willie mumble/grogne*"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:01:09.399Z",
+    "modifiedOn": "2020-05-03T12:02:32.015Z"
+  },
+  {
+    "id": "builtin_text-SbOJib",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie chuchottant* J'ai compris, j'ai le fusil à pompe alors je passe en premier...  *Willie mumble/grogne*"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:02:56.111Z",
+    "modifiedOn": "2020-05-03T12:02:56.111Z"
+  },
+  {
+    "id": "builtin_text-Od72uE",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*bruit de chargement de fusil à pompe* *ouverture rapide d'une tente* *Willie* Personne... *marche sur du sol* *Willie* La radio est là *frappe sur un objet en métal*. Elle à l'air solide, ont vas pas pouvoir la détruire en la frappant. Ont fait comment ? *Menu* Voulez-vous suggérer à Willie de tirer dans la radio ou de chercher un objet pour la détruire ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:07:27.957Z",
+    "modifiedOn": "2020-05-03T12:07:27.957Z"
+  },
+  {
+    "id": "builtin_text-2geQwQ",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* T'est sérieux ? Si je tire dedans ça vas s'entendre, il faudrait vraiment qu'ont parte super vite. Tu pense vraiment que c'est une bonne idée ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:09:44.861Z",
+    "modifiedOn": "2020-05-03T12:10:07.690Z"
+  },
+  {
+    "id": "builtin_text-jocq9d",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Je te fais confiance. Prêt à courrir ? *Léo* Oui. *chargement de fusil à pompe* *tire de fusil à pompe* *bruits de pas qui courts* *Willie* C'est clear *interrompu dans sa phrase par un coup de feu* *bruit de raisonnement cliché* *Léo* Willie ! *bruits de plusieurs balles tiré par une machine gun qui touchent Léo* *corps qui tombe par terre* *bruits de pas qui se rapproche* *Soldat allemand* Verdammt kanadisch... (Fucking Canadian) *tire de pistolet*"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:14:54.106Z",
+    "modifiedOn": "2020-05-03T13:04:52.457Z"
+  },
+  {
+    "id": "builtin_text-BnmU8e",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Narrateur* Et bien, ont dirais que vous avez réussir à vous faire tuer vous et votre ami. Vos corps aurais probablement brulé ou été jeté dans une fausse commune."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:20:15.957Z",
+    "modifiedOn": "2020-05-03T13:05:20.312Z"
+  },
+  {
+    "id": "builtin_text-Yxzzjh",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Léo* Cherchons, il doivent bien avoir un truc pour réparer la radio qu'ont pourrais utiliser. *Willie* Ok, je prend le coté droit et toi la gauche. *Léo* Ok... *bruits de pas pendant une seconde*"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:28:46.062Z",
+    "modifiedOn": "2020-05-03T12:32:26.242Z"
+  },
+  {
+    "id": "builtin_text-P_pwCf",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*bruit d'essayer d'ouvrir la boite* *Menu* La boite est fermé par le verrou."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:31:06.796Z",
+    "modifiedOn": "2020-05-03T12:32:08.101Z"
+  },
+  {
+    "id": "builtin_text-GStv0w",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Menu* Vous voyez devant vous une pile de papiers, et une boite métallique légèrement rouillé avec un verrou, lequel voulez-vous regarder ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:32:36.337Z",
+    "modifiedOn": "2020-05-03T12:34:22.962Z"
+  },
+  {
+    "id": "builtin_text-pFtVEt",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Menu* Ont dirais qu'il y à quelque chose sous la pile de papier. Avec vos quelques notions en allemand, sur la première feuille de la pile, vous appercevez écris en le mot \"Attaque\". Vous pouvez prendre le temps de lire ce qu'il y à écris sur la feuille, ou déplacer la pile pour regarder si il y à quelque chose en dessous. Choissisez-vous de lire la feuille, où déplacer la pile ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:40:12.862Z",
+    "modifiedOn": "2020-05-03T12:41:40.297Z"
+  },
+  {
+    "id": "builtin_text-ZYe-en",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Léo murmure* Ils pourraient pas mieux écrire ces Boschs... *Menu* Via le peu que vous pouvez lire, vous réussisez à sortir les mots \"Attaque\", \"Alliés\", \"Pluie\", \"Ville\", \"Quand\"... Le reste est incompréhensible, vous les déplacer pour voir si quelque chose est sous la pile."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:50:26.725Z",
+    "modifiedOn": "2020-05-03T12:50:26.725Z"
+  },
+  {
+    "id": "builtin_text-Q3YbfF",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*bruits de papiers étant déplacé* *Menu* Vous voyez un sorte de sachet en cuir, pas plus grand que la paume de votre main. *Willie chuchottant fort* Léo, j'ai rien trouvé d'utile, et toi, t'as trouvé quelque chose ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:51:53.545Z",
+    "modifiedOn": "2020-05-03T13:15:39.247Z"
+  },
+  {
+    "id": "builtin_text-TU7f9P",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Sérieusement ? Merde. *silence d'une demi seconde* Et ce truc en cuir, t'as checker ? *Menu* Répondez-vous à Willie qu'il n'y à rien dedans, ou que vous ne l'avez pas encore ouvert ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:57:54.090Z",
+    "modifiedOn": "2020-05-03T12:57:54.090Z"
+  },
+  {
+    "id": "builtin_text-rn6WHf",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Léo* Une boîte vérouillé et une pochette en cuir. *Willie* T'as ouvert la pochette ? *Léo* Non, je m'appretais à le faire."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T12:58:54.098Z",
+    "modifiedOn": "2020-05-03T12:58:54.098Z"
+  },
+  {
+    "id": "builtin_text-Z-W39H",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Ca me surprend, si t'as vraiment rien trouvé, ça ont doit abandonner le sabotage de la radio, ou ont doit lui tiré dessus. T'est sûr que t'as rien trouvé ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T13:01:58.630Z",
+    "modifiedOn": "2020-05-03T13:01:58.630Z"
+  },
+  {
+    "id": "builtin_text-ufTOmu",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Je te fais confiance. "
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T13:02:37.984Z",
+    "modifiedOn": "2020-05-03T13:02:37.984Z"
+  },
+  {
+    "id": "builtin_text-f0Lk9N",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Willie* Donc ont fait quoi ? Ont abandonne la radio, ou ont tire dessus ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T13:03:39.971Z",
+    "modifiedOn": "2020-05-03T13:03:39.971Z"
+  },
+  {
+    "id": "builtin_text-zvwPmD",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Narrateur* Durant la guerre, vous êtes tous aussi mortel que vos ennemis. Si vous oublier ça, vous ne pouvez que ne pas revenir de votre mission. *silence d'une demi seconde*"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T13:05:35.011Z",
+    "modifiedOn": "2020-05-03T13:05:35.011Z"
+  },
+  {
+    "id": "builtin_text-80HhMM",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Narrateur* Prêt à recommencer ?"
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T13:05:45.414Z",
+    "modifiedOn": "2020-05-03T13:05:45.414Z"
+  },
+  {
+    "id": "builtin_text-CAv5Tb",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*Narrateur* Durant une guerre, plus vous aurez d'informations mieux ce seras. Cependant elle ne vous serons d'aucune utilité si vous ne les partager pas avec vos coéquipiers. Sauf si vous avez comme but de mourrir bien sûr."
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T13:08:08.601Z",
+    "modifiedOn": "2020-05-03T13:08:33.509Z"
+  },
+  {
+    "id": "builtin_text-Bahnxu",
+    "formData": {
+      "markdown$fr": true,
+      "typing$fr": true,
+      "text$fr": "*ouvre une pochette en cuir* *Menu* C'est une clé, légèrement rouillé. *Willie* Ca doit ouvrir la boite. *Léo* Je suis pas stupide Willie... *ouvre une boite métallique* *Menu* La boite contiens une vingtaine d'outils de tous genre. *Willie* Il y à un tourne vis ? *Léo* Oui. *Willie* "
+    },
+    "createdBy": "admin",
+    "createdOn": "2020-05-03T13:14:40.493Z",
+    "modifiedOn": "2020-05-03T13:14:40.493Z"
   }
 ]

@@ -4,6 +4,10 @@
 {{code_element}}
     {% endfor %}
 {% endif %}
+{% if wait_for_user_response is true %}
 self.memorize_session_then_state({{path.target_node_class}})
+{% else %}
+{{path.target_node_class}}(self).handle()
+{% endif %}
 return self.to_platform_dict()
 

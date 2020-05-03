@@ -28,6 +28,7 @@ def prettify_speech_text(text: str) -> str:
 def to_class_name(text: str) -> str:
     new_text = ""
     current_digit_sequence = ""
+    number_last_char_index = None
     for i, char in enumerate(text):
         # We add a - when adding numbers, so that they will be considered as separate
         # element in the class name, and that their first letter will be capitalized.
@@ -36,10 +37,14 @@ def to_class_name(text: str) -> str:
             if i+1 == len(text):
                 new_text += ("-" + inflect.engine().number_to_words(current_digit_sequence))
                 current_digit_sequence = ""
-        elif current_digit_sequence != "":
-            new_text += ("-" + inflect.engine().number_to_words(current_digit_sequence))
-            current_digit_sequence = ""
         else:
+            if current_digit_sequence != "":
+                new_text += ("-" + inflect.engine().number_to_words(current_digit_sequence))
+                current_digit_sequence = ""
+                number_last_char_index = i
+
+            if number_last_char_index is not None and number_last_char_index == i:
+                char = char.capitalize()
             new_text += char
 
     formatted_output_text = ""
@@ -148,6 +153,9 @@ class Core:
                         processed_action_dict = ast.literal_eval("{" + processed_action_list[1].replace("}", "") + "}")
                         if isinstance(processed_action_dict, dict):
                             if all(key in processed_action_dict.keys() and processed_action_dict[key] != "" for key in ["name", "value"]):
+                                if "type" in processed_action_dict.keys() and processed_action_dict["type"] == "str":
+                                    processed_action_dict["value"] = f'"{processed_action_dict["value"]}"'
+
                                 logic_elements.append(TemplatesAccess().set_variable_logic_template.render(action_dict=processed_action_dict))
 
         return logic_elements
@@ -174,11 +182,17 @@ class StateHandler:
     CLASS_TYPE = "StateHandler"
 
     def __init__(self, node_name: str):
+        self.cannot_include_else_statement = False
         self.counts_used_condition_intent_names = dict()
         self.node_name = node_name
         self.class_name = to_class_name(self.node_name)
+        self.wait_for_user_response = True
         self.code = None
         self.next_paths = list()
+
+    def set_cannot_include_else_statement(self, value: bool = True):
+        self.cannot_include_else_statement = value
+        return ""
 
     class Path:
         CONDITION_TYPE_INTENT_NAME = "intent_name"
@@ -210,8 +224,7 @@ class StateHandler:
 
                 elif self.condition_str == "true":
                     self.condition_type = self.CONDITION_TYPE_ALWAYS
-                    if self.path_index > 0:
-                        self.code_elements = parent_core.process_on_enter(current_target_node_values_dict["onEnter"])
+                    self.code_elements = parent_core.process_on_enter(current_target_node_values_dict["onEnter"])
 
                 elif any(key == storage_type_key for key in ["user", "session"]):
                     # todo: create a special handler function to retrieve data (or some default attributes that get a path)
@@ -263,13 +276,16 @@ class StateHandler:
         return self.code
 
     def process(self, parent_core: Core):
-        self.next_paths = self.process_paths(parent_core=parent_core, paths=(self.next_paths if len(self.next_paths) > 0 else
-                                                                             parent_core.node_values_dict[self.node_name]["next"]))
+        current_node_values_dict = parent_core.node_values_dict[self.node_name]
+        on_receive = current_node_values_dict["onReceive"]
+        self.wait_for_user_response = True if isinstance(on_receive, list) and len(on_receive) == 0 else False
+        self.next_paths = self.process_paths(parent_core=parent_core, paths=(self.next_paths if len(self.next_paths) > 0 else current_node_values_dict["next"]))
 
     def render(self, parent_core: Core) -> list:
-        self.code = TemplatesAccess().state_handler_template.render(class_name=self.class_name, node_name=self.node_name,
-            paths=self.next_paths, counts_used_condition_intent_names=parent_core.counts_used_condition_intent_names,
-            threshold_of_intent_use_to_create_a_condition=parent_core.threshold_of_intent_use_to_create_a_condition)
+        self.code = TemplatesAccess().state_handler_template.render(class_name=self.class_name,
+            node_name=self.node_name, wait_for_user_response=self.wait_for_user_response, paths=self.next_paths,
+            counts_used_condition_intent_names=parent_core.counts_used_condition_intent_names,
+            threshold_of_intent_use_to_create_a_condition=parent_core.threshold_of_intent_use_to_create_a_condition, cannot_include_else_statement=self.cannot_include_else_statement)
         return [self]
 
 class LaunchRequestHandler:
@@ -347,5 +363,5 @@ class Messages:
 
 
 
-Core(main_flow_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/Scene_Preparation.flow.json",
+Core(main_flow_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/Scene_Sabotage.flow.json",
      builtin_text_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/builtin_text.json").process()
