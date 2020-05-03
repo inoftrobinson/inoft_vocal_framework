@@ -107,7 +107,14 @@ class InoftSkill:
         if settings_yaml_filepath is not None and settings_json_filepath is not None:
             raise Exception(f"You cannot specify multiple settings files. Please specify only one")
         elif settings_yaml_filepath is None and settings_json_filepath is None:
-            raise Exception(f"Please specify a yaml or json settings file with the settings_yaml_filepath arg or settings_json_filepath")
+            from inspect import stack, getmodule
+            frame = stack()[1]
+            module = getmodule(frame[0])
+            from pathlib import Path
+            root_folder = Path(module.__file__).parent
+            self.settings.find_load_settings_file(root_folderpath=root_folder)
+            if self.settings.settings_loaded is not True:
+                raise Exception(f"Please specify a yaml or json settings file with the settings_yaml_filepath arg or settings_json_filepath")
         elif settings_yaml_filepath is not None:
             self.settings.load_yaml(settings_file=settings_yaml_filepath)
         elif settings_json_filepath is not None:
