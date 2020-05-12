@@ -1,6 +1,41 @@
+
+
 # Inoft Vocal Framework
 
-### Create Alexa Skills, Google Actions, Samsung Bixby Capsules and Siri 'skills', with the same codebase. Then deploy automatically your app to AWS. All that in Python !
+### To allow to make Alexa Skills and Google Actions with ambitions
+
+
+
+## Why ?
+
+- We needed a cross platform framework in Python for vocal assistant, it did not exist, we made it.
+
+- We knew we were going to make apps and games that could have big scopes, the techonologies and frameworks allow this did not exist, we made it.
+
+- In order to make sophisticated games, we needed some systems to create content and interactions visually, extend them with ease with full code control, and have a scalable way to audio editing that is re-usable when translating to other languages. We made that to.
+
+  
+
+### In summary
+
+If you are looking to make apps and games on vocal assistants, and might want to make something as simple as a quizz, while knowing that you have in your hand the tools to create a project of any scale and scope. Or if you know that you know right away that you want to do projects with ambitions on vocal assistants. In both cases, the framework that you and us needed did not exist, so we made it.
+
+
+
+### The types of peoples this framework is for :
+
+- Technical contractors - Use all of the framework capabilities, the possibility to extends on them and the content creation and management tools to make apps and games that stand out from what most others contractors offers.
+- Game developpers - Use the Visual Programming capabilities of the framework, the programmatic audio editing module and the tips on vocal user experience to make an engaging interactive game on vocal assistants available in the documentation. Then, you can use the subscribers management system and the monetisation capabilities to stay fidelise and monetize an audience.
+- Web & Mobiles Apps developpers - Use the intent and event based that works similarly to a website or an app backend, coupled with the content management system and the tips on how on how to use experience in web and mobile development on vocal assistants development, to make compelings apps that you can market.
+- Marketing contractors - Use the easy to use content management system, Visual Programming tools and subscribers management system to allow to create a new connection trough a novel experience for the users and clients of the companies you are working with.k
+
+### The types of peoples this framework is NOT for:
+
+- Non-technical writters & designers - Even if you can develop an interactive story without touching a line of code, you will need to get your hands dirty with the deployment, the setting up and publication of your apps, etc. If you have no technical experience, if you are eager to learn, it might take you a week or two before becoming with using the framework (less if you are only using Visual Development)
+
+
+
+
 
 #### Requirements :
 
@@ -9,11 +44,7 @@
 - (In order to create an Alexa Skill) An Amazon developer account (takes 20 seconds to create) https://developer.amazon.com/fr/
 - (In order to create a Google Assistant Action) A Google Account (you use your regular Google/Gmail account as your developer account) https://developers.google.com/assistant
 
-#### About computing costs :
 
-##### All services used by the framework should not be consequent enough to cross the free monthly ressources while in deployement or even with thousands of users in the month (even if you have finished your 1 year free tier, i'm talking about the free monthly ressources).
-
-##### The framework also use the most performant and cost efficient services. For example, it will auto configure your databases (DynamoDB) to have them using on demand access instead of provisionned capacity. And it will use a newer, faster and cheaper (but still very undocumented) version of the api service of AWS (ApiGatewayV2 instead of ApiGatewayV1).
 
 ### Installation (Python 3.7 is recommanded. Python 3.6+ is required) :
 
@@ -37,243 +68,107 @@
  inoft deploy
 ```
 
- If you have never used AWS on your computer (or do not have an AWS account), you will need one (with the framework, you will be able to do around 200 000 invocations of your skill (depending of its time to execute) per month for free). You will also need to configure the botocore package by indicating your AWS credentials (the framework will point you to the right documentations to do that)
 
- After that, the framework will create an S3 Bucket (to store your code), a Lambda (to host and run your code), an API Gateway (to access your Lambda), and multiple DynamoDB tables (to store your users data, and your dynamic messages).
- PS : The API Gateway is an API Gateway V2 (its newer, has fewer docs, was longer to code, but is faster and cheaper than V1 !)
 
-# todo: do some redactions on the deployment !
+#### Hello World Example :
 
-#### This code makes an Alexa Skill, a Google Action and a Bixby Capsule, and its Pythonic !
-
- Hello World :
-
-```
-from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftDefaultFallback
-
-class LaunchRequestHandler(InoftRequestHandler):
-   def can_handle(self) -> bool:
-       return self.is_launch_request()
-
-   def handle(self):
-       self.say("Hello World !")
-       return self.to_platform_dict()
-
-class DefaultFallback(InoftDefaultFallback):
-   def handle(self):
-       self.say("I did not understand. Do you want me to say HELLO WORLD ?!")
-       return self.to_platform_dict()
-
-def lambda_handler(event, context):
-   skill_builder = InoftSkill(disable_database=True)
-   skill_builder.add_request_handler(LaunchRequestHandler)
-   skill_builder.set_default_fallback_handler(DefaultFallback)
-   return skill_builder.handle_any_platform(event=event, context=context)
-```
-
- 
-
-## In depth tutorial
-
-### The 3 classes :
-
-All of the interactions with the framework are done inside of classes and their self object. You need to clearly understand their specificities. I recommand that you take the time to carefully read this section.
-
-### InoftRequestHandler
-
-This is the most basic class, it requires you to implement 2 functions
-
-```
+```python
 class LaunchRequestHandler(InoftRequestHandler):
     def can_handle(self) -> bool:
        return self.is_launch_request()
     
     def handle(self):
-       self.say("Hello world ! Will you marry me ?")
-       return self.to_platform_dict()
-```
-
-The can_handle function contain and return the result of the condition that will define if the handle function of the class, should create the response that will be send back to the vocal assistant.
-
-And the handle function will create the response by using the self object, and return it with the to_platform_dict() function. You can of course call other functions, classes or handle functions from your handle function.
-
-There is an aditionnal function you can use, which is handle_resume(self), that allow to automaticly resume an user to a point of the interaction. We will discover this in the advanced features.
-
-### InoftStateHandler
-
-```
-class MarryMeStateHandler(InoftStateHandler):
-    def handle(self):
-        if YesHandler(self).can_handle():
-            self.say("You said yes ? I love you !")
-            return self.to_platform_dict()
-
-        elif NoHandler(self).can_handle():
-            self.say("What do you mean you said NO ?!!")
-            return self.to_platform_dict()
-
-    def fallback(self):
-        self.say("Well, gotta make your choice, do you want to marry me or no ?")
-        return self.to_platform_dict()
-```
-
-Weeeeell, i gotta explai
-
-### InoftDefaultFallback
-
-It is the last resort to handle any any fallback situation (where the user said or did something not supported by your interaction model). It will not override over the fallback method of a StateHandler class. It is really the last ressort.
-
-You only have one function available, the handle function, like in the two other classes, you will interacte with the framework with the self object, and return with self.to_platform_dict()
-
-```
-class DefaultFallback(InoftDefaultFallback):
-    def handle(self):
-        self.say("You must be clear with what you want in life ! Otherwise i'm going to take"
-        "replace you and take your programmer job that you love so much !")
-        return self.to_platform_dict()
-```
-
-Having a InoftDefaultFallback class is required for every skill. Otherwise it will give you an exception.
-
-### Putting the 3 classes together
-
-```
-from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
-
-class LaunchRequestHandler(InoftRequestHandler):
-    def can_handle(self) -> bool:
-       return self.is_launch_request()
-    
-    def handle(self):
-       self.say("Hello world ! Will you marry me ?")
-       self.memorize_session_then_state(MarryMeStateHandler)
+       self.say("Hello world ! I hope you are doing great ! Bye !")
+       self.end_session()
        return self.to_platform_dict()
        
-class MarryMeStateHandler(InoftStateHandler):
-    def handle(self):
-        if YesHandler(self).can_handle():
-            self.say("You said yes ? I love you !")
-            return self.to_platform_dict()
-
-        elif NoHandler(self).can_handle():
-            self.say("What do you mean you said NO ?!!")
-            return self.to_platform_dict()
-
-    def fallback(self):
-        self.say("Well, gotta make your choice, do you want to marry me or no ?")
-        return self.to_platform_dict()
-
+# A class to handle the default response of the app is always required.
 class DefaultFallback(InoftDefaultFallback):
-    def handle(self):
-        self.say("You must be clear with what you want in life ! Otherwise i'm going to take"
-        "replace you and take your programmer job that you love so much !")
-        return self.to_platform_dict()
+   def handle(self):
+       self.say("I did not understand... Goodbye...")
+       self.end_session()
+       return self.to_platform_dict()
 
+# This function is called by our serverless service (like AWS Lamda) on every interaction of an user with our app.
 def lambda_handler(event, context):
    skill_builder = InoftSkill(disable_database=True)
    skill_builder.add_request_handler(LaunchRequestHandler)
-   skill_builder.add_state_handler(MarryMeStateHandler)
    skill_builder.set_default_fallback_handler(DefaultFallback)
    return skill_builder.handle_any_platform(event=event, context=context)
+   
+# For local development and testing, we use the simulator module
+if __name__ == "__main__":
+    from inoft_vocal_framework import Simulator
+    event_, context_ = Simulator(platform=Simulator.PLATFORM_GOOGLE, event_type="launch").get_event_and_context()
+    print(f"\n\nFinal Output : {lambda_handler(event=event_, context=context_)}")
 ```
 
 
 
- 
+
+
+#### Unique Points
+
+| Name                                                        | Description                                                  |
+| :---------------------------------------------------------- | :----------------------------------------------------------- |
+| Cross-Platform with all platforms specific functionnalities | Depeding on your application, around 80-95% of your code will be shared for all platforms (Alexa, Google Assistant, and soon Siri and Samsung Bixby), all the while having access to all of the platforms specifics features. |
+| Made in Python                                              | Do not limit yourself to small projects, by using all of your classical Python librairies and the Python syntax suitable for projects of any size. |
+| AWS Optimized                                               | Take full advantage of the AWS services, like the latest and fastest HTTP API'S, or possibility to have your database clients be static on AWS Lambda to provide a response time that can be up to 20x faster than classic librairies. |
+| Serverless Architecture                                     | Made to be used with a serverless architecture (like AWS Lambda), so that you only pay for what you use, and do not face any scabilities issues. |
+| Made to be robust and pereine                               | In the way it has been designed, and the way it deploy the version you used for your application, the framework has been made with the goal of pereinity of the applications in mind. |
+| Fully Open-Source under the MIT License                     | You can do anything you want with the framework. Use it in your projects, modify it, sell it without even modifying it. The MIT License give you a total freedom. |
+| Made to allow projects of large scales                      | Unlike the others few libraries, the way the framework allows your code to be structured has been made to enable something as simple as a quizz, or an interactive game that take 200 hours to play. |
 
 
 
-```
-from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
+#### Basic Concepts
+
+| Name                               | Description                                                  | Available          |
+| :--------------------------------- | :----------------------------------------------------------- | :----------------- |
+| Auto-deployment                    | Automaticly deploy your applications and contents to AWS with the command line interface and create a light weight package with all of the librairies available in the cloud | :white_check_mark: |
+| Modular Logic                      | No matter the size, keep the code of your project clear, with five différents modular classes that you can use to handle the logic of your application. | :white_check_mark: |
+| Intent Handling                    | Easy way to provide different responses to the users according to their intents (saying "I need a booking", and "Can you give me a booking ?" put the user in the same intent that you could call wantBooking) | :white_check_mark: |
+| Data Input                         | Retrieve parameters that the user has specified, for example, "We will be 3 players", you could retrieve the number of players. | :white_check_mark: |
+| Choices States                     | Easily put your user in a state with multiple choices and saying an helpful message if the user has not chosen one of the available choicex | :white_check_mark: |
+| Visual Elements with errors checks | Display any visual elements on Amazon Alexa and Google Assistant (that will be available on devices with screens) with built-in checks and errors to make sure your elements respect the platforms constraints (instead of your application not working without any errors) | :white_check_mark: |
 
 
-class LaunchRequestHandler(InoftRequestHandler):
-   def can_handle(self) -> bool:
-       return self.is_launch_request()
 
-   def handle(self):
-       self.persistent_memorize("has_launched_at_least_once", True)
-       self.say("Do you want to read me ? I'm a good example, i assure you !")
-       self.memorize_session_then_state(LaunchStateHandler)
-       return self.to_platform_dict()
+#### Advanced Features
 
-class LaunchStateHandler(InoftStateHandler):
-   """ This is a state handler which has been set by the memorize_session_then_state() in the
-   LaunchRequestHandler. When the user is in a state_handler, the handler function of the handler
-   (for example our Yes and No handlers are not used, and everything is handled by the StateHandler """
-   def handle(self):
-       """ If something is returned by the handle function (if the user said
-       yes or no), we will reset the then_state, and the user can move on """
-
-       # In order for an handler to be used on its own (not in the context of an InoftSkill),
-       # you must pass the self keyword to the class. Otherwise you will get an exception.
-       if YesHandler(self).can_handle():
-           self.say("I'm so happy that you want to read me !")
-           return self.to_platform_dict()
-
-       elif NoHandler(self).can_handle():
-           self.say("WHAT DO YOU MEAN YOU DO NOT WANT TO READ ME ?!")
-           return self.to_platform_dict()
-
-   def fallback(self):
-       """ But if nothing is returned, the fallback function is called, and the user will stay in
-       the then_state until he said something that will make the handle function return something. """
-
-       self.say("You can say Yes, or No. And that's it my guy")
-       return self.to_platform_dict()
-
-class YesHandler(InoftRequestHandler):
-   def can_handle(self) -> bool:
-       return self.is_in_intent_names(["AMAZON.YesIntent", "OkConfirmation"])
-
-   def handle(self):
-       self.persistent_memorize("is_the_user_weird", True)
-       self.say(f"Why are you saying Yes ? You are not in a StateHandler. You are crazy weird.")
-       return self.to_platform_dict()
-
-class NoHandler(InoftRequestHandler):
-   def can_handle(self) -> bool:
-       return self.is_in_intent_names(["AMAZON.NoIntent", "NoConfirmation"])
-
-   def handle(self):
-       self.say("YOU SAID NO TO ME ?! I KNOW WHERE YOU LIVE !")
-       return self.to_platform_dict()
-
-class NumberHandler(InoftRequestHandler):
-   def can_handle(self) -> bool:
-       return self.is_in_intent_names(["SayANumber"])
-
-   def handle(self):
-       # You can get arg_value from intents (slots for Alexa, parameters for Google Assistant and Bixby)
-       number = self.get_intent_arg_value(arg_key="number")
-       if number is not None:
-           self.say(f"Here is your number : {number}")
-       else:
-           self.say(f"What's your number ? I did not got it.")
-       return self.to_platform_dict()
-
-class DefaultFallback(InoftDefaultFallback):
-   def handle(self):
-       self.say("I have no idea what you want. Go cook yourself an egg.")
-       return self.to_platform_dict()
+| Name                                                 | Description                                                  | Available          |
+| :--------------------------------------------------- | :----------------------------------------------------------- | :----------------- |
+| Notifications subscribers management system          | Easily organize the users that have subscribed to receive notifications in groups in a similar way to a newsletter management system | Next version       |
+| Speech Builder                                       | Easily create SSML responses to provide variety and more customizations to your syntheied speechs responses. | :white_check_mark: |
+| Smart Sessions & Automatic State Resuming            | Instead of ending an user session when the application is closed (intentionnaly or by mistake) define a timeout (for example 60 seconds) that if not crossed since the last use of the application will resume the user previous session attributes and where he was in the application (or ask him if he want to resume), with zero line of code required on your side. | :white_check_mark: |
+| Functional Callbacks for interactive Visual Elements | When creating a Visual Elements that the user can interact with, provide your callback functions for the different scenarios right when creating the elements (instead of needing to create a whole conditionnal id based system for each interactive element) | :white_check_mark: |
 
 
-def lambda_handler(event, context):
-   # The inoft skill must be initiated in the lambda_handler function, otherwise we would not reset the variables due to staticness of lambda
-   skill_builder = InoftSkill(db_table_name="my-table-name_users-data", db_region_name="eu-west-3")
-   # For now the framework only support dynamodb as the database client (which is why there is the db_region_name argument)
-   skill_builder.add_request_handler(LaunchRequestHandler)
-   skill_builder.add_request_handler(YesHandler)
-   skill_builder.add_request_handler(NoHandler)
-   skill_builder.add_request_handler(NumberHandler)
-   skill_builder.add_state_handler(LaunchStateHandler)
-   skill_builder.set_default_fallback_handler(DefaultFallback)
-   return skill_builder.handle_any_platform(event=event, context=context)
-```
 
-### Roadmap :
+#### Programmatic Audio Editing
 
-- To finish writing the README file, including the roadmap section ;)
+| Name                                             | Description                                                  | Available             |
+| :----------------------------------------------- | :----------------------------------------------------------- | :-------------------- |
+| Track based system                               | Unlimited liberty to make your sounds by using the same methods as professional manual audio editing software. | :white_check_mark:    |
+| Automatic upload of your files                   | Just use the local path to your source audio files, all the tedious work of formatting and uploading your sources and generated files will be done automaticly for you. | :black_square_button: |
+| Make your audio content as robust as code        | Instead of facing the hasle of updating or translating audio files that have been created in an external audio software, create, combine, modify and update your audio content programatictly. | :white_check_mark:    |
+| Relations system between your sounds             | Need to have a gun shot start half a second after a character has finished speaking ? Use a relation between the two sounds. No additionnal work will be needed if you change the character speech, or if you make a translation of it that is of a different duration. | :white_check_mark:    |
+| Do not limit your use of sophisticated scenarios | Instead of giving up having a lot of possibilities for the user when using recorded audio because of the complexity of creating all of the audio files, you can easily combine multiple audio files and use the same ambiances, transitions, etc on all of your combinaisons. | :white_check_mark:    |
+
+
+
+#### Visual Programming
+
+| Name                        | Description                                                  | Docs                  |
+| :-------------------------- | :----------------------------------------------------------- | :-------------------- |
+| Botpress integration        | Use Botpress, an open-source tool (with over height thousands stars on GitHub) that has been designed to make textual chatbot, to now make your interactions heavy projects on vocal assistants | :white_check_mark:    |
+| Generate everything         | From your code logic, your content, to your interactions models, you can design everything in Botpress and generate all of the code for vocal assistants while having access to all of the framework capabilities. | :black_square_button: |
+| Generate readable code      | We have put the emphasis on making the code generation more readable and navigable than human code, so that will always have the hand on your code so that you can extend on it anyway you like. | :white_check_mark:    |
+| Extends the code generation | Need to use visual programming for a big project that cannot be done with manual code, yet you have created some uniques fonctionnalities or logic that you want to use without destroying your CTRL-V key each time you re-generate the code ? You can easily create an extension for the code/content/models generation by customizing the framework Jinja2 templates or by creating new ones. | :black_square_button: |
+
+
+
+
 
 #### Credits :
 
