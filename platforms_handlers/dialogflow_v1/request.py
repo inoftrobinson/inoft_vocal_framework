@@ -465,6 +465,15 @@ class Request:
     def is_option_select_request(self) -> bool:
         return self.queryResult.queryText == "actions_intent_OPTION"
 
+    def get_updates_user_id_if_present(self):
+        for output_context in self.queryResult.outputContexts:
+            output_context_safe_dict = SafeDict(output_context)
+            if output_context_safe_dict.get("parameters").get("PERMISSION").to_bool(default=None) is True:
+                updates_user_id = output_context_safe_dict.get("parameters").get("UPDATES_USER_ID").to_str(default=None)
+                if updates_user_id is not None:
+                    return updates_user_id
+        return None
+
     def selected_option_identifier(self) -> str:
         argument_item = self.originalDetectIntentRequest.payload.get_first_input_of_type(self.originalDetectIntentRequest.payload.INPUT_TYPE_OPTION)
         if isinstance(argument_item, self.originalDetectIntentRequest.payload.InputsCustomList.InputItem.ArgumentItemsCustomList.ArgumentItem):

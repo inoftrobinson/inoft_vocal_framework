@@ -1,4 +1,5 @@
 from json import dumps as json_dumps
+from typing import Optional
 
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
@@ -418,7 +419,7 @@ class SystemIntent:
     option_elements_types_keys = [element_type_list_select, element_type_carousel_select]
     permission_elements_types_keys = [element_type_ask_permission]
 
-    def __init__(self, element_type: str):
+    def __init__(self, element_type: str, permissions_update_intent_name: Optional[str] = None):
         if element_type in self.option_elements_types_keys:
             self.intent = self.intent_type_option
         elif element_type in self.permission_elements_types_keys:
@@ -426,7 +427,7 @@ class SystemIntent:
         else:
             raise Exception(f"The element_type '{element_type}' for the SystemIntent as not been recognized.")
 
-        self._data = self.Data(element_type=element_type)
+        self._data = self.Data(element_type=element_type, permissions_update_intent_name=permissions_update_intent_name)
 
     @property
     def intent(self) -> str:
@@ -441,7 +442,7 @@ class SystemIntent:
     class Data:
         json_key = "data"
 
-        def __init__(self, element_type: str):
+        def __init__(self, element_type: str, permissions_update_intent_name: Optional[str] = None):
             if element_type == SystemIntent.element_type_list_select:
                 self._type = "type.googleapis.com/google.actions.v2.OptionValueSpec"
                 self._listSelect = self.ListSelect()
@@ -449,9 +450,11 @@ class SystemIntent:
                 self._type = "type.googleapis.com/google.actions.v2.OptionValueSpec"
                 self._carouselSelect = self.CarouselSelect()
             elif element_type == SystemIntent.element_type_ask_permission:
+                if permissions_update_intent_name is None:
+                    raise Exception(f"The intent_name argument in the request_push_notifications_permission_if_missing function has not been defined.")
                 self._type = "type.googleapis.com/google.actions.v2.PermissionValueSpec"
                 self._permissions = ["UPDATE"]
-                self._updatePermissionValueSpec = self.UpdatePermissionValueSpec(intent="actions.intent.MAIN")
+                self._updatePermissionValueSpec = self.UpdatePermissionValueSpec(intent=permissions_update_intent_name)
             else:
                 raise Exception(f"The element_type {element_type} is not a supported element type.")
 
@@ -770,10 +773,8 @@ class GoogleInPayload:
 
     @expectUserResponse.setter
     def expectUserResponse(self, expectUserResponse) -> None:
-        if expectUserResponse is False or expectUserResponse is True:
-            self._expectUserResponse = expectUserResponse
-        else:
-            raise Exception(f"expectUserResponse can only receive a True or False value, it received the following : {expectUserResponse}")
+        raise_if_variable_not_expected_type(value=expectUserResponse, expected_type=bool, variable_name="expectUserResponse")
+        self._expectUserResponse = expectUserResponse
 
     @property
     def userStorage(self) -> str:
@@ -781,8 +782,7 @@ class GoogleInPayload:
 
     @userStorage.setter
     def userStorage(self, userStorage: str) -> None:
-        if not isinstance(userStorage, str):
-            raise Exception(f"userStorage was type {type(userStorage)} which is not valid value for his parameter.")
+        raise_if_variable_not_expected_type(value=userStorage, expected_type=str, variable_name="userStorage")
         self._userStorage = userStorage
 
 class Payload:
@@ -870,6 +870,9 @@ class Response:
         output_response.textToSpeech = text_or_ssml
         self.payload.google.richResponse.add_response_item(output_response)
 
+    def end_session(self, should_end: bool = True):
+        self.payload.google.expectUserResponse = False if should_end is True else True
+
     def add_output_context_item(self, output_context_item: OutputContextItem) -> None:
         if isinstance(output_context_item, OutputContextItem):
             self.outputContexts.append(output_context_item)
@@ -954,8 +957,8 @@ class Response:
         media_response_instance.add_audio_content(mp3_file_url=mp3_file_url, name=name, description=description,
                                                   icon_image_url=icon_image_url, icon_accessibility_text=icon_accessibility_text)
 
-    def request_push_notifications_permission(self) -> None:
-        self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_ask_permission)
+    def request_push_notifications_permission(self, intent_name: str) -> None:
+        self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_ask_permission, permissions_update_intent_name=intent_name)
 
 
     def to_dict(self) -> dict:

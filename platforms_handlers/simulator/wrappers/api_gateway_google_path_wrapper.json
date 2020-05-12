@@ -1,0 +1,38 @@
+{
+    "version": "2.0",
+    "routeKey": "ANY /googleAssistantDialogflowV1",
+    "rawPath": "/googleAssistantDialogflowV1",
+    "rawQueryString": "",
+    "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip,deflate,br",
+        "content-length": "3657",
+        "content-type": "application/json",
+        "host": "779cmrwtm2.execute-api.eu-west-3.amazonaws.com",
+        "user-agent": "Google-Dialogflow",
+        "x-amzn-trace-id": "Root=1-5ea73040-9d65ac82c665ea8cdb297fac",
+        "x-forwarded-for": "66.249.88.163",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https"
+    },
+    "requestContext": {
+        "accountId": "631258222318",
+        "apiId": "779cmrwtm2",
+        "domainName": "779cmrwtm2.execute-api.eu-west-3.amazonaws.com",
+        "domainPrefix": "779cmrwtm2",
+        "http": {
+            "method": "POST",
+            "path": "/googleAssistantDialogflowV1",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "66.249.88.163",
+            "userAgent": "Google-Dialogflow"
+        },
+        "requestId": "LqR6Ej5wiGYEJCQ=",
+        "routeKey": "ANY /googleAssistantDialogflowV1",
+        "stage": "$default",
+        "time": "27/Apr/2020:19:19:28 +0000",
+        "timeEpoch": 1588015168374
+    },
+    "body": null,
+    "isBase64Encoded": false
+}

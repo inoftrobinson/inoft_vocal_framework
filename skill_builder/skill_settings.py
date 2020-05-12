@@ -94,6 +94,36 @@ class Settings:
                     }
                 }
             },
+            "user_notifications_subscriptions": {
+                "required": False,
+                "type": "dict",
+                "schema": {
+                    "disable_database": {
+                        "required": False,
+                        "type": "boolean",
+                    },
+                    "database_client": {
+                        "required": True,
+                        "type": "string",
+                        "allowed": ["dynamodb"],
+                        "is_database_not_disabled": True,
+                        "check_database_field_present": True,
+                    },
+                    "dynamodb": {
+                        "type": "dict",
+                        "schema": {
+                            "table_name": {
+                                "required": True,
+                                "type": "string"
+                            },
+                            "region_name": {
+                                "required": True,
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "deployment": {
                 "type": "dict",
                 "schema": {

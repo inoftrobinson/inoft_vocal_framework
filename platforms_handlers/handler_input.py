@@ -1,10 +1,11 @@
 import logging
 from collections import Callable
+from typing import Optional
 
 from inoft_vocal_framework.dummy_object import DummyObject
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
-from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter
+from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
+from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
@@ -13,14 +14,16 @@ from inoft_vocal_framework.skill_builder.skill_settings import Settings
 class HandlerInput(CurrentUsedPlatformInfo):
     def __init__(self, use_default_settings_if_missing: bool = False):
         super().__init__()
-        self.settings = Settings(raise_if_not_loaded=use_default_settings_if_missing)
-        self.session_users_data_safedict = self.settings.settings.get("sessions_users_data").to_safedict()
+        self._use_default_settings_if_missing = use_default_settings_if_missing
 
-        self.sessions_users_data_db_table_name = self.session_users_data_safedict.get("dynamodb").get("table_name").to_str(default=None)
-        self.sessions_users_data_db_region_name = self.session_users_data_safedict.get("dynamodb").get("region_name").to_str(default=None)
-        if self.sessions_users_data_db_table_name is not None:
+        self.__settings = None
+        self.__session_users_data_safedict = None
+
+        self.__sessions_users_data_db_table_name = None
+        self.__sessions_users_data_db_region_name = None
+        if self._sessions_users_data_db_table_name is not None:
             # If the user do not specify that the database should be disable, then we set it to False
-            self.sessions_users_data_disable_database = self.session_users_data_safedict.get("disable_database").to_bool(default=False)
+            self.sessions_users_data_disable_database = self._session_users_data_safedict.get("disable_database").to_bool(default=False)
         else:
             # Yet, if the table_name has not been found, we disable the database (yet we do not raise, since
             # in some cases, it could be normal to not specify a table_name, for example for our unit tests)
@@ -28,7 +31,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
         self._session_id = None
         self._is_invocation_new_session = None
-        self._default_session_data_timeout = self.settings.settings.get("default_session_data_timeout").to_int(default=60)
+        self._default_session_data_timeout = self._settings.settings.get("default_session_data_timeout").to_int(default=60)
         self._session_been_resumed = None
         self._simple_session_user_data = None
         self._smart_session_user_data = None
@@ -41,16 +44,79 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._selected_option_identifier = None
 
         if (self.sessions_users_data_disable_database is not True
-        and (not isinstance(self.sessions_users_data_db_table_name, str) or self.sessions_users_data_db_region_name is None)):
+        and (not isinstance(self._sessions_users_data_db_table_name, str) or self._sessions_users_data_db_region_name is None)):
             raise Exception(f"The disable_database argument on the initialization of the InoftSkill has not been"
                             f"specified or set to True, yet the database table name or region name are missing.")
 
-        self.dynamodb_adapter = (DynamoDbAttributesAdapter(table_name=self.sessions_users_data_db_table_name,
-                                                           region_name=self.sessions_users_data_db_region_name,
-                                                           primary_key_name="id", create_table=True)
-                                 if self.sessions_users_data_disable_database is False else None)
+        self.__attributes_dynamodb_adapter = None
+        self.__notifications_subscribers_dynamodb_adapter = None
 
+        self._notifications_subscribers = None
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput = None, None, None
+
+    @property
+    def _settings(self) -> Settings:
+        if self.__settings is None:
+            self.__settings = Settings(raise_if_not_loaded=self._use_default_settings_if_missing)
+        return self.__settings
+
+    @property
+    def _session_users_data_safedict(self) -> SafeDict:
+        if self.__session_users_data_safedict is None:
+            self.__session_users_data_safedict = self._settings.settings.get("sessions_users_data").to_safedict()
+        return self.__session_users_data_safedict
+
+    @property
+    def _sessions_users_data_db_table_name(self):
+        if self.__sessions_users_data_db_table_name is None:
+            self.__sessions_users_data_db_table_name = self._session_users_data_safedict.get("dynamodb").get("table_name").to_str(default=None)
+        return self.__sessions_users_data_db_table_name
+
+    @property
+    def _sessions_users_data_db_region_name(self):
+        if self.__sessions_users_data_db_region_name is None:
+            self.__sessions_users_data_db_region_name = self._session_users_data_safedict.get("dynamodb").get("region_name").to_str(default=None)
+        return self.__sessions_users_data_db_region_name
+
+    @property
+    def _attributes_dynamodb_adapter(self) -> DynamoDbAttributesAdapter:
+        if self.__attributes_dynamodb_adapter is None:
+            if self.sessions_users_data_disable_database is False:
+                self.__attributes_dynamodb_adapter = DynamoDbAttributesAdapter(table_name=self._sessions_users_data_db_table_name,
+                                                                               region_name=self._sessions_users_data_db_region_name,
+                                                                               primary_key_name="id", create_table=True)
+        return self.__attributes_dynamodb_adapter
+
+    @property
+    def _notifications_subscribers_dynamodb_adapter(self) -> DynamoDbNotificationsSubscribers:
+        if self.__notifications_subscribers_dynamodb_adapter is None:
+            def raise_exception_parameter_missing(parameter_name: str):
+                # todo: add docs link
+                raise Exception(f"The {parameter_name} setting has not been found in the user_notifications_subscriptions "
+                                f"section in your app_settings file.\nPlease refer to the documentation to see the format "
+                                f"and parameters of the user_notifications_subscriptions setting.")
+
+            user_notifications_subscriptions_settings = self._settings.settings.get("user_notifications_subscriptions").to_safedict(default=None)
+            if user_notifications_subscriptions_settings is None:
+                raise_exception_parameter_missing(parameter_name="user_notifications_subscriptions")
+
+            dynamodb_settings = user_notifications_subscriptions_settings.get("dynamodb").to_safedict(default=None)
+            if dynamodb_settings is None:
+                raise_exception_parameter_missing(parameter_name="dynamodb")
+
+            region_name = dynamodb_settings.get("region_name").to_str(default=None)
+            if dynamodb_settings is None:
+                raise_exception_parameter_missing(parameter_name="region_name")
+
+            table_name = dynamodb_settings.get("table_name").to_str(default=None)
+            if dynamodb_settings is None:
+                raise_exception_parameter_missing(parameter_name="table_name")
+
+            self.__notifications_subscribers_dynamodb_adapter = DynamoDbNotificationsSubscribers(
+                table_name=table_name, region_name=region_name, create_table=True)
+
+        return self.__notifications_subscribers_dynamodb_adapter
+
 
     @property
     def session_id(self):
@@ -124,7 +190,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         # because this function can be called by the smart_session_user_data property or the session_been_resumed property.
         if self._smart_session_user_data is None:
             if self.sessions_users_data_disable_database is False:
-                self._smart_session_user_data, self._session_been_resumed = self.dynamodb_adapter.get_smart_session_attributes(
+                self._smart_session_user_data, self._session_been_resumed = self._attributes_dynamodb_adapter.get_smart_session_attributes(
                     user_id=self.persistent_user_id, session_id=self.session_id, timeout_seconds=self.default_session_data_timeout)
 
                 if not isinstance(self._smart_session_user_data, SafeDict):
@@ -139,7 +205,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             if self.is_alexa_v1 is True:
                 user_id = SafeDict(self.alexaHandlerInput.session.user).get("userId").to_str(default=None)
             elif self.is_dialogflow_v1 is True:
-                user_id = self.dialogFlowHandlerInput.user_id
+                user_id = self.dialogFlowHandlerInput.get_user_id()
             elif self.is_bixby_v1 is True:
                 user_id = self.bixbyHandlerInput.request.context.userId
 
@@ -159,7 +225,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def persistent_user_data(self) -> SafeDict:
         if self._persistent_user_data is None:
             if self.sessions_users_data_disable_database is False:
-                self._persistent_user_data = self.dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
+                self._persistent_user_data = self._attributes_dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
             if not isinstance(self._persistent_user_data, SafeDict):
                 self._persistent_user_data = SafeDict()
             logging.debug(f"_persistent_user_data = {self._persistent_user_data}")
@@ -168,7 +234,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def interactivity_callback_functions(self) -> SafeDict:
         if self._interactivity_callback_functions is None:
-            self._interactivity_callback_functions = self.smart_session_user_data.get("interactivity_callback_functions").to_safedict()
+            self._interactivity_callback_functions = self.smart_session_user_data.get("interactivityCallbackFunctions").to_safedict()
         return self._interactivity_callback_functions
 
     def load_event(self, event: dict) -> None:
@@ -214,20 +280,25 @@ class HandlerInput(CurrentUsedPlatformInfo):
         from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
         self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
-    def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: str):
+    def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: Optional[str] = None):
         # todo: fix bug where the identifier_key is not the right now if it has been modified because there were only 1 element
         # No matter if we already have functions for the different ids in the same key name, we remember the dict of all the
         # callback functions of the key name (will be an empty dict if was not present), then we add the callback for the
         # current specified identifier. Finally, we can memorize this new updated list.
         callback_functions_dict = self.session_remember(data_key=callback_functions_key_name, specific_object_type=dict)
         from inspect import getfile
-        callback_functions_dict[identifier_key] = {"file_filepath_containing_callback": getfile(callback_function),
-                                                   "callback_function_path": callback_function.__qualname__}
+
+        item_dict = {"file_filepath_containing_callback": getfile(callback_function),
+                     "callback_function_path": callback_function.__qualname__}
+
+        if identifier_key is not None:
+            callback_functions_dict[identifier_key] = item_dict
+        else:
+            callback_functions_dict = item_dict
 
         self.session_memorize(callback_functions_key_name, callback_functions_dict)
 
-    @property
-    def is_option_select_request(self) -> bool:
+    def need_to_be_handled_by_callback(self) -> bool:
         if self._is_option_select_request is None:
             if self.is_alexa_v1 is True:
                 return False
@@ -283,7 +354,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         if self.is_alexa_v1 is True:
             self.alexaHandlerInput.end_session(should_end=should_end)
         elif self.is_dialogflow_v1 is True:
-            raise
+            self.dialogFlowHandlerInput.response.end_session(should_end=should_end)
         elif self.is_bixby_v1 is True:
             raise
 
@@ -440,7 +511,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def save_attributes_if_need_to(self):
         if self.data_for_database_has_been_modified is True:
             if self.sessions_users_data_disable_database is False:
-                self.dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
+                self._attributes_dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
                                                       smart_session_attributes=self.smart_session_user_data.to_dict(),
                                                       persistent_attributes=self.persistent_user_data.to_dict())
 
@@ -454,7 +525,12 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 "response": self.alexaHandlerInput.response.to_dict()["response"]  # todo: fix the need to enter with response key
             }
         elif self.is_dialogflow_v1 is True:
-            self.dialogFlowHandlerInput.response.payload.google.userStorage = str({"userId": self.persistent_user_id})
+            data_dict_to_store = {"userId": self.persistent_user_id}
+            updates_user_id = self.dialogFlowHandlerInput.get_updates_user_id()
+            if updates_user_id is not None:
+                data_dict_to_store["updatesUserId"] = updates_user_id
+
+            self.dialogFlowHandlerInput.response.payload.google.userStorage = str(data_dict_to_store)
 
             from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import OutputContextItem
             session_user_data_context_item = OutputContextItem(session_id=self.dialogFlowHandlerInput.session_id,
@@ -469,6 +545,12 @@ class HandlerInput(CurrentUsedPlatformInfo):
             output_response_dict = self.bixbyHandlerInput.response.to_dict()
 
         return output_response_dict
+
+    @property
+    def notifications_subscribers(self) -> NotificationsSubscribers:
+        if self._notifications_subscribers is None:
+            self._notifications_subscribers = NotificationsSubscribers(parent_handler_input=self)
+        return self._notifications_subscribers
 
     @property
     def alexaHandlerInput(self):

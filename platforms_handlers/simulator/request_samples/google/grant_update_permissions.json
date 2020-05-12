@@ -1,0 +1,162 @@
+{
+    "responseId": "1cebf9ce-4011-4599-9519-b4125783454c-c1292b34",
+    "queryResult":
+    {
+        "action": "input.unknown",
+        "parameters": {},
+        "allRequiredParamsPresent": true,
+        "fulfillmentText": "J'ai mal compris votre demande.",
+        "fulfillmentMessages":
+        [
+            {
+                "text":
+                {
+                    "text":
+                    [
+                        "J'ai mal compris votre demande."
+                    ]
+                }
+            }
+        ],
+        "outputContexts":
+        [
+            {
+                "name": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg/contexts/actions_capability_account_linking"
+            },
+            {
+                "name": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg/contexts/actions_capability_screen_output"
+            },
+            {
+                "name": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg/contexts/actions_capability_audio_output"
+            },
+            {
+                "name": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg/contexts/actions_capability_media_response_audio"
+            },
+            {
+                "name": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg/contexts/google_assistant_input_type_voice"
+            },
+            {
+                "name": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg/contexts/sessiondata",
+                "lifespanCount": 998
+            },
+            {
+                "name": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg/contexts/actions_intent_permission",
+                "parameters":
+                {
+                    "PERMISSION": true,
+                    "text": "Oui",
+                    "UPDATES_USER_ID": "ABwppHFaeRO9XIkGoInSGaqRa4cTCcZpYEvwSp83gLS7P2jrKv14jqb1XnBYsT-HgqxtkISHfUyw9cRjehKb"
+                }
+            },
+            {
+                "name": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg/contexts/__system_counters__",
+                "lifespanCount": 1,
+                "parameters":
+                {
+                    "no-input": 0,
+                    "no-match": 1
+                }
+            }
+        ],
+        "intent":
+        {
+            "name": "projects/newagent-cxcgho/agent/intents/a0af04c7-d295-435f-8ca3-743a3b1e2987",
+            "displayName": "Default Fallback Intent",
+            "isFallback": true
+        },
+        "intentDetectionConfidence": 1,
+        "languageCode": "fr"
+    },
+    "originalDetectIntentRequest":
+    {
+        "source": "google",
+        "version": "2",
+        "payload":
+        {
+            "user":
+            {
+                "permissions":
+                [
+                    "UPDATE"
+                ],
+                "locale": "fr-CA",
+                "userStorage": "{'userId': 'testUserId'}",
+                "userVerificationStatus": "VERIFIED"
+            },
+            "conversation":
+            {
+                "conversationId": "ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg",
+                "type": "ACTIVE",
+                "conversationToken": "[\"sessiondata\"]"
+            },
+            "inputs":
+            [
+                {
+                    "intent": "actions.intent.PERMISSION",
+                    "rawInputs":
+                    [
+                        {
+                            "inputType": "VOICE",
+                            "query": "Oui"
+                        }
+                    ],
+                    "arguments":
+                    [
+                        {
+                            "name": "PERMISSION",
+                            "boolValue": true,
+                            "textValue": "true"
+                        },
+                        {
+                            "name": "text",
+                            "rawText": "Oui",
+                            "textValue": "Oui"
+                        },
+                        {
+                            "name": "UPDATES_USER_ID",
+                            "textValue": "ABwppHFaeRO9XIkGoInSGaqRa4cTCcZpYEvwSp83gLS7P2jrKv14jqb1XnBYsT-HgqxtkISHfUyw9cRjehKb"
+                        }
+                    ]
+                }
+            ],
+            "surface":
+            {
+                "capabilities":
+                [
+                    {
+                        "name": "actions.capability.ACCOUNT_LINKING"
+                    },
+                    {
+                        "name": "actions.capability.SCREEN_OUTPUT"
+                    },
+                    {
+                        "name": "actions.capability.AUDIO_OUTPUT"
+                    },
+                    {
+                        "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
+                    }
+                ]
+            },
+            "isInSandbox": true,
+            "availableSurfaces":
+            [
+                {
+                    "capabilities":
+                    [
+                        {
+                            "name": "actions.capability.AUDIO_OUTPUT"
+                        },
+                        {
+                            "name": "actions.capability.SCREEN_OUTPUT"
+                        },
+                        {
+                            "name": "actions.capability.WEB_BROWSER"
+                        }
+                    ]
+                }
+            ],
+            "requestType": "SIMULATOR"
+        }
+    },
+    "session": "projects/newagent-cxcgho/agent/sessions/ABwppHHJivcyQCF4Mz9-6_Q7Z1DukswGopX_Io9nV3KK-RLXqioyPGpvNZyzUhas87VdLSkOVN6kOWdUzbNg"
+}

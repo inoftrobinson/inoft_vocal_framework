@@ -1,6 +1,7 @@
 import logging
 from abc import abstractmethod
 from json import dumps as json_dumps
+from typing import Optional
 
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_value_not_in_list
@@ -102,7 +103,7 @@ class InoftHandlersGroup:
 
 
 class InoftSkill:
-    def __init__(self, settings_yaml_filepath=None, settings_json_filepath=None):
+    def __init__(self, settings_yaml_filepath: Optional[str] = None, settings_json_filepath: Optional[str] = None):
         self.settings = Settings()
         if settings_yaml_filepath is not None and settings_json_filepath is not None:
             raise Exception(f"You cannot specify multiple settings files. Please specify only one")
@@ -196,11 +197,18 @@ class InoftSkill:
         handler_is_a_then_state_handler = False
         handler_is_a_request_handler = False
 
+        # If an UPDATES_USER_ID has been found on the Google Assistant Platform, we saved it in the user data.
+        if self.handler_input.is_dialogflow_v1 is True:
+            current_updates_user_id = self.handler_input.dialogFlowHandlerInput.request.get_updates_user_id_if_present()
+            if current_updates_user_id is not None:
+                remembered_updates_user_id = self.handler_input.persistent_remember("updatesUserId", str)
+                if current_updates_user_id != remembered_updates_user_id:
+                    self.handler_input.persistent_memorize("updatesUserId", current_updates_user_id)
+
         # Steps of priority
 
         # First, if the request is an interactive option made by the user
-        if self.handler_input.is_option_select_request:
-            # todo: rename is_option_select_request to need_to_be_handled_by_callback
+        if self.handler_input.need_to_be_handled_by_callback():
             infos_callback_function_to_use = self.handler_input.interactivity_callback_functions.get(
                 self.handler_input.selected_option_identifier).to_safedict(default=None)
 
@@ -319,7 +327,7 @@ class InoftSkill:
             raise Exception(f"A skill must have a {InoftDefaultFallback} handler set with the {self.set_default_fallback_handler} function.")
 
     def handle_any_platform(self, event: dict, context: dict):
-        print(f"Event = {json_dumps(event)}\nContext = {context}")
+        print(f"Crude event = {json_dumps(event)}\nCrude context = {context}")
         self.check_everything_implemented()
         event_safedict = SafeDict(classic_dict=event)
 
@@ -327,18 +335,30 @@ class InoftSkill:
         if event_safedict.get("rawPath").to_str() == "/googleAssistantDialogflowV1":
             # A google-assistant or dialogflow request always pass trough an API gateway
             self.handler_input.is_dialogflow_v1 = True
-            event = NestedObjectToDict.get_dict_from_json(event_safedict.get("body").to_str())
+            body = event_safedict.get("body").to_any()
+
+            if isinstance(body, str):
+                event = NestedObjectToDict.get_dict_from_json(body)
+            elif isinstance(body, dict):
+                event = body
+            else:
+                raise Exception(f"The body object of the request, must be of type str or dict, but was of type : {type(body)} : {body}")
+
+            print(f"Event body for Google Assistant = {json_dumps(event)}")
 
         elif event_safedict.get("rawPath").to_str() == "/samsungBixbyV1":
             # A samsung bixby request always pass trough an API gateway
             self.handler_input.is_bixby_v1 = True
             from urllib import parse
-            event = {"context": NestedObjectToDict.get_dict_from_json(stringed_json_dict=event_safedict.get("body").to_str())["$vivContext"],
-                     "parameters": dict(parse.parse_qsl(event_safedict.get("rawQueryString").to_str()))}
+            event = {"context": NestedObjectToDict.get_dict_from_json(stringed_json_dict=event_safedict.get("body").to_any())["$vivContext"],
+                     "parameters": dict(parse.parse_qsl(event_safedict.get("rawQueryString").to_any()))}
+            print(f"Event body for Samsung Bixby = {json_dumps(event)}")
+
 
         elif "amzn1." in event_safedict.get("context").get("System").get("application").get("applicationId").to_str():
             # Alexa always go last, since it do not pass trough an api resource, its a less robust identification than the other platforms.
             self.handler_input.is_alexa_v1 = True
+            print(f"Event body do not need processing for Alexa : {event}")
         else:
             from inoft_vocal_framework.messages import ERROR_PLATFORM_NOT_SUPPORTED
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)

@@ -5,7 +5,7 @@ from inoft_vocal_framework.dummy_object import DummyObject
 from typing import List
 
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
-from inoft_vocal_framework.platforms_handlers.audio_editing.relation import Relation
+from .relation import Relation
 
 
 class SoundProps:

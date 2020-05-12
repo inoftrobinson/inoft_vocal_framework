@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+from typing import Optional
 
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
@@ -8,6 +9,8 @@ from inoft_vocal_framework.session_utils import add_new_played_category  # todo:
 from inoft_vocal_framework.general_utils import pick_msg # todo: and remove this dependance too
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 
+# todo: make all functions cross platform ;)
+# todo: likely it will be smarter to make a SpeechAlexa object, a SpeechGoogle object, and a SpeechBixby object.
 
 class SpeechsList:
     def __init__(self, id: str, speechs: list = None):
@@ -24,7 +27,7 @@ class SpeechsList:
     @property
     def id(self) -> str:
         return self._id
-    
+
     @id.setter
     def id(self, id: str) -> None:
         raise_if_variable_not_expected_type(value=id, expected_type=str, variable_name="id")
@@ -81,59 +84,30 @@ class Speech:
         self.probability_value = probability_value
         return self
 
-    def get_text(self):
+    def get_text(self) -> str:
         return self.text
 
-    def speak(self):
-        """
-        <speak>
-        :return:
-        """
-        return '<speak>{}</speak>'.format(self.speech)
+    def speak(self) -> str:
+        return f'<speak>{self.speech}</speak>'
 
-    def add_text(self, value):
-        """
-        add text
-        :return:
-        """
-
-        self.text += value
-        self.speech += value
+    def add_text(self, text: str):
+        self.text += text
+        self.speech += text
         return self
 
-    def say_as(self, value, interpret_as, is_nested=False):
-        """
-        <say_as>
-        :param value:
-        :param interpret_as:
-        :param is_nested:
-        :return:
-        """
-
-        if interpret_as not in self.VALID_INTERPRET_AS:
+    def say_as(self, text: str, name_interpret_as: str, is_nested: Optional[bool] = False):
+        if name_interpret_as not in self.VALID_INTERPRET_AS:
             raise ValueError('The interpret-as provided to say_as is not valid')
 
-        ssml = '<say-as interpret-as="{interpret_as}">' \
-               '{value}</say-as>'.format(interpret_as=interpret_as, value=value)
-
+        ssml = f'<say-as interpret-as="{name_interpret_as}">{text}</say-as>'
         if is_nested:
             return ssml
 
-        self.text += value
+        self.text += text
         self.speech += ssml
         return self
 
-    def prosody(self, value, rate='medium', pitch='medium', volume='medium', is_nested=False):
-        """
-        <prosody>
-        :param value:
-        :param rate:
-        :param pitch:
-        :param volume:
-        :param is_nested:
-        :return:
-        """
-
+    def prosody(self, text: str, rate: str = "medium", pitch: str = "medium", volume: str = "medium", is_nested: Optional[bool] = False):
         if rate not in self.VALID_PROSODY_ATTRIBUTES['rate']:
             if re.match(r'^\d+%$', rate) is None:
                 raise ValueError('The rate provided to prosody is not valid')
@@ -146,104 +120,63 @@ class Speech:
             raise ValueError('The volume provided to prosody is not valid')
 
         ssml = '<prosody rate="{rate}" pitch="{pitch}" volume="{volume}">' \
-               '{value}</prosody>'.format(rate=rate, pitch=pitch, volume=volume, value=value)
+               '{value}</prosody>'.format(rate=rate, pitch=pitch, volume=volume, value=text)
 
         if is_nested:
             return ssml
 
-        self.text += value
+        self.text += text
         self.speech += ssml
         return self
 
-    def sub(self, value, alias, is_nested=False):
-        """
-        <sub>
-        :param value:
-        :param alias:
-        :param is_nested:
-        :return:
-        """
-
-        ssml = '<sub alias="{}">{}</sub>'.format(alias, value)
-
+    def sub(self, text: str, alias, is_nested: Optional[bool] = False):
+        ssml = f'<sub alias="{alias}">{text}</sub>'
         if is_nested:
             return ssml
 
-        self.text += value
+        self.text += text
         self.speech += ssml
         return self
 
-    def lang(self, value, lang, is_nested=False):
-        """
-        <lang>
-        :param value:
-        :param lang:
-        :param is_nested:
-        :return:
-        """
-
-        ssml = '<lang xml:lang="{}">{}</lang>'.format(lang, value)
-
+    def lang(self, text: str, lang_key: str, is_nested: Optional[bool] = False):
+        ssml = f'<lang xml:lang="{lang_key}">{text}</lang>'
         if is_nested:
             return ssml
 
-        self.text += value
+        self.text += text
         self.speech += ssml
         return self
 
-    def voice(self, value, name, is_nested=False):
-        """
-        <voice>
-        :param value:
-        :param name:
-        :return:
-        """
-
-        if name not in self.VALID_VOICE_NAMES:
+    def voice(self, text: str, voice_name: str, is_nested: Optional[bool] = False):
+        if voice_name not in self.VALID_VOICE_NAMES:
             raise ValueError('The name provided to voice is not valid')
 
-        ssml = '<voice name="{}">{}</voice>'.format(name, value)
-
+        ssml = f'<voice name="{voice_name}">{text}</voice>'
         if is_nested:
             return ssml
 
-        self.text += value
-        self.speech += '<voice name="{}">{}</voice>'.format(name, value)
+        self.text += text
+        self.speech += ssml
         return self
 
-    def pause(self, time_ms: int, is_nested=False):
-        """
-        <break>
-        :param time_ms:
-        :param is_nested:
-        :return:
-        """
-
+    def pause(self, time_ms: int, is_nested: Optional[bool] = False):
         ssml = f"<break time='{time_ms}ms'/>"
-
         if is_nested:
             return ssml
 
         self.speech += ssml
         return self
 
-    def whisper(self, value, is_nested=False):
-        """
-        :param value:
-        :param is_nested:
-        :return:
-        """
-
-        ssml = '<amazon:effect name="whispered">{}</amazon:effect>'.format(value)
-
+    def whisper(self, text: str, is_nested: Optional[bool] = False):
+        ssml = f'<amazon:effect name="whispered">{text}</amazon:effect>'
         if is_nested:
             return ssml
 
-        self.text += value
+        self.text += text
         self.speech += ssml
         return self
 
-    def audio_file(self, src_url, is_nested=False):
+    def audio_file(self, src_url: str, is_nested: Optional[bool] = False):
         """
         :param src_url:
         :param is_nested:
@@ -258,32 +191,26 @@ class Speech:
         self.speech += ssml
         return self
 
-    def emphasis(self, value, level, is_nested=False):
+    def emphasis(self, text: str, level: str, is_nested: Optional[bool] = False):
 
         if level not in self.VALID_EMPHASIS_LEVELS:
             raise ValueError('The level provided to emphasis is not valid')
 
-        ssml = '<emphasis level="strong">{}</emphasis>'.format(value)
+        ssml = '<emphasis level="strong">{}</emphasis>'.format(text)
 
         if is_nested:
             return ssml
 
-        self.text += value
+        self.text += text
         self.speech += ssml
         return self
 
-    def p(self, value,is_nested=False):
-        """
-        :param value:
-        :param is_nested:
-        :return:
-        """
-        ssml = '<p>{}</p>'.format(value)
-
+    def p(self, text: str, is_nested: Optional[bool] = False):
+        ssml = f'<p>{text}</p>'
         if is_nested:
             return ssml
 
-        self.text += value
+        self.text += text
         self.speech += ssml
         return self
 

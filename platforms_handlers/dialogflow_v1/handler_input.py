@@ -1,4 +1,5 @@
 from collections import Callable
+from typing import Optional
 
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.dialogflow_v1.request import Request
@@ -31,32 +32,38 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
         self.request = Request()
         self.response = Response()
 
+        self._user_persistent_stored_data = None
         self._user_id = None
         self._session_id = None
         self._is_new_session = None
         self._simple_session_user_data = None
 
-    def _get_user_persistent_stored_data(self):
-        unprocessed_user_stored_data = self.request.originalDetectIntentRequest.payload.user.userStorage
-        if isinstance(unprocessed_user_stored_data, str) and unprocessed_user_stored_data.replace(" ", "") != "":
-            from unicodedata import normalize as unicode_normalize
-            from ast import literal_eval
-            try:
-                user_stored_data = literal_eval(unicode_normalize("NFD", unprocessed_user_stored_data))
-                if isinstance(user_stored_data, dict):
-                    return user_stored_data
-                else:
-                    print(f"Non-crashing error, the user_stored_data has been retrieved and converted from a string, but was but {type(user_stored_data)} and need to be a dict")
-                    return None
-            except Exception as e:
-                print(f"Error while processing the user_persistent_data. Non-crashing but returning None : {e}")
-        return None
-
     @property
-    def user_id(self):
-        persistent_data = self._get_user_persistent_stored_data()
-        if isinstance(persistent_data, dict) and "userId" in persistent_data.keys():
-            return persistent_data["userId"]
+    def user_persistent_stored_data(self) -> dict:
+        if self._user_persistent_stored_data is None:
+            unprocessed_user_stored_data = self.request.originalDetectIntentRequest.payload.user.userStorage
+            if isinstance(unprocessed_user_stored_data, str) and unprocessed_user_stored_data.replace(" ", "") != "":
+                from unicodedata import normalize as unicode_normalize
+                from ast import literal_eval
+                try:
+                    user_stored_data = literal_eval(unicode_normalize("NFD", unprocessed_user_stored_data))
+                    if isinstance(user_stored_data, dict):
+                        self._user_persistent_stored_data = user_stored_data
+                    else:
+                        print(f"Non-crashing error, the user_stored_data has been retrieved and converted from a string, but was but {type(user_stored_data)} and need to be a dict")
+                except Exception as e:
+                    print(f"Error while processing the user_persistent_data. Non-crashing but returning None : {e}")
+        return self._user_persistent_stored_data
+
+    def get_user_id(self):
+        if self.user_persistent_stored_data is not None and "userId" in self.user_persistent_stored_data.keys():
+            return self.user_persistent_stored_data["userId"]
+        else:
+            return None
+
+    def get_updates_user_id(self):
+        if self.user_persistent_stored_data is not None and "updatesUserId" in self.user_persistent_stored_data.keys():
+            return self.user_persistent_stored_data["updatesUserId"]
         else:
             return None
 
@@ -174,7 +181,7 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
                                                   image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
 
     def _save_interaction_options_callback_function(self, on_select_callback_function: Callable, identifier_key: str):
-        self.parent_handler_input.save_callback_function_to_database(callback_functions_key_name="interactivity_callback_functions",
+        self.parent_handler_input.save_callback_function_to_database(callback_functions_key_name="interactivityCallbackFunctions",
             callback_function=on_select_callback_function, identifier_key=identifier_key)
 
     def show_interactive_list_item(self, identifier_key: str, on_select_callback: Callable, title: str, description: str = None,
@@ -202,6 +209,24 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
         if override_default_end_session is False:
             self.parent_handler_input.end_session()
 
-    def request_push_notifications_permission_if_missing(self) -> None:
-        if self.request.originalDetectIntentRequest.payload.user.PERMISSION_UPDATE_TYPE not in self.request.originalDetectIntentRequest.payload.user.permissions:
-            self.response.request_push_notifications_permission()
+    def has_user_granted_push_notifications_permission(self) -> bool:
+        user_permissions = self.request.originalDetectIntentRequest.payload.user.permissions
+        if user_permissions is None or self.request.originalDetectIntentRequest.payload.user.PERMISSION_UPDATE_TYPE not in user_permissions:
+            return False
+        else:
+            return True
+
+    def request_push_notifications_permission_if_missing(self, intent_name: str) -> None:
+        if not self.has_user_granted_push_notifications_permission():
+            self.response.request_push_notifications_permission(intent_name=intent_name)
+
+    def subscribe_current_user_to_notifications_group(self, group_key: str) -> bool:
+        """:return True if the user has been able to be subscribed, False otherwise"""
+
+        updates_user_id = self.get_updates_user_id()
+        if updates_user_id is not None and self.has_user_granted_push_notifications_permission():
+            self.parent_handler_input._notifications_subscribers_dynamodb_adapter.add_new_subscribed_group_to_user(
+                updates_user_id=self.get_updates_user_id(), group_key=group_key)
+            return True
+        else:
+            return False

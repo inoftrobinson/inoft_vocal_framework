@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 
 from boto3.session import ResourceNotExistsError
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
@@ -222,7 +223,60 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
         raise_if_variable_not_expected_type(value=last_messages_list_id, expected_type=str, variable_name="last_messages_list_id")
         self._last_messages_list_id = last_messages_list_id
 
+
+class DynamoDbNotificationsSubscribers(DynamoDbCoreAdapter):
+    def __init__(self, table_name: str, region_name: str, create_table: Optional[bool] = True):
+        super().__init__(table_name=table_name, region_name=region_name, primary_key_name="updatesUserId", create_table=create_table)
+
+    def get_user_subscriptions(self, updates_user_id: str):
+        try:
+            response = self.dynamodb.get_item(TableName=self.table_name,
+                Key={"updatesUserId": self.utils.python_to_dynamodb(updates_user_id)}, ConsistentRead=True)
+
+            if "Item" in response:
+                item = response["Item"]
+                if isinstance(item, dict) and self.primary_key_name in item.keys():
+                    item.pop(self.primary_key_name)
+                    if len(item) > 0:
+                        # If there is an ID field, then that we remove it from the Item dict, and if after that the length of the item values
+                        # is superior to 0, we know we have at least one field other than the id, which is the key of a subscription group.
+                        return self.utils.dynamodb_to_python(item)
+            return None
+        except ResourceNotExistsError:
+            raise Exception(f"DynamoDb table {self.table_name} do not exist or in the process of "
+                            f"being created. Failed to get user subscriptions from DynamoDb table.")
+        except Exception as e:
+            raise Exception(f"Failed to retrieve user subscriptions from DynamoDb table. "
+                            f"Exception of type {type(e).__name__} occurred: {str(e)}")
+
+    def add_new_subscribed_group_to_user(self, updates_user_id: str, group_key: str):
+        try:
+            user_subscriptions = self.get_user_subscriptions(updates_user_id=updates_user_id)
+            if user_subscriptions is None:
+                print(f"Adding the user with the updates_user_id : {updates_user_id} to the subscription group {group_key}")
+                self.dynamodb.put_item(TableName=self.table_name, Item=self.utils.python_to_dynamodb({
+                    "updatesUserId": updates_user_id,
+                    group_key: True
+                }))
+            else:
+                print(f"Adding the subscription group {group_key} to an existing user with the updates_user_id : {updates_user_id}")
+                self.dynamodb.update_item(TableName=self.table_name,
+                                          Key={self.primary_key_name: self.utils.python_to_dynamodb(updates_user_id)},
+                                          UpdateExpression=f"set {group_key} = :value",
+                                          ExpressionAttributeValues={":value": self.utils.python_to_dynamodb(True)},
+                                          ReturnValues="UPDATED_NEW")
+        except ResourceNotExistsError:
+            raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to add a new subscribed group to an user in DynamoDb table.")
+        except Exception as e:
+            raise Exception(f"Failed to add a new subscribed group to an user in DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
+
+
 if __name__ == "__main__":
+    notifs = DynamoDbNotificationsSubscribers(table_name="test_notifications", region_name="eu-west-3")
+    # notifs.add_new_subscribed_group_to_user(updates_user_id="test", group_key="blyat")
+    print(notifs.get_user_subscriptions(updates_user_id="test"))
+
+    """""
     messages_db = DynamoDbMessagesAdapter(is_admin_mode=True, table_name="test_messages", region_name="eu-west-3")
     INTERACTION_TYPE_QUESTION_DO_YOU_WANT_INFOS_ABOUT_THE_GAME = "question_do-you-want-infos-about-the-game"
     MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME = SpeechsList().types(INTERACTION_TYPE_QUESTION_DO_YOU_WANT_INFOS_ABOUT_THE_GAME).speechs({
@@ -230,3 +284,4 @@ if __name__ == "__main__":
     })
     # messages_db.post_new_speechs_list(MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME)
     # print(messages_db.get_messages_of_category(category_id="question_do-you-want-infos-about-the-game").to_dict())
+    """""

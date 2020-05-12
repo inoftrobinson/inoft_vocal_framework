@@ -1,4 +1,5 @@
 from collections import Callable
+from typing import Optional
 
 from inoft_vocal_framework.platforms_handlers.alexa_v1.audioplayer.audioplayer_directives import AudioPlayerWrapper
 from inoft_vocal_framework.platforms_handlers.alexa_v1.context import Context
@@ -67,7 +68,7 @@ class AlexaHandlerInput:
     def get_last_used_audioplayer_handlers_group(self) -> SafeDict:
         return SafeDict(self.parent_handler_input.persistent_remember("lastUsedAudioPlayerHandlersGroupClass", specific_object_type=dict))
 
-    def show_basic_card(self, title: str, text: str, small_image_url: str = None, large_image_url: str = None) -> None:
+    def show_basic_card(self, title: str, text: str, small_image_url: Optional[str] = None, large_image_url: Optional[str] = None) -> None:
         from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Card
         if small_image_url is not None or large_image_url is not None:
             from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Image

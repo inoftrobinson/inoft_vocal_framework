@@ -1,0 +1,121 @@
+{
+    "responseId": "testResponseId",
+    "queryResult":
+    {
+        "queryText": "GOOGLE_ASSISTANT_WELCOME",
+        "action": "input.welcome",
+        "parameters": {},
+        "allRequiredParamsPresent": true,
+        "outputContexts":
+        [
+            {
+                "name": "projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs/contexts/actions_capability_screen_output"
+            },
+            {
+                "name": "projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs/contexts/actions_capability_account_linking"
+            },
+            {
+                "name": "projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs/contexts/actions_capability_media_response_audio"
+            },
+            {
+                "name": "projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs/contexts/actions_capability_audio_output"
+            },
+            {
+                "name": "projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs/contexts/google_assistant_input_type_voice"
+            },
+            {
+                "name": "projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs/contexts/google_assistant_welcome"
+            },
+            {
+                "name": "projects/jeu-seconde-guerre-mondiale/agent/sessions/ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs/contexts/__system_counters__",
+                "parameters":
+                {
+                    "no-input": 0,
+                    "no-match": 0
+                }
+            }
+        ],
+        "intent":
+        {
+            "name": "projects/testProjectName/agent/intents/0214fea4-9370-49cd-87f6-fb01dc655cbd",
+            "displayName": "Default Welcome Intent"
+        },
+        "intentDetectionConfidence": 1,
+        "languageCode": "fr"
+    },
+    "originalDetectIntentRequest":
+    {
+        "source": "google",
+        "version": "2",
+        "payload":
+        {
+            "user":
+            {
+                "permissions":
+                [
+                    "UPDATE"
+                ],
+                "locale": "fr-FR",
+                "lastSeen": "2020-04-27T19:17:34Z",
+                "userStorage": "{'userId': 'testUserId'}",
+                "userVerificationStatus": "VERIFIED"
+            },
+            "conversation":
+            {
+                "conversationId": "ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs",
+                "type": "NEW"
+            },
+            "inputs":
+            [
+                {
+                    "intent": "actions.intent.MAIN",
+                    "rawInputs":
+                    [
+                        {
+                            "inputType": "VOICE",
+                            "query": "Parler avec Le jeu"
+                        }
+                    ]
+                }
+            ],
+            "surface":
+            {
+                "capabilities":
+                [
+                    {
+                        "name": "actions.capability.SCREEN_OUTPUT"
+                    },
+                    {
+                        "name": "actions.capability.ACCOUNT_LINKING"
+                    },
+                    {
+                        "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
+                    },
+                    {
+                        "name": "actions.capability.AUDIO_OUTPUT"
+                    }
+                ]
+            },
+            "isInSandbox": true,
+            "availableSurfaces":
+            [
+                {
+                    "capabilities":
+                    [
+                        {
+                            "name": "actions.capability.AUDIO_OUTPUT"
+                        },
+                        {
+                            "name": "actions.capability.WEB_BROWSER"
+                        },
+                        {
+                            "name": "actions.capability.SCREEN_OUTPUT"
+                        }
+                    ]
+                }
+            ],
+            "requestType": "SIMULATOR"
+        }
+    },
+    "session": "projects/testProjectName/agent/sessions/ABwppHGllhJFyTX4ZnoeFDMQZsU6al8lufN0b2weobX2zfrPJU47ZyVdpHtWR7tM93cXCZ-RKziCfeqLmru2AHeb9umtAuPRDdFs"
+}
