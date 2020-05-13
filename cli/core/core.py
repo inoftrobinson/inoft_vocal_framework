@@ -70,8 +70,10 @@ class Core(CoreClients):
             MemorySize=memory_size,
             Publish=publish,
             Layers=[
-                "arn:aws:lambda:eu-west-3:631258222318:layer:inoft-vocal-framework_0-38-5:1",
+                "arn:aws:lambda:eu-west-3:631258222318:layer:inoft-vocal-framework_v0-8dot3:2",
+                "arn:aws:lambda:eu-west-3:631258222318:layer:ffmpeg:2",
             ]
+            # Those ARNs point to the required lambda layers to use the framework. Please do not modify them.
         )
         if local_zip is not None:
             kwargs['Code'] = {
