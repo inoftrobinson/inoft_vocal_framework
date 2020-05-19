@@ -1,6 +1,6 @@
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.request import Request
-from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.response import Response
+from inoft_vocal_framework.platforms_handlers.samsungbixby.request import Request
+from inoft_vocal_framework.platforms_handlers.samsungbixby.response import Response
 
 
 class BixbyHandlerInput:

@@ -114,8 +114,8 @@ class Response:
     def to_platform_dict(self) -> dict:
         from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
 
-        if HandlerInput.is_alexa_v1 is True:
-            from inoft_vocal_framework.platforms_handlers.alexa_v1 import response
+        if HandlerInput.is_alexa is True:
+            from inoft_vocal_framework.platforms_handlers.alexa import response
             output_response = response.Response()
 
             if self.outputSpeech.type == self.outputSpeech.TYPE_KEY_SSML:
@@ -132,8 +132,8 @@ class Response:
             print(f"Final platform adapted on Alexa-v1 : {platform_adapted_response_dict}")
             return platform_adapted_response_dict
 
-        elif HandlerInput.is_dialogflow_v1 is True:
-            from inoft_vocal_framework.platforms_handlers.dialogflow_v1 import response
+        elif HandlerInput.is_dialogflow is True:
+            from inoft_vocal_framework.platforms_handlers.dialogflow import response
             output_response = HandlerInput.handler_input.response
 
 

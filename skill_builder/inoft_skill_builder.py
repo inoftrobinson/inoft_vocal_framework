@@ -198,7 +198,7 @@ class InoftSkill:
         handler_is_a_request_handler = False
 
         # If an UPDATES_USER_ID has been found on the Google Assistant Platform, we saved it in the user data.
-        if self.handler_input.is_dialogflow_v1 is True:
+        if self.handler_input.is_dialogflow is True:
             current_updates_user_id = self.handler_input.dialogFlowHandlerInput.request.get_updates_user_id_if_present()
             if current_updates_user_id is not None:
                 remembered_updates_user_id = self.handler_input.persistent_remember("updatesUserId", str)
@@ -222,7 +222,7 @@ class InoftSkill:
                     handler_is_an_alone_callback_function = True
 
         # Second, Alexa Audio Player
-        if self.handler_input.is_alexa_v1:
+        if self.handler_input.is_alexa:
             if self.handler_input.alexaHandlerInput.context.audioPlayer.token is not None:
                 last_used_audioplayer_handlers_group_infos = self.handler_input.alexaHandlerInput.get_last_used_audioplayer_handlers_group()
                 from inoft_vocal_framework.skill_builder.utils import get_function_or_class_from_file_and_path
@@ -334,7 +334,7 @@ class InoftSkill:
         # The 'rawPath' is for ApiGatewayV2, use the key 'resource' (without the comma) if using ApiGatewayV1
         if event_safedict.get("rawPath").to_str() == "/googleAssistantDialogflowV1":
             # A google-assistant or dialogflow request always pass trough an API gateway
-            self.handler_input.is_dialogflow_v1 = True
+            self.handler_input.is_dialogflow = True
             body = event_safedict.get("body").to_any()
 
             if isinstance(body, str):
@@ -348,7 +348,7 @@ class InoftSkill:
 
         elif event_safedict.get("rawPath").to_str() == "/samsungBixbyV1":
             # A samsung bixby request always pass trough an API gateway
-            self.handler_input.is_bixby_v1 = True
+            self.handler_input.is_bixby = True
             from urllib import parse
             event = {"context": NestedObjectToDict.get_dict_from_json(stringed_json_dict=event_safedict.get("body").to_any())["$vivContext"],
                      "parameters": dict(parse.parse_qsl(event_safedict.get("rawQueryString").to_any()))}
@@ -357,8 +357,13 @@ class InoftSkill:
 
         elif "amzn1." in event_safedict.get("context").get("System").get("application").get("applicationId").to_str():
             # Alexa always go last, since it do not pass trough an api resource, its a less robust identification than the other platforms.
-            self.handler_input.is_alexa_v1 = True
+            self.handler_input.is_alexa = True
             print(f"Event body do not need processing for Alexa : {event}")
+
+        elif self.handler_input.discord.SHOULD_BE_USED is True:
+            self.handler_input.is_discord = True
+            print(f"Event body do not need processing for Discord : {event}")
+
         else:
             from inoft_vocal_framework.messages import ERROR_PLATFORM_NOT_SUPPORTED
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)

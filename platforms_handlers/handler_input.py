@@ -52,7 +52,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self.__notifications_subscribers_dynamodb_adapter = None
 
         self._notifications_subscribers = None
-        self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput = None, None, None
+        self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput, self._discordHandlerInput = None, None, None, None
 
     @property
     def _settings(self) -> Settings:
@@ -121,11 +121,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def session_id(self):
         if self._session_id is None:
-            if self.is_alexa_v1 is True:
+            if self.is_alexa is True:
                 self._session_id = self.alexaHandlerInput.session.sessionId
-            elif self.is_dialogflow_v1 is True:
+            elif self.is_dialogflow is True:
                 self._session_id = self.dialogFlowHandlerInput.session_id
-            elif self.is_bixby_v1 is True:
+            elif self.is_bixby is True:
                 self._session_id = self.bixbyHandlerInput.request.context.sessionId
 
             if not isinstance(self._session_id, str):
@@ -136,11 +136,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def is_invocation_new_session(self) -> bool:
         if self._is_invocation_new_session is None:
-            if self.is_alexa_v1 is True:
+            if self.is_alexa is True:
                 self._is_invocation_new_session = self.alexaHandlerInput.is_new_session
-            elif self.is_dialogflow_v1 is True:
+            elif self.is_dialogflow is True:
                 self._is_invocation_new_session = self.dialogFlowHandlerInput.is_new_session
-            elif self.is_bixby_v1 is True:
+            elif self.is_bixby is True:
                 last_session_id = self.persistent_remember("lastSessionId", str)
                 if last_session_id is None or last_session_id == "":
                     self._is_invocation_new_session = True
@@ -168,11 +168,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def simple_session_user_data(self) -> SafeDict:
         if self._simple_session_user_data is None:
-            if self.is_alexa_v1 is True:
+            if self.is_alexa is True:
                 self._simple_session_user_data = self.alexaHandlerInput.session_attributes
-            elif self.is_dialogflow_v1 is True:
+            elif self.is_dialogflow is True:
                 self._simple_session_user_data = self.dialogFlowHandlerInput.simple_session_user_data
-            elif self.is_bixby_v1 is True:
+            elif self.is_bixby is True:
                 print("simple_session_user_data is not implemented for the bixby platform.")
 
             if not isinstance(self._simple_session_user_data, SafeDict):
@@ -202,11 +202,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def persistent_user_id(self) -> str:
         if not isinstance(self._persistent_user_id, str) or (self._persistent_user_id.replace(" ", "") == ""):
-            if self.is_alexa_v1 is True:
+            if self.is_alexa is True:
                 user_id = SafeDict(self.alexaHandlerInput.session.user).get("userId").to_str(default=None)
-            elif self.is_dialogflow_v1 is True:
+            elif self.is_dialogflow is True:
                 user_id = self.dialogFlowHandlerInput.get_user_id()
-            elif self.is_bixby_v1 is True:
+            elif self.is_bixby is True:
                 user_id = self.bixbyHandlerInput.request.context.userId
 
             if not isinstance(user_id, str) or user_id.replace(" ", "") == "":
@@ -238,20 +238,20 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._interactivity_callback_functions
 
     def load_event(self, event: dict) -> None:
-        if self.is_alexa_v1 is True:
-            from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
+        if self.is_alexa is True:
+            from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
             self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.alexaHandlerInput,
                 request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
 
-        elif self.is_dialogflow_v1 is True:
-            from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
+        elif self.is_dialogflow is True:
+            from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
             self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
                 request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
 
-        elif self.is_bixby_v1 is True:
-            from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
+        elif self.is_bixby is True:
+            from inoft_vocal_framework.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
             self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request.context,
@@ -259,26 +259,36 @@ class HandlerInput(CurrentUsedPlatformInfo):
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
                 request_json_dict_stringed_dict_or_list=event["parameters"], key_names_identifier_objects_to_go_into=["json_key"])
 
+        elif self.is_discord is True:
+            pass
+
     def _force_load_alexa(self):
-        self.is_dialogflow_v1 = False
-        self.is_bixby_v1 = False
-        self.is_alexa_v1 = True
-        from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
+        self.is_dialogflow = False
+        self.is_bixby = False
+        self.is_alexa = True
+        from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
         self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
 
     def _force_load_dialogflow(self):
-        self.is_alexa_v1 = False
-        self.is_bixby_v1 = False
-        self.is_dialogflow_v1 = True
-        from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
+        self.is_alexa = False
+        self.is_bixby = False
+        self.is_dialogflow = True
+        from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
         self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
 
     def _force_load_bixby(self):
-        self.is_alexa_v1 = False
-        self.is_dialogflow_v1 = False
-        self.is_bixby_v1 = True
-        from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
+        self.is_alexa = False
+        self.is_dialogflow = False
+        self.is_bixby = True
+        from inoft_vocal_framework.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
         self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
+
+    def _force_load_discord(self):
+        self.is_alexa = False
+        self.is_dialogflow = False
+        self.is_bixby = False
+        from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
+        self._discordHandlerInput = DiscordHandlerInput(parent_handler_input=self)
 
     def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: Optional[str] = None):
         # todo: fix bug where the identifier_key is not the right now if it has been modified because there were only 1 element
@@ -300,70 +310,70 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def need_to_be_handled_by_callback(self) -> bool:
         if self._is_option_select_request is None:
-            if self.is_alexa_v1 is True:
+            if self.is_alexa is True:
                 return False
-            elif self.is_dialogflow_v1 is True:
+            elif self.is_dialogflow is True:
                 self._is_option_select_request = self.dialogFlowHandlerInput.is_option_select_request()
-            elif self.is_bixby_v1 is True:
+            elif self.is_bixby is True:
                 return False
         return self._is_option_select_request
 
     @property
     def selected_option_identifier(self) -> str:
-        if self.is_alexa_v1:
+        if self.is_alexa:
             raise
-        elif self.is_dialogflow_v1 is True:
+        elif self.is_dialogflow is True:
             self._selected_option_identifier = self.dialogFlowHandlerInput.selected_option_identifier()
-        elif self.is_bixby_v1:
+        elif self.is_bixby:
             raise
         return self._selected_option_identifier
 
     def is_launch_request(self) -> bool:
-        if self.is_alexa_v1 is True:
+        if self.is_alexa is True:
             return self.alexaHandlerInput.is_launch_request()
-        elif self.is_dialogflow_v1 is True:
+        elif self.is_dialogflow is True:
             return self.dialogFlowHandlerInput.is_launch_request()
-        elif self.is_bixby_v1 is True:
+        elif self.is_bixby is True:
             return self.bixbyHandlerInput.is_launch_request()
 
     def is_in_intent_names(self, intent_names_list) -> bool:
-        if self.is_alexa_v1 is True:
+        if self.is_alexa is True:
             return self.alexaHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
-        elif self.is_dialogflow_v1 is True:
+        elif self.is_dialogflow is True:
             return self.dialogFlowHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
-        elif self.is_bixby_v1 is True:
+        elif self.is_bixby is True:
             return self.bixbyHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
 
     def say(self, text_or_ssml: str) -> None:
-        if self.is_alexa_v1 is True:
+        if self.is_alexa is True:
             self.alexaHandlerInput.say(text_or_ssml=text_or_ssml)
-        elif self.is_dialogflow_v1 is True:
+        elif self.is_dialogflow is True:
             self.dialogFlowHandlerInput.say(text_or_ssml=text_or_ssml)
-        elif self.is_bixby_v1 is True:
+        elif self.is_bixby is True:
             self.bixbyHandlerInput.say(text_or_ssml=text_or_ssml)
 
     def reprompt(self, text_or_ssml: str) -> None:
-        if self.is_alexa_v1 is True:
+        if self.is_alexa is True:
             self.alexaHandlerInput.reprompt(text_or_ssml=text_or_ssml)
-        elif self.is_dialogflow_v1 is True:
+        elif self.is_dialogflow is True:
             self.dialogFlowHandlerInput.reprompt(text_or_ssml=text_or_ssml)
-        elif self.is_bixby_v1 is True:
+        elif self.is_bixby is True:
             self.bixbyHandlerInput.reprompt(text_or_ssml=text_or_ssml)
 
     def end_session(self, should_end: bool = True) -> None:
-        if self.is_alexa_v1 is True:
+        if self.is_alexa is True:
             self.alexaHandlerInput.end_session(should_end=should_end)
-        elif self.is_dialogflow_v1 is True:
+        elif self.is_dialogflow is True:
             self.dialogFlowHandlerInput.response.end_session(should_end=should_end)
-        elif self.is_bixby_v1 is True:
+        elif self.is_bixby is True:
             raise
 
     def get_intent_arg_value(self, arg_key: str):
-        if self.is_alexa_v1 is True:
+        if self.is_alexa is True:
             return self.alexaHandlerInput.request.get_intent_slot_value(slot_key=arg_key)
-        elif self.is_dialogflow_v1 is True:
+        elif self.is_dialogflow is True:
             return self.dialogFlowHandlerInput.request.get_intent_parameter_value(parameter_key=arg_key)
-        elif self.is_bixby_v1 is True:
+        elif self.is_bixby is True:
             return self.bixbyHandlerInput.request.get_intent_parameter_value(parameter_key=arg_key)
 
     def simple_session_memorize(self, data_key: str, data_value=None) -> None:
@@ -518,13 +528,13 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def to_platform_dict(self) -> dict:
         output_response_dict = None
         # todo: improve this code, i found it dirty...
-        if self.is_alexa_v1 is True:
+        if self.is_alexa is True:
             output_response_dict = {
                 "version": "1.0",
                 "sessionAttributes": self.simple_session_user_data.to_dict(),
                 "response": self.alexaHandlerInput.response.to_dict()["response"]  # todo: fix the need to enter with response key
             }
-        elif self.is_dialogflow_v1 is True:
+        elif self.is_dialogflow is True:
             data_dict_to_store = {"userId": self.persistent_user_id}
             updates_user_id = self.dialogFlowHandlerInput.get_updates_user_id()
             if updates_user_id is not None:
@@ -532,7 +542,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
             self.dialogFlowHandlerInput.response.payload.google.userStorage = str(data_dict_to_store)
 
-            from inoft_vocal_framework.platforms_handlers.dialogflow_v1.response import OutputContextItem
+            from inoft_vocal_framework.platforms_handlers.dialogflow.response import OutputContextItem
             session_user_data_context_item = OutputContextItem(session_id=self.dialogFlowHandlerInput.session_id,
                                                                name=OutputContextItem.session_data_name)
 
@@ -541,7 +551,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             self.dialogFlowHandlerInput.response.add_output_context_item(session_user_data_context_item)
 
             output_response_dict = self.dialogFlowHandlerInput.response.to_dict()
-        elif self.is_bixby_v1 is True:
+        elif self.is_bixby is True:
             output_response_dict = self.bixbyHandlerInput.response.to_dict()
 
         return output_response_dict
@@ -576,11 +586,19 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def bixby(self):
         return self.bixbyHandlerInput
 
+    @property
+    def discordHandlerInput(self):
+        return self._discordHandlerInput if self._discordHandlerInput is not None else DummyObject()
+
+    @property
+    def discord(self):
+        return self.discordHandlerInput
+
 
 class HandlerInputWrapper:
-    from inoft_vocal_framework.platforms_handlers.dialogflow_v1.handler_input import DialogFlowHandlerInput
-    from inoft_vocal_framework.platforms_handlers.alexa_v1.handler_input import AlexaHandlerInput
-    from inoft_vocal_framework.platforms_handlers.samsungbixby_v1.handler_input import BixbyHandlerInput
+    from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
+    from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
+    from inoft_vocal_framework.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
 
     def __init__(self, parent_handler=None):
         if parent_handler is None:
@@ -689,16 +707,19 @@ class HandlerInputWrapper:
         return self.handler_input.to_platform_dict()
 
     @property
-    def is_alexa_v1(self) -> bool:
-        return self.handler_input.is_alexa_v1
+    def is_alexa(self) -> bool:
+        return self.handler_input.is_alexa
 
     @property
-    def is_dialogflow_v1(self) -> bool:
-        return self.handler_input.is_dialogflow_v1
+    def is_dialogflow(self) -> bool:
+        return self.handler_input.is_dialogflow
 
     @property
-    def is_bixby_v1(self) -> bool:
-        return self.handler_input.is_bixby_v1
+    def is_bixby(self) -> bool:
+        return self.handler_input.is_bixby
+
+    def is_discord(self) -> bool:
+        return self.handler_input.is_discord
 
     @property
     def alexa(self) -> AlexaHandlerInput:
@@ -711,3 +732,7 @@ class HandlerInputWrapper:
     @property
     def bixby(self) -> BixbyHandlerInput:
         return self.handler_input.bixbyHandlerInput
+
+    @property
+    def discord(self):
+        return self.handler_input.discordHandlerInput

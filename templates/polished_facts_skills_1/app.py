@@ -51,7 +51,7 @@ class WantSomeInformationsStateHandler(InoftStateHandler):
     def handle(self):
         if YesCondition(self).can_handle():
             self.say(f"The application to thank for us talking to each other, has been developed in Python with the Inoft Vocal Framework, "
-                     f"and work both for me {'Alexa, and also Google Assistant' if self.is_alexa_v1 else 'Google Assistant, and also Alexa'}")
+                     f"and work both for me {'Alexa, and also Google Assistant' if self.is_alexa else 'Google Assistant, and also Alexa'}")
         else:
             self.say("Then if you do not want a fact, i'm going to close myself. So, do you want a fact ?")
         return self.to_platform_dict()

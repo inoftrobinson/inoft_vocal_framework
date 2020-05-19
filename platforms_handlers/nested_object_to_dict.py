@@ -167,7 +167,7 @@ class NestedObjectToDict:
 
     @staticmethod
     def _process_and_set_dict_to_object(object_class_to_set_to, dict_object: dict, key_names_identifier_objects_to_go_into: list):
-        from inoft_vocal_framework.platforms_handlers.alexa_v1.context import Context
+        from inoft_vocal_framework.platforms_handlers.alexa.context import Context
 
         unprocessed_vars_dict = vars(object_class_to_set_to)
         from types import MappingProxyType

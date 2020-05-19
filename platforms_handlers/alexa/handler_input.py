@@ -1,11 +1,11 @@
 from collections import Callable
 from typing import Optional
 
-from inoft_vocal_framework.platforms_handlers.alexa_v1.audioplayer.audioplayer_directives import AudioPlayerWrapper
-from inoft_vocal_framework.platforms_handlers.alexa_v1.context import Context
-from inoft_vocal_framework.platforms_handlers.alexa_v1.request import Request
-from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Response
-from inoft_vocal_framework.platforms_handlers.alexa_v1.session import Session
+from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayerWrapper
+from inoft_vocal_framework.platforms_handlers.alexa.context import Context
+from inoft_vocal_framework.platforms_handlers.alexa.request import Request
+from inoft_vocal_framework.platforms_handlers.alexa.response.response import Response
+from inoft_vocal_framework.platforms_handlers.alexa.session import Session
 from inoft_vocal_framework.safe_dict import SafeDict
 
 
@@ -69,9 +69,9 @@ class AlexaHandlerInput:
         return SafeDict(self.parent_handler_input.persistent_remember("lastUsedAudioPlayerHandlersGroupClass", specific_object_type=dict))
 
     def show_basic_card(self, title: str, text: str, small_image_url: Optional[str] = None, large_image_url: Optional[str] = None) -> None:
-        from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Card
+        from inoft_vocal_framework.platforms_handlers.alexa.response.response import Card
         if small_image_url is not None or large_image_url is not None:
-            from inoft_vocal_framework.platforms_handlers.alexa_v1.response.response import Image
+            from inoft_vocal_framework.platforms_handlers.alexa.response.response import Image
 
             if small_image_url is None and large_image_url is not None:
                 small_image_url = large_image_url

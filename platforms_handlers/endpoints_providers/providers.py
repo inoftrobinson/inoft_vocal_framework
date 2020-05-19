@@ -10,11 +10,11 @@ class LambdaResponseWrapper:
         self._response_dict = response_dict
 
     def get_wrapped(self, handler_input: HandlerInput) -> dict:
-        if handler_input.is_alexa_v1 is True:
+        if handler_input.is_alexa is True:
             return self._response_dict
 
-        elif (handler_input.is_dialogflow_v1 is True
-        or handler_input.is_bixby_v1 is True):
+        elif (handler_input.is_dialogflow is True
+        or handler_input.is_bixby is True):
             return {
                 "isBase64Encoded": False,
                 "statusCode": 200,
