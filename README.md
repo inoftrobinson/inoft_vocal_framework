@@ -8,11 +8,11 @@
 
 ## Why ?
 
-- We needed a cross platform framework in Python for vocal assistant, it did not exist, we made it.
+- We needed a cross platform framework in Python for making apps and games on vocal assistants. It did not exist, we made it.
 
-- We knew we were going to make apps and games that could have big scopes, the techonologies and frameworks allow this did not exist, we made it.
+- We knew we were going to make apps and games that would have big scopes, the techonologies and frameworks to allow this did not exist, we made it.
 
-- In order to make sophisticated games, we needed some systems to create content and interactions visually, extend them with ease with full code control, and have a scalable way to audio editing that is re-usable when translating to other languages. We made that to.
+- In order to make sophisticated games, we needed some systems to create the contents and interactions visually, extend them with ease with full code control, and have a scalable way of doing audio editing that is scalable and modular. We made that too.
 
   
 
