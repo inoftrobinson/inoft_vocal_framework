@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
 #### Visual Programming
 
-| Name                        | Description                                                  | Docs                  |
+| Name                        | Description                                                  | Available             |
 | :-------------------------- | :----------------------------------------------------------- | :-------------------- |
 | Botpress integration        | Use Botpress, an open-source tool (with over height thousands stars on GitHub) that has been designed to make textual chatbot, to now make your interactions heavy projects on vocal assistants | :white_check_mark:    |
 | Generate everything         | From your code logic, your content, to your interactions models, you can design everything in Botpress and generate all of the code for vocal assistants while having access to all of the framework capabilities. | :black_square_button: |
