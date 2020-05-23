@@ -27,7 +27,8 @@ async def on_message(message):
             'time':message.created_at
         }
         print(data)
-
+        await message.channel.send(data)
+        
     await client.process_commands(message)
 
 client.run('')
