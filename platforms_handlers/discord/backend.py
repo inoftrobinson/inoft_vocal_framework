@@ -1,5 +1,5 @@
 # invite : https://discordapp.com/oauth2/authorize?client_id=713363868226945054&scope=bot&permissions=8
-# token : NzEzMzYzODY4MjI2OTQ1MDU0.XsfB5A.kVzkMJfcEWPBUumQ7bHS4s_lZKQ
+# token :
 import json
 import discord
 from discord.ext import commands
@@ -54,4 +54,4 @@ async def on_message(message):
 
     await client.process_commands(message)
 
-client.run('NzEzMzYzODY4MjI2OTQ1MDU0.XsfB5A.kVzkMJfcEWPBUumQ7bHS4s_lZKQ')
+client.run('')
