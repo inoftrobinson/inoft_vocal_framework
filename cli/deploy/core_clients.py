@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import time
 import boto3
-from inoft_vocal_framework.cli.core.policies import ATTACH_POLICY, ASSUME_POLICY
+from inoft_vocal_framework.cli.deploy.policies import ATTACH_POLICY, ASSUME_POLICY
 
 
 class CoreClients:

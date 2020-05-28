@@ -31,7 +31,7 @@ def new():
 
 @cli.command("deploy")
 def deploy():
-    from inoft_vocal_framework.cli.deploy import DeployHandler as deployHandler
+    from inoft_vocal_framework.cli.deploy.cli_deploy import DeployHandler as deployHandler
     deployHandler().handle()
 
 @cli.group()

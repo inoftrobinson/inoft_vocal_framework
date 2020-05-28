@@ -7,7 +7,7 @@ import click
 from botocore.exceptions import ClientError, NoCredentialsError
 
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
-from inoft_vocal_framework.cli.core.core_clients import CoreClients
+from inoft_vocal_framework.cli.deploy.core_clients import CoreClients
 from inoft_vocal_framework.safe_dict import SafeDict
 
 

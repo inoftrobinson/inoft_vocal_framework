@@ -27,7 +27,7 @@ class AudacityClient:
     def import_file(self, filepath: str, track_number: int = 0):
         self.client.write(f"Select: Track={track_number}")
         self.client.write(f"Import2: Filename={filepath}")
-        self.set_clip(clip_id=0,)
+        # self.set_clip(clip_id=0)
 
     def delete_all_audio(self):
         self.client.write("SelectAll:")
@@ -35,7 +35,9 @@ class AudacityClient:
 
     def delete_all_tracks(self):
         self.client.write("SelectTracks: Track=First TrackCount=Last Mode=Add")
+        # We add all the tracks from the First to the Last to a selection
         self.client.write("RemoveTracks:")
+        # Then we remove the tracks in our selection
 
     def get_info(self):
         print(self.client.write("GetInfo: Type=Tracks"))
@@ -44,10 +46,10 @@ class AudacityClient:
 if __name__ == "__main__":
     client = AudacityClient()
 
-    client.select_track(track_number=1)
-    client.set_clip(clip_id=0, track_number=0, seconds_start=2.0)
+    # client.select_track(track_number=1)
+    # client.set_clip(clip_id=0, track_number=0, seconds_start=2.0)
 
-    # client.import_file(filepath="C:/Users/LABOURDETTE/Documents/MAGIX/2020-05-20_01_24.wav")  # "F:/test1.mp3")
+    client.import_file(filepath="C:/Users/LABOURDETTE/Documents/MAGIX/2020-05-20_01_24.wav")  # "F:/test1.mp3")
     # To note, audacity will only accept wav files, and no spaces can be present in the filepath. So the files must
     # be moved to a temporary folder (if they have spaces) and be converted to wav files if they are not in wav.
     print("done")

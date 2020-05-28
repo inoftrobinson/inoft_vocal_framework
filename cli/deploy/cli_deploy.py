@@ -14,7 +14,7 @@ from click import ClickException
 import inoft_vocal_framework
 from inoft_vocal_framework.cli.aws_utils import raise_if_bucket_name_not_valid
 from inoft_vocal_framework.cli.cli_cache import CliCache
-from inoft_vocal_framework.cli.core.core import Core
+from inoft_vocal_framework.cli.deploy.core import Core
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
 
 # todo: fix issue where when deploying we do not check if the api with the id found in the settings file do exit
