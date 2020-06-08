@@ -7,19 +7,30 @@ import click
 from botocore.exceptions import ClientError, NoCredentialsError
 
 
-class Core:
-    def __init__(self):
+class AwsCore:
+    CLIENT_BOTO_SESSION = "boto_session"
+    CLIENT_S3 = "s3"
+
+    def __init__(self, clients_to_load: list = [CLIENT_BOTO_SESSION, CLIENT_S3]):
         self.boto_session = None
         self.s3_client = None
 
-        self.pool = ThreadPoolExecutor(2)
+        self.pool = ThreadPoolExecutor(len(clients_to_load))
         # We cannot use asyncio for the initialization of the client, because currently the http
         # requests made by boto3 are blocking http request made with the default urllib library.
         # See (https://www.mathewmarcus.com/blog/asynchronous-aws-api-requests-with-asyncio.html)
-        boto_session_future = self.pool.submit(self._create_boto_session)
-        s3_client_future = self.pool.submit(self._create_s3_client)
-        while not s3_client_future.done():
-            time.sleep(0.01)
+
+        futures = list()
+        if self.CLIENT_BOTO_SESSION in clients_to_load:
+            boto_session_future = self.pool.submit(self._create_boto_session)
+            futures.append(boto_session_future)
+        if self.CLIENT_S3 in clients_to_load:
+            s3_client_future = self.pool.submit(self._create_s3_client)
+            futures.append(s3_client_future)
+
+        for future in futures:
+            while not future.done():
+                time.sleep(0.01)
 
     def _create_boto_session(self):
         self.boto_session = boto3.Session()

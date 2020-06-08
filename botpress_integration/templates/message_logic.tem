@@ -1,3 +1,0 @@
-{% if message is not none %}
-self.say({% if message.is_callable is true %}{{message.element}}{% else %}"{{message.element}}"{% endif %})
-{%- endif %}

@@ -1,0 +1,4 @@
+{% if say_action.code is not none -%}
+self.alexa.audioplayer.play("{{say_action.code}}")
+self.google.play_audio("{{say_action.code}}")
+{%- endif %}

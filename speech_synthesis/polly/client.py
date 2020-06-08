@@ -31,7 +31,7 @@ class PollyClient:
             with closing(response["AudioStream"]) as stream:
                 try:
                     # Open a file for writing the output as a binary stream
-                    with open(filepath_to_save_to, "wb") as file:
+                    with open(filepath_to_save_to, "wb+") as file:
                         file.write(stream.read())
                 except IOError as error:
                     # Could not write to file, exit gracefully

@@ -13,8 +13,7 @@ class SoundProps:
         pass
 
 class Sound(SoundProps):
-    def __init__(self, local_filepath: Optional[str] = None,
-                 relation: Optional[Relation] = None, volume_gain: Optional[float] = 0.0,
+    def __init__(self, local_filepath: str, relation: Optional[Relation] = None, volume_gain: Optional[float] = 0.0,
                  source_file_s3_bucket_name: Optional[str] = None, source_file_s3_bucket_region: Optional[str] = None,
                  source_file_s3_item_path: Optional[str] = None,
                  render_file_s3_bucket_name: Optional[str] = None, render_file_s3_bucket_region: Optional[str] = None,
@@ -31,7 +30,7 @@ class Sound(SoundProps):
             # avoid any confusions, and to make it clear this is for backend only.
             self._audio_segment = local_filepath
         else:
-            if not os.path.exists(self.local_filepath):
+            if self.local_filepath is None or not os.path.exists(self.local_filepath):
                 raise Exception(f"No file has not been found at {self.local_filepath}")
             self._audio_segment = AudioSegment.from_file(self.local_filepath, Path(self.local_filepath).suffix.replace(".", ""))
 

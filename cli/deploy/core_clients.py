@@ -32,17 +32,28 @@ class CoreClients:
         self.create_clients()
 
     def create_clients(self):
+        futures = list()
+
         boto_session_future = self.pool.submit(self._create_boto_session)
+        futures.append(boto_session_future)
         lambda_client_future = self.pool.submit(self._create_lambda_client)
+        futures.append(lambda_client_future)
         s3_client_future = self.pool.submit(self._create_s3_client)
+        futures.append(s3_client_future)
         dynamodb_client_future = self.pool.submit(self._create_dynamodb_client)
+        futures.append(dynamodb_client_future)
         api_gateway_client_future = self.pool.submit(self._create_api_gateway_client)
+        futures.append(api_gateway_client_future)
         events_client_future = self.pool.submit(self._create_events_client)
+        futures.append(events_client_future)
         iam_client_future = self.pool.submit(self._create_iam_client)
+        futures.append(iam_client_future)
         iam_resource_future = self.pool.submit(self._create_iam_resource)
-        while (not boto_session_future.done() or not lambda_client_future.done() or not s3_client_future.done() or not dynamodb_client_future.done()
-               or not api_gateway_client_future.done() or not events_client_future.done() or not iam_client_future.done() or not iam_resource_future.done()):
-            time.sleep(0.1)
+        futures.append(iam_resource_future)
+
+        for future in futures:
+            while not future.done():
+                time.sleep(0.01)
 
     def _create_boto_session(self):
         self.boto_session = boto3.Session()

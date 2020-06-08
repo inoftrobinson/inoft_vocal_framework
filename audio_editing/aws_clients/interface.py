@@ -1,13 +1,13 @@
 import os
 
-from inoft_vocal_framework.audio_editing.aws_clients.core import Core
+from inoft_vocal_framework.cli.aws_core import AwsCore
 
 a = 9
 
 from inoft_vocal_framework.audio_editing.sound import Sound
 
 
-class Interface(Core):
+class Interface(AwsCore):
     def __init__(self):
         super().__init__()
 

@@ -1,9 +1,11 @@
 import ast
 import os
+from typing import Dict, List, Optional
 
 import inflect as inflect
 
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, \
+    raise_if_variable_not_expected_type_and_not_none
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.utils.general import load_json
 from inoft_vocal_framework.botpress_integration.templates.templates_access import TemplatesAccess
@@ -60,7 +62,7 @@ def to_class_name(text: str) -> str:
 
     return formatted_output_text
 
-class Core:
+class GeneratorCore:
     def __init__(self, main_flow_filepath: str = None, builtin_text_filepath: str = None):
         self.main_flow_filepath = main_flow_filepath
         self.builtin_text_filepath = builtin_text_filepath
@@ -75,9 +77,21 @@ class Core:
         self.node_values_dict = dict()
         self.node_classes_dict = dict()
 
+        self.templates = TemplatesAccess()
+        self._plugins = None
+        self.plugins_folder_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "plugins")
+
+        self.say_actions: List[SayAction] = list()
+        self.set_variables_actions: List[SetVariableAction] = list()
+
+    @property
+    def plugins(self) -> list:
+        if self._plugins is None:
+            self.plugins_folder_dir = os.path.dirname(os.path.abspath(__file__))
+
     def process(self):
         self.messages = Messages(messages_items=load_json(self.builtin_text_filepath))
-        self.write_to_file(text=self.messages.render(), filepath="F:/Inoft/skill_histoire_decryptage_1/messages.py")
+        self.write_to_file(text=self.messages.render(parent_core=self), filepath="F:/Inoft/skill_histoire_decryptage_1/messages.py")
         # os.path.join(os.path.dirname(os.path.abspath(__file__)), "messages.py"))
 
         flow_dict = load_json(filepath=self.main_flow_filepath)
@@ -122,13 +136,14 @@ class Core:
                 for handler_class in class_from_node.render(parent_core=self):
                     output_handlers_list.append(handler_class)
 
-            skill_app_rendered_code = TemplatesAccess().skill_app_template.render(conditions_classes_list=output_conditions_classes,
+            skill_app_rendered_code = self.templates.skill_app_template.render(conditions_classes_list=output_conditions_classes,
                 handlers_list=output_handlers_list, has_condition_classes=self.has_conditions_classes,
-                has_request_handlers=self.has_request_handlers, has_state_handlers=self.has_state_handlers,)
+                has_request_handlers=self.has_request_handlers, has_state_handlers=self.has_state_handlers)
 
             self.write_to_file(text=skill_app_rendered_code, filepath="F:/Inoft/skill_histoire_decryptage_1/app_generated.py")
 
     def process_on_enter(self, actions_list: list) -> list:
+        self.say_actions.clear()
         logic_elements = list()
 
         for action in actions_list:
@@ -136,16 +151,15 @@ class Core:
                 if len(action) >= 3:
                     if action[0:3] == "say":
                         if "#!builtin_text" in action:
-                            message_name = action.replace("say", "").replace("#!", "").replace(" ", "")
-                            if message_name in self.messages.output_messages_dict.keys():
-                                message_element = f"{self.messages.output_messages_dict[message_name].variable_name}.pick()"
-                                is_callable = True
-                            else:
-                                message_element = message_name
-                                is_callable = False
+                            current_say_action = SayAction()
+                            current_say_action.message_id_to_say = action.replace("say", "").replace("#!", "").replace(" ", "")
 
-                            logic_elements.append(TemplatesAccess().message_logic_template.render(message={
-                                "name": message_name, "element": message_element, "is_callable": is_callable}))
+                            if current_say_action.message_id_to_say in self.messages.output_messages_dict.keys():
+                                current_say_action.message_item_to_say = self.messages.output_messages_dict[current_say_action.message_id_to_say]
+                            else:
+                                current_say_action.text_to_say_if_message_item_missing = f"The message with id {current_say_action.message_id_to_say} is missing"
+
+                            self.say_actions.append(current_say_action)
 
                 if "/setVariable" in action:
                     processed_action_list = action.split('{', maxsplit=1)
@@ -156,13 +170,27 @@ class Core:
                                 if "type" in processed_action_dict.keys() and processed_action_dict["type"] == "str":
                                     processed_action_dict["value"] = f'"{processed_action_dict["value"]}"'
 
-                                logic_elements.append(TemplatesAccess().set_variable_logic_template.render(action_dict=processed_action_dict))
+                                logic_elements.append(self.templates.set_variable_logic_template.render(action_dict=processed_action_dict))
+
+        from inoft_vocal_framework.plugins.official_audio_files_instead_of_text import core as plugin_core
+        plugin_core.execute(generator_core=self)
+
+        for say_action in self.say_actions:
+            if say_action.code is None:
+                if say_action.message_item_to_say is not None:
+                    say_action.code = f"{say_action.message_item_to_say.variable_name}.pick()"
+                    say_action.is_callable = True
+                else:
+                    say_action.code = say_action.text_to_say_if_message_item_missing
+                    say_action.is_callable = False
+
+            logic_elements.append(self.templates.say_action_template.render(say_action=say_action, **say_action.extra_args))
 
         return logic_elements
 
     @staticmethod
     def write_to_file(text: str, filepath: str):
-        with open(filepath, "w+") as file:
+        with open(filepath, "w+", encoding="utf-8") as file:
             file.write(text)
 
 
@@ -174,8 +202,8 @@ class IntentNameCondition:
         self.class_name = to_class_name(self.intent_name)
         self.code = None
 
-    def render(self, parent_core: Core) -> list:
-        self.code = TemplatesAccess().intent_name_condition_template.render(class_name=self.class_name, intent_name=self.intent_name)
+    def render(self, parent_core: GeneratorCore) -> list:
+        self.code = parent_core.templates.intent_name_condition_template.render(class_name=self.class_name, intent_name=self.intent_name)
         return [self]
 
 class StateHandler:
@@ -210,7 +238,7 @@ class StateHandler:
             self.target_node_class = f"{to_class_name(target_node_name or '')}StateHandler"
             self.code_elements = list()
 
-        def process(self, parent_core: Core) -> bool:
+        def process(self, parent_core: GeneratorCore) -> bool:
             """:return Has empty code_elements and need to be removed from the paths list"""
             if self.target_node_name in parent_core.node_values_dict.keys():
                 current_target_node_values_dict = parent_core.node_values_dict[self.target_node_name]
@@ -242,7 +270,7 @@ class StateHandler:
                 else:
                     return False
 
-    def process_paths(self, parent_core: Core, paths: list) -> list:
+    def process_paths(self, parent_core: GeneratorCore, paths: list) -> list:
         processed_paths = list()
 
         for i, path in enumerate(paths):
@@ -270,19 +298,19 @@ class StateHandler:
 
         return processed_paths
 
-    def get_code(self, parent_core: Core) -> str:
+    def get_code(self, parent_core: GeneratorCore) -> str:
         if self.code is None:
             self.render(parent_core=parent_core)
         return self.code
 
-    def process(self, parent_core: Core):
+    def process(self, parent_core: GeneratorCore):
         current_node_values_dict = parent_core.node_values_dict[self.node_name]
         on_receive = current_node_values_dict["onReceive"]
         self.wait_for_user_response = True if isinstance(on_receive, list) and len(on_receive) == 0 else False
         self.next_paths = self.process_paths(parent_core=parent_core, paths=(self.next_paths if len(self.next_paths) > 0 else current_node_values_dict["next"]))
 
-    def render(self, parent_core: Core) -> list:
-        self.code = TemplatesAccess().state_handler_template.render(class_name=self.class_name,
+    def render(self, parent_core: GeneratorCore) -> list:
+        self.code = parent_core.templates.state_handler_template.render(class_name=self.class_name,
             node_name=self.node_name, wait_for_user_response=self.wait_for_user_response, paths=self.next_paths,
             counts_used_condition_intent_names=parent_core.counts_used_condition_intent_names,
             threshold_of_intent_use_to_create_a_condition=parent_core.threshold_of_intent_use_to_create_a_condition, cannot_include_else_statement=self.cannot_include_else_statement)
@@ -298,14 +326,14 @@ class LaunchRequestHandler:
         self.code = None
         self.state_handler_class = None
 
-    def process(self, parent_core: Core):
+    def process(self, parent_core: GeneratorCore):
         next_paths = self.node_safedict.get("next").to_list()
         if len(next_paths) > 0:
             self.state_handler_class = StateHandler(node_name=self.node_name)
             for path in next_paths:
                 self.state_handler_class.next_paths.append(path)  # all_nodes_classes_dict[next_paths[0]["name"]]
 
-    def render(self, parent_core: Core):  # dict, parent_all_nodes_classes_dict: dict):
+    def render(self, parent_core: GeneratorCore):  # dict, parent_all_nodes_classes_dict: dict):
         created_classes = list()
 
         next_state_handler_class = None
@@ -316,7 +344,7 @@ class LaunchRequestHandler:
             created_classes.append(state_handler)
             next_state_handler_class = f"{self.class_name}StateHandler"
 
-        self.code = TemplatesAccess().launch_request_handler_template.render(class_name=self.class_name, node_name=self.node_name,
+        self.code = parent_core.templates.launch_request_handler_template.render(class_name=self.class_name, node_name=self.node_name,
             next_state_handler_class=next_state_handler_class, code_elements=parent_core.process_on_enter(self.node_safedict.get("onEnter").to_list()))
 
         created_classes.insert(0, self)
@@ -327,14 +355,31 @@ class LaunchRequestHandler:
 class Messages:
     def __init__(self, messages_items: dict):
         self.input_messages_items = messages_items
-        self.output_messages_dict = dict()
+        self.output_messages_dict: Dict[str, Messages.MessageItem] = dict()
         self.process()
 
     class MessageItem:
-        def __init__(self, id_value: str, speech_items: list):
-            self.id = id_value
+        def __init__(self, id_value: str = None, speech_items: list = None, is_callable: bool = False):
+            self._id = id_value
             self.speechs = speech_items
-            self.variable_name = "".join([char.capitalize() for char in self.id.replace("-", "_")])
+            self.is_callable = is_callable
+            self.variable_name = None
+            self._update_variable_name()
+
+        @property
+        def id(self):
+            return self._id
+
+        @id.setter
+        def id(self, id_value: str):
+            self._id = id_value
+            self._update_variable_name()
+
+        def _update_variable_name(self):
+            if isinstance(self.id, str):
+                self.variable_name = "".join([char.capitalize() for char in self.id.replace("-", "_")])
+            else:
+                self.variable_name = None
 
     def process(self):
         for message_dict in self.input_messages_items:
@@ -357,11 +402,79 @@ class Messages:
             message_item = self.MessageItem(id_value=message_dict.get("id").to_str(), speech_items=speech_items)
             self.output_messages_dict[message_item.id] = message_item
 
-    def render(self):
-        code_messages_file = TemplatesAccess().messages_template.render(messages=self.output_messages_dict.values())
+    def render(self, parent_core: GeneratorCore):
+        code_messages_file = parent_core.templates.messages_template.render(messages=self.output_messages_dict.values())
         return code_messages_file
 
+class SayAction:
+    def __init__(self, message_id_to_say: str = None, message_item_to_say: Messages.MessageItem = None, is_callable: bool = False,
+                 text_to_say_if_message_item_missing: Optional[str] = "A message element is missing.", code: str = None, extra_args: dict = None):
+
+        self.message_id_to_say = message_id_to_say
+        self.message_item_to_say = message_item_to_say
+        self.is_callable = is_callable
+        self.text_to_say_if_message_item_missing = text_to_say_if_message_item_missing
+        self.code = code
+        self.extra_args = extra_args if extra_args is not None else dict()
+
+    @property
+    def message_id_to_say(self) -> str:
+        return self._message_id_to_say
+
+    @message_id_to_say.setter
+    def message_id_to_say(self, message_id_to_say: str) -> None:
+        raise_if_variable_not_expected_type_and_not_none(value=message_id_to_say, expected_type=str, variable_name="message_id_to_say")
+        self._message_id_to_say = message_id_to_say
+
+    @property
+    def message_item_to_say(self) -> Messages.MessageItem:
+        return self._message_item_to_say
+
+    @message_item_to_say.setter
+    def message_item_to_say(self, message_item_to_say: Messages.MessageItem) -> None:
+        raise_if_variable_not_expected_type_and_not_none(value=message_item_to_say, expected_type=Messages.MessageItem, variable_name="message_item_to_say")
+        self._message_item_to_say = message_item_to_say
+
+    @property
+    def is_callable(self) -> bool:
+        return self._is_callable
+
+    @is_callable.setter
+    def is_callable(self, is_callable: bool) -> None:
+        raise_if_variable_not_expected_type(value=is_callable, expected_type=bool, variable_name="is_callable")
+        self._is_callable = is_callable
+
+    @property
+    def text_to_say_if_message_item_missing(self) -> str:
+        return self._text_to_say_if_message_item_missing
+
+    @text_to_say_if_message_item_missing.setter
+    def text_to_say_if_message_item_missing(self, text_to_say_if_message_item_missing: str) -> None:
+        raise_if_variable_not_expected_type(value=text_to_say_if_message_item_missing, expected_type=str, variable_name="text_to_say_if_message_item_missing")
+        self._text_to_say_if_message_item_missing = text_to_say_if_message_item_missing
+
+    @property
+    def code(self) -> str:
+        return self._code
+
+    @code.setter
+    def code(self, code: str) -> None:
+        raise_if_variable_not_expected_type_and_not_none(value=code, expected_type=str, variable_name="code")
+        self._code = code
+
+    @property
+    def extra_args(self) -> dict:
+        return self._extra_args
+
+    @extra_args.setter
+    def extra_args(self, extra_args: dict) -> None:
+        raise_if_variable_not_expected_type(value=extra_args, expected_type=dict, variable_name="extra_args")
+        self._extra_args = extra_args
+
+class SetVariableAction:
+    def __init__(self):
+        pass
 
 
-Core(main_flow_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/Scene_Sabotage.flow.json",
+GeneratorCore(main_flow_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/Scene_Sabotage.flow.json",
      builtin_text_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/builtin_text.json").process()

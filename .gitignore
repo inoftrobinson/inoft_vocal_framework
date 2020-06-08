@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# Audio and Audacity extensions
+*.au
+*.aup
+*.wav
+*.mp3
+
 # Distribution / packaging
 .Python
 build/

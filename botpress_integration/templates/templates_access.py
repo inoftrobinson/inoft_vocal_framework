@@ -1,15 +1,20 @@
+import os
+
 from jinja2 import Template, FileSystemLoader, Environment
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 
 
 class TemplatesAccess:
     file_loader = FileSystemLoader("templates")
     env = Environment(loader=file_loader, lstrip_blocks=True, trim_blocks=True)
 
+    # remove the staticness
+
     _skill_app_template = None
     _launch_request_handler_template = None
     _intent_name_condition_template = None
     _state_handler_template = None
-    _message_logic_template = None
+    _say_action_template = None
     _set_variable_logic_template = None
     _handler_logic_template = None
     _messages_template = None
@@ -17,6 +22,13 @@ class TemplatesAccess:
     @staticmethod
     def _get_template(template_name: str) -> Template:
         return TemplatesAccess.env.get_template(template_name)
+
+    @staticmethod
+    def _load_template(template_filepath: str) -> Template:
+        from inoft_vocal_framework.botpress_integration.templates.jinja_filepath_loader import JinjaFilepathLoader
+        env = Environment(loader=JinjaFilepathLoader(filepath=template_filepath))
+        # The JinjaFilepathLoader do not care about the template name, only the full template_filepath.
+        return env.get_template(name=None)
 
     @property
     def skill_app_template(self) -> Template:
@@ -43,10 +55,14 @@ class TemplatesAccess:
         return TemplatesAccess._state_handler_template
 
     @property
-    def message_logic_template(self) -> Template:
-        if TemplatesAccess._message_logic_template is None:
-            TemplatesAccess._message_logic_template = TemplatesAccess._get_template("message_logic.tem")
-        return TemplatesAccess._message_logic_template
+    def say_action_template(self) -> Template:
+        if TemplatesAccess._say_action_template is None:
+            TemplatesAccess._say_action_template = TemplatesAccess._get_template("say_action.tem")
+        return TemplatesAccess._say_action_template
+
+    @say_action_template.setter
+    def say_action_template(self, filepath: str):
+        TemplatesAccess._say_action_template = self._load_template(template_filepath=filepath)
 
     @property
     def set_variable_logic_template(self) -> Template:
@@ -65,3 +81,8 @@ class TemplatesAccess:
         if TemplatesAccess._messages_template is None:
             TemplatesAccess._messages_template = TemplatesAccess._get_template("messages.tem")
         return TemplatesAccess._messages_template
+
+    @messages_template.setter
+    def messages_template(self, filepath: str):
+        TemplatesAccess._messages_template = self._load_template(template_filepath=filepath)
+

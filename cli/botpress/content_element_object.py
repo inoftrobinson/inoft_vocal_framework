@@ -16,7 +16,7 @@ class ContentElement:
     @id.setter
     def id(self, id_value: str) -> None:
         raise_if_variable_not_expected_type_and_not_none(value=id_value, expected_type=str, variable_name="id")
-        self._id = id
+        self._id = id_value
 
     @property
     def created_by(self) -> str:
