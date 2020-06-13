@@ -1,5 +1,5 @@
 # invite : https://discordapp.com/oauth2/authorize?client_id=713363868226945054&scope=bot&permissions=8
-# token :
+# token : 
 import json
 import discord
 from discord.ext import commands
@@ -7,6 +7,7 @@ from discord.ext import commands
 
 prfx = '.'
 client = commands.Bot(command_prefix = prfx)
+private_state = False
 
 
 @client.event
@@ -21,10 +22,35 @@ async def ping(ctx):
 async def private(ctx):
     #user grabbing by id
     user = client.get_user(ctx.message.author.id)
-    #dm sending by author method
-    await ctx.author.send('Voulez vous parler dans un channel privé ou non ?')
     #dm sending by user (id)
     await user.send('Voulez vous parler dans un channel privé ou non ?')
+
+@client.command()
+async def launch(ctx):
+    message = await ctx.send('Voulez vous jouer en textuel privé ou public ?')
+    for emoji in ('1️⃣', '2️⃣'):
+        await message.add_reaction(emoji)
+        #res = await ctx.wait_for_reaction()
+
+@client.event
+async def on_reaction_add(reaction, user):
+    channel = reaction.message.channel
+    message = reaction.message
+    if user == client.user:
+        return
+    else:
+        if reaction.emoji == '1️⃣':
+            #delete last message and continue in private
+            await message.delete()
+            await user.send("Nous continuerons ici alors.")
+            private_state = True
+        elif reaction.emoji == '2️⃣':
+            #delete last message and continue in the current channel
+            await message.delete()
+            await channel.send("Nous continuerons ici alors.")
+        else:
+            await channel.send("Réagissez avec une des réactions proposées")
+        
 
 @client.event
 async def on_message(message):
@@ -46,8 +72,6 @@ async def on_message(message):
 
         #public channel sending 
         await message.channel.send(data)
-        #sending private response to the last person sending a message
-        await message.author.send(data)
         #sending private response to a spécific person whom we grabbed his id before
         await user.send(data)
 
