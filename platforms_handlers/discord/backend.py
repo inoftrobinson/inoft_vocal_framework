@@ -2,12 +2,16 @@
 # token : 
 import json
 import discord
+import time
 from discord.ext import commands
+from discord.utils import get
+import writing_func as wf
 
 
 prfx = '.'
 client = commands.Bot(command_prefix = prfx)
 private_state = False
+m_type = 'launch'
 
 
 @client.event
@@ -27,30 +31,26 @@ async def private(ctx):
 
 @client.command()
 async def launch(ctx):
-    message = await ctx.send('Voulez vous jouer en textuel privé ou public ?')
-    for emoji in ('1️⃣', '2️⃣'):
-        await message.add_reaction(emoji)
-        #res = await ctx.wait_for_reaction()
+    await wf.send_poll('Voulez vous jouer en textuel privé ou public ?', ctx, 'num', m_type, 2)
+
+@client.command()
+async def testpoll(ctx):
+    await wf.send_poll("poll test", ctx, 'num', m_type, 5)
+    
+    print(ctx)
+
+@client.command()
+async def testmess(ctx):
+    await wf.send_message("message test", ctx)
 
 @client.event
 async def on_reaction_add(reaction, user):
-    channel = reaction.message.channel
-    message = reaction.message
-    if user == client.user:
+    author = reaction.message.author
+
+    if user == author:
         return
     else:
-        if reaction.emoji == '1️⃣':
-            #delete last message and continue in private
-            await message.delete()
-            await user.send("Nous continuerons ici alors.")
-            private_state = True
-        elif reaction.emoji == '2️⃣':
-            #delete last message and continue in the current channel
-            await message.delete()
-            await channel.send("Nous continuerons ici alors.")
-        else:
-            await channel.send("Réagissez avec une des réactions proposées")
-        
+        await wf.emojis_reaction_response(m_type, reaction, user)
 
 @client.event
 async def on_message(message):
