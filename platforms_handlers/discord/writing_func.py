@@ -30,10 +30,10 @@ async def emojis_reaction_response(m_type, reaction, user):
     if m_type == 'launch':
         if reaction.emoji == '1️⃣':
             await user.send('Continuons ici !')
-            reaction.message.delete()
+            await reaction.message.delete()
         elif reaction.emoji == '2️⃣':
             await reaction.message.channel.send('Continuons ici !')
-            reaction.message.delete()
+            await reaction.message.delete()
         else:
             await reaction.message.channel.send('Reaction innapropriée')
     elif m_type == 'game':
