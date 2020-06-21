@@ -1,8 +1,9 @@
 import discord
 #from discord.ext import commands
 
+
 def emoji_array(e_type, number):
-    numeric_emojis = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟']
+    numeric_emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
     behavior_emojis = []
 
     if e_type == 'num':
@@ -13,18 +14,18 @@ def emoji_array(e_type, number):
     return tab
 
 
-#general function to send polls
+# general function to send polls
 async def send_poll(message_to_send, destination, e_type, m_type, number):
     message = await destination.send(message_to_send)
     reactions = emoji_array(e_type, number)
     for emoji in reactions:
         await message.add_reaction(emoji)
 
-#general function to send messages
+# general function to send messages
 async def send_message(message_to_send, destination):
     await destination.send(message_to_send)
 
-#function with all response options to aa reaction add
+# function with all response options to aa reaction add
 async def emojis_reaction_response(m_type, reaction, user):
     if m_type == 'launch':
         if reaction.emoji == '1️⃣':

@@ -157,6 +157,20 @@ class Settings:
                         }
                     }
                 }
+            },
+            "plugins": {
+                "required": False,
+                "type": "dict",
+                "schema": {
+                    "installed_plugins": {
+                        "required": True,
+                        "type": "list"
+                    },
+                    "activated_plugins": {
+                        "required": True,
+                        "type": "list"
+                    }
+                }
             }
         }
 

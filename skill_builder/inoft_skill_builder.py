@@ -10,6 +10,9 @@ from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput,
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_builder.skill_settings import Settings
+from inoft_vocal_framework.plugins.loader import plugins_load
+
+# todo: Add a prod and dev production mode, so that optisionnal status (like loading of plugins) is done only in developpement
 
 # todo: Add a class with only a CanHandle function (for cases like the Yes and No classical handlers=
 class InoftCondition(HandlerInputWrapper):
@@ -120,6 +123,8 @@ class InoftSkill:
             self.settings.load_yaml(settings_file=settings_yaml_filepath)
         elif settings_json_filepath is not None:
             self.settings.load_json(settings_file=settings_json_filepath)
+
+        self.plugins = plugins_load(settings=self.settings)
 
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()

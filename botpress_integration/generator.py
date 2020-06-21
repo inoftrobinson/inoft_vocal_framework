@@ -475,6 +475,6 @@ class SetVariableAction:
     def __init__(self):
         pass
 
-
-GeneratorCore(main_flow_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/Scene_Sabotage.flow.json",
-     builtin_text_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/builtin_text.json").process()
+if __name__ == "__main__":
+    GeneratorCore(main_flow_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/Scene_Sabotage.flow.json",
+        builtin_text_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/builtin_text.json").process()
