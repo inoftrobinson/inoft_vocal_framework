@@ -12,6 +12,9 @@ __pycache__/
 *.wav
 *.mp3
 
+# Exclusion of static discord bot token
+platforms_handlers/discord/static_token.py
+
 # Distribution / packaging
 .Python
 build/

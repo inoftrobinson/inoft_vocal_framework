@@ -8,6 +8,7 @@ from discord.ext.commands.context import Context
 from discord.message import Message
 from discord.utils import get
 from inoft_vocal_framework.platforms_handlers.discord import writing_func as wf
+from inoft_vocal_framework.platforms_handlers.discord.static_token import token
 
 
 prfx = '.'
@@ -77,7 +78,6 @@ async def on_message(message: Message):
         # sending private response to a spécific person whom we grabbed his id before
         await user.send(data)
 
-
     await client.process_commands(message)
 
-client.run('NzEzMzYzODY4MjI2OTQ1MDU0.XsrlzQ.tJ_-8rBh430Hzys_WvX6YGMZfco')
+client.run(token)
