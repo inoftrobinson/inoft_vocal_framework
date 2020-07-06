@@ -1,4 +1,4 @@
-from inoft_vocal_framework.speechs.ssml_builder_core import SpeechsList, Speech
+from inoft_vocal_engine.speechs.ssml_builder_core import SpeechsList, Speech
 
 INTERACTION_TYPE_WELCOME = "welcome"
 MSGS_WELCOME = SpeechsList(id="1", speechs=[

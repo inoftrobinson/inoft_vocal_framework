@@ -1,10 +1,10 @@
 import os
 
-from inoft_vocal_framework.cli.aws_core import AwsCore
+from inoft_vocal_engine.cli.aws_core import AwsCore
 
 a = 9
 
-from inoft_vocal_framework.audio_editing.sound import Sound
+from inoft_vocal_engine.audio_editing.sound import Sound
 
 
 class Interface(AwsCore):

@@ -1,9 +1,9 @@
 import os
-from inoft_vocal_framework.plugins.plugin_base import PluginCodeGenerationBase
+from inoft_vocal_engine.plugins.plugin_base import PluginCodeGenerationBase
 
 
 class Core(PluginCodeGenerationBase):
-    from inoft_vocal_framework.botpress_integration.generator import GeneratorCore
+    from inoft_vocal_engine.botpress_integration.generator import GeneratorCore
 
     def execute(self, generator_core: GeneratorCore):
         current_dir = os.path.dirname(os.path.abspath(__file__))

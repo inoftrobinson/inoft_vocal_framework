@@ -2,8 +2,8 @@ from typing import List
 
 from pydub import AudioSegment
 
-from inoft_vocal_framework.audio_editing.relation import Relation
-from inoft_vocal_framework.audio_editing.sound import Sound
+from inoft_vocal_engine.audio_editing.relation import Relation
+from inoft_vocal_engine.audio_editing.sound import Sound
 
 
 def apply_relation_settings(sound: Sound) -> Sound:

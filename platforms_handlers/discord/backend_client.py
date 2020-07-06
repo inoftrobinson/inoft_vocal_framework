@@ -8,15 +8,14 @@ from discord.ext import commands
 from discord.ext.commands.context import Context
 from discord.message import Message
 from discord.utils import get
-from inoft_vocal_framework.platforms_handlers.discord import writing_func as wf
-from inoft_vocal_framework.platforms_handlers.discord.static_token import token
-from inoft_vocal_framework.platforms_handlers.discord.discord_static_infos import DiscordStaticInfos
+from inoft_vocal_engine.platforms_handlers.discord import writing_func as wf
+from inoft_vocal_engine.platforms_handlers.discord.static_token import token
+from inoft_vocal_engine.platforms_handlers.discord.discord_static_infos import DiscordStaticInfos
 
 
 bot_client = commands.Bot(command_prefix=DiscordStaticInfos.COMMAND_PREFIX)
 private_state = False
 m_type = 'launch'
-eee = e
 
 @bot_client.event
 async def on_ready():
@@ -44,7 +43,7 @@ async def testpoll(context: Context):
 
 @bot_client.command()
 async def testmess(context: Context):
-    await wf.send_message("message test", context)
+    await wf.send_message(message_to_send="message test", destination_context=context)
 
 @bot_client.event
 async def on_reaction_add(reaction, user):
@@ -64,6 +63,14 @@ async def on_message(message: Message):
 
         # user grabbing by id
         user = bot_client.get_user(message.author.id)
+        from inoft_vocal_engine.platforms_handlers.discord.handler_input import DiscordHandlerInput
+        DiscordHandlerInput.HANDLER_FUNCTION_TO_USE(event=message, context=None)
+
+        """
+        print(f"Channel id beach {message.channel.id} & type : {type(message.channel.id)}")
+        print(f"user id ea {message.author.id} & type : {type(message.author.id)}")
+        print(f"Channel id beach {message.channel} & type : {type(message.channel)}")
+        print(f"user id ea {message.author} & type : {type(message.author)}")
 
         data = {
             "author_name": message.author.name,
@@ -78,5 +85,6 @@ async def on_message(message: Message):
         await message.channel.send(data)
         # sending private response to a spécific person whom we grabbed his id before
         await user.send(data)
+        """
 
     await bot_client.process_commands(message)

@@ -2,12 +2,12 @@ import os
 import time
 from typing import List
 
-from inoft_vocal_framework.audacity.client import AudacityClient
-from inoft_vocal_framework.speech_synthesis.polly.client import PollyClient
-from inoft_vocal_framework.speech_synthesis.polly import VOICES
-from inoft_vocal_framework.inoft_vocal_markup.deserializer import Deserializer, DialogueLine
-from inoft_vocal_framework import Sound
-from inoft_vocal_framework.speech_synthesis.polly.voice_object import Voice
+from inoft_vocal_engine.audacity.client import AudacityClient
+from inoft_vocal_engine.speech_synthesis.polly.client import PollyClient
+from inoft_vocal_engine.speech_synthesis.polly import VOICES
+from inoft_vocal_engine.inoft_vocal_markup.deserializer import Deserializer, DialogueLine
+from inoft_vocal_engine import Sound
+from inoft_vocal_engine.speech_synthesis.polly.voice_object import Voice
 
 
 class TextToAudacity:
@@ -107,15 +107,15 @@ if __name__ == "__main__":
     """
     leo = Sound(polly.synthesize(text="Ont pourrais essayer de récuperer des informations en utilisant leurs radio.",
                            voice_id=VOICES.French_France_Male_MATHIEU.id,
-                                 filepath_to_save_to="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/speech_synthesis/polly/leo.mp3"))
+                                 filepath_to_save_to="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/speech_synthesis/polly/leo.mp3"))
 
     willie = Sound(polly.synthesize(text="Comment ont ferrais, il faudrais qu'ils croient qu'ont soit dans leurs camp ?",
                                     voice_id=VOICES.French_France_Female_CELINE.id,
-                                    filepath_to_save_to="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/speech_synthesis/polly/willie.mp3"))
+                                    filepath_to_save_to="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/speech_synthesis/polly/willie.mp3"))
     """
 
-    leo = Sound("F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/speech_synthesis/polly/leo.mp3")
-    willie = Sound("F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/speech_synthesis/polly/willie.mp3")
+    leo = Sound("F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/speech_synthesis/polly/leo.mp3")
+    willie = Sound("F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/speech_synthesis/polly/willie.mp3")
 
     audacity.delete_all_tracks()
     audacity.import_file(leo.local_filepath, track_number=1)

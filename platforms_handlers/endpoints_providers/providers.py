@@ -1,5 +1,5 @@
 from json import dumps as json_dumps
-from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
+from inoft_vocal_engine.platforms_handlers.handler_input import HandlerInput
 
 
 class LambdaResponseWrapper:

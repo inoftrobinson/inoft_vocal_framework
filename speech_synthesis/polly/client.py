@@ -57,8 +57,8 @@ class PollyClient:
 
 
 if __name__ == "__main__":
-    from inoft_vocal_framework.speech_synthesis.polly import VOICES
+    from inoft_vocal_engine.speech_synthesis.polly import VOICES
 
     PollyClient().synthesize(text="Bien le bonjour l'ami. T'aime le chocolat ?", voice_id=VOICES.Icelandic_Iceland_Male_KARL.id,
-                             filepath_to_save_to="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/speech_synthesis/polly/test.mp3",
+                             filepath_to_save_to="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/speech_synthesis/polly/test.mp3",
                              should_play_audio=True)

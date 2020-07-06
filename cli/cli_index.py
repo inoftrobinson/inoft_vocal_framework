@@ -2,9 +2,9 @@ import os
 
 import click
 
-from inoft_vocal_framework.cli.cli_cache import CliCache
-from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
-from inoft_vocal_framework.speechs.ssml_builder_core import SpeechsList
+from inoft_vocal_engine.cli.cli_cache import CliCache
+from inoft_vocal_engine.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
+from inoft_vocal_engine.speechs.ssml_builder_core import SpeechsList
 
 """"
 @click.command()
@@ -26,12 +26,12 @@ def cli():
 
 @cli.command("new")
 def new():
-    from inoft_vocal_framework.cli import new as new_module
+    from inoft_vocal_engine.cli import new as new_module
     new_module.new()
 
 @cli.command("deploy")
 def deploy():
-    from inoft_vocal_framework.cli.deploy.cli_deploy import DeployHandler as deployHandler
+    from inoft_vocal_engine.cli.deploy.cli_deploy import DeployHandler as deployHandler
     deployHandler().handle()
 
 @cli.group()
@@ -44,7 +44,7 @@ def botpress():
 
 @botpress.command()
 def text_to_audio():
-    from inoft_vocal_framework.cli.botpress.cli_botpress import BotpressCore
+    from inoft_vocal_engine.cli.botpress.cli_botpress import BotpressCore
     botpress_core = BotpressCore()
     botpress_core.generate_audio_contents_from_texts()
 

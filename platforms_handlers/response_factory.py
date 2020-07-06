@@ -3,7 +3,7 @@ This file is deprecated and shall not be used. It will soon be discarded in futu
 """
 
 
-from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentPlatformData
+from inoft_vocal_engine.platforms_handlers.current_used_platform_info import CurrentPlatformData
 
 
 class Card:
@@ -112,10 +112,10 @@ class Response:
         self._shouldEndSession = should_end_session
 
     def to_platform_dict(self) -> dict:
-        from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
+        from inoft_vocal_engine.platforms_handlers.handler_input import HandlerInput
 
         if HandlerInput.is_alexa is True:
-            from inoft_vocal_framework.platforms_handlers.alexa import response
+            from inoft_vocal_engine.platforms_handlers.alexa import response
             output_response = response.Response()
 
             if self.outputSpeech.type == self.outputSpeech.TYPE_KEY_SSML:
@@ -133,7 +133,7 @@ class Response:
             return platform_adapted_response_dict
 
         elif HandlerInput.is_dialogflow is True:
-            from inoft_vocal_framework.platforms_handlers.dialogflow import response
+            from inoft_vocal_engine.platforms_handlers.dialogflow import response
             output_response = HandlerInput.handler_input.response
 
 

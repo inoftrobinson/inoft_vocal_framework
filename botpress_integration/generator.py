@@ -4,11 +4,11 @@ from typing import Dict, List, Optional
 
 import inflect as inflect
 
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, \
+from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type, \
     raise_if_variable_not_expected_type_and_not_none
-from inoft_vocal_framework.safe_dict import SafeDict
-from inoft_vocal_framework.utils.general import load_json
-from inoft_vocal_framework.botpress_integration.templates.templates_access import TemplatesAccess
+from inoft_vocal_engine.safe_dict import SafeDict
+from inoft_vocal_engine.utils.general import load_json
+from inoft_vocal_engine.botpress_integration.templates.templates_access import TemplatesAccess
 
 # todo: fix bug with node where no text is played (it will jump the node itself, and the next node x)  )
 
@@ -172,7 +172,7 @@ class GeneratorCore:
 
                                 logic_elements.append(self.templates.set_variable_logic_template.render(action_dict=processed_action_dict))
 
-        from inoft_vocal_framework.plugins.OfficialAudioFilesInsteadOfText.core import Core as PluginCore
+        from inoft_vocal_engine.plugins.OfficialAudioFilesInsteadOfText.core import Core as PluginCore
         PluginCore().execute(generator_core=self)
 
         for say_action in self.say_actions:
@@ -476,5 +476,5 @@ class SetVariableAction:
         pass
 
 if __name__ == "__main__":
-    GeneratorCore(main_flow_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/Scene_Sabotage.flow.json",
-        builtin_text_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/builtin_text.json").process()
+    GeneratorCore(main_flow_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/botpress_integration/Scene_Sabotage.flow.json",
+        builtin_text_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/botpress_integration/builtin_text.json").process()

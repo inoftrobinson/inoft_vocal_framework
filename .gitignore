@@ -17,6 +17,7 @@ platforms_handlers/discord/static_token.py
 
 # Distribution / packaging
 .Python
+.idea/
 build/
 develop-eggs/
 dist/

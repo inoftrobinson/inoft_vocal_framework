@@ -3,13 +3,13 @@ def prompt():
     import os
     import click
     from pathlib import Path
-    import inoft_vocal_framework
-    from inoft_vocal_framework.cli.cli_cache import CliCache
+    import inoft_vocal_engine
+    from inoft_vocal_engine.cli.cli_cache import CliCache
 
     def prompt_user_to_select_folderpath():
         return click.prompt(text="What is the root folder path of your project ? "
                                  "This is the default if you do not write anything :",
-                            default=str(Path(os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))).parent))
+                            default=str(Path(os.path.dirname(os.path.realpath(inoft_vocal_engine.__file__))).parent))
 
     changed_root_folderpath = False
     app_project_root_folderpath = CliCache.cache().get("lastAppProjectRootFolderpath").to_str(default=None)

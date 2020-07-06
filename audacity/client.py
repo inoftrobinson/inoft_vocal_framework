@@ -1,7 +1,7 @@
 import os
 from typing import Optional
 
-from inoft_vocal_framework.audacity.pipeclient import PipeClient
+from inoft_vocal_engine.audacity.pipeclient import PipeClient
 
 
 class AudacityClient:
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     # client.set_clip(clip_id=0, track_number=0, seconds_start=2.0)
 
     # client.import_file(filepath="C:/Users/LABOURDETTE/Documents/MAGIX/2020-05-20_01_24.wav")  # "F:/test1.mp3")
-    # client.save_project(project_output_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/speech_synthesis/polly/project.aup")
+    # client.save_project(project_output_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/speech_synthesis/polly/project.aup")
     # To note, audacity will only accept wav files, and no spaces can be present in the filepath. So the files must
     # be moved to a temporary folder (if they have spaces) and be converted to wav files if they are not in wav.
     print("done")

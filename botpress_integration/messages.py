@@ -1,4 +1,4 @@
-from inoft_vocal_framework.speechs.ssml_builder_core import Speech, SpeechsList
+from inoft_vocal_engine.speechs.ssml_builder_core import Speech, SpeechsList
 
 BUILTIN_TEXT_PSSHWG = SpeechsList("builtin_text-pSsHWg").speechs([
     Speech().add_text("""

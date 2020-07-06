@@ -1,8 +1,8 @@
 from collections import Callable
 
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from inoft_vocal_framework.utils.general import is_text_ssml
+from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list
+from inoft_vocal_engine.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_engine.utils.general import is_text_ssml
 
 
 class Image:
@@ -104,7 +104,7 @@ class Directives(list):
 
     @property
     def audioPlayer(self):
-        from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayer
+        from inoft_vocal_engine.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayer
         for directive in self:
             if isinstance(directive, AudioPlayer):
                 return directive
@@ -113,7 +113,7 @@ class Directives(list):
         if self.audioPlayer is not None:
             raise Exception(f"AudioPlayer has already been set and cannot be set twice")
 
-        from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayer
+        from inoft_vocal_engine.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayer
         self.append(AudioPlayer(played_type=played_type, play_behavior=play_behavior,
                                 token_identifier=token_identifier, url=url,
                                 offsetInMilliseconds=offsetInMilliseconds))
@@ -223,7 +223,7 @@ class Response:
 
     @property
     def audioplayer(self):
-        from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayer
+        from inoft_vocal_engine.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayer
         for directive in self.directives:
             if isinstance(directive, AudioPlayer):
                 return directive
@@ -234,7 +234,7 @@ class Response:
                    milliseconds_start_offset: int = 0, played_type: str = None, play_behavior: str = None,
                    override_default_end_session: bool = False):
 
-        from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayer
+        from inoft_vocal_engine.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayer
         if played_type is None:
             played_type = AudioPlayer.TYPE_PLAY
         if play_behavior is None:

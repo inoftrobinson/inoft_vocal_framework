@@ -3,18 +3,18 @@ from abc import abstractmethod
 from json import dumps as json_dumps
 from typing import Optional
 
-from inoft_vocal_framework.dummy_object import DummyObject
-from inoft_vocal_framework.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
-from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
-from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput, HandlerInputWrapper
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from inoft_vocal_framework.safe_dict import SafeDict
-from inoft_vocal_framework.plugins.loader import plugins_load
+from inoft_vocal_engine.dummy_object import DummyObject
+from inoft_vocal_engine.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
+from inoft_vocal_engine.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
+from inoft_vocal_engine.platforms_handlers.handler_input import HandlerInput, HandlerInputWrapper
+from inoft_vocal_engine.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_engine.safe_dict import SafeDict
+from inoft_vocal_engine.plugins.loader import plugins_load
 
 # todo: Add a prod and dev production mode, so that optisionnal status (like loading of plugins) is done only in developpement
 
 # todo: Add a class with only a CanHandle function (for cases like the Yes and No classical handlers=
-from inoft_vocal_framework.skill_builder.skill_settings import Settings
+from inoft_vocal_engine.skill_builder.skill_settings import Settings
 
 
 class InoftCondition(HandlerInputWrapper):
@@ -110,7 +110,8 @@ class InoftHandlersGroup:
 class InoftSkill:
     def __init__(self, settings_instance: Settings = None):
         self.settings = settings_instance
-        self.plugins = plugins_load(settings=self.settings)
+        # self.plugins = plugins_load(settings=self.settings)
+        # todo: reactivate plugins
 
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()
@@ -207,13 +208,20 @@ class InoftSkill:
 
         # Steps of priority
 
+        # Discord override
+        if self.handler_input.is_discord is True:
+            if not len(self.request_handlers_chain) > 0:
+                raise Exception(f"No request handlers have been found !!!!!")
+            else:
+                handler_to_use = list(self.request_handlers_chain.values())[0]
+
         # First, if the request is an interactive option made by the user
         if self.handler_input.need_to_be_handled_by_callback():
             infos_callback_function_to_use = self.handler_input.interactivity_callback_functions.get(
                 self.handler_input.selected_option_identifier).to_safedict(default=None)
 
             if infos_callback_function_to_use is not None:
-                from inoft_vocal_framework.skill_builder.utils import get_function_or_class_from_file_and_path
+                from inoft_vocal_engine.skill_builder.utils import get_function_or_class_from_file_and_path
                 handler_to_use = get_function_or_class_from_file_and_path(
                     file_filepath=infos_callback_function_to_use.get("file_filepath_containing_callback").to_str(),
                     path_qualname=infos_callback_function_to_use.get("callback_function_path").to_str())
@@ -225,7 +233,7 @@ class InoftSkill:
         if self.handler_input.is_alexa:
             if self.handler_input.alexaHandlerInput.context.audioPlayer.token is not None:
                 last_used_audioplayer_handlers_group_infos = self.handler_input.alexaHandlerInput.get_last_used_audioplayer_handlers_group()
-                from inoft_vocal_framework.skill_builder.utils import get_function_or_class_from_file_and_path
+                from inoft_vocal_engine.skill_builder.utils import get_function_or_class_from_file_and_path
                 audioplayer_handlers_group_class_type = get_function_or_class_from_file_and_path(
                     file_filepath=last_used_audioplayer_handlers_group_infos.get("fileFilepathContainingClass").to_str(),
                     path_qualname=last_used_audioplayer_handlers_group_infos.get("classPath").to_str())
@@ -318,16 +326,21 @@ class InoftSkill:
 
         self.handler_input.save_attributes_if_need_to()
 
-        print(f"output_event = {output_event}")
-        wrapped_output_event = LambdaResponseWrapper(response_dict=output_event).get_wrapped(handler_input=self.handler_input)
-        return wrapped_output_event
+        if self.handler_input.is_discord is not True:
+            print(f"output_event = {output_event}")
+            wrapped_output_event = LambdaResponseWrapper(response_dict=output_event).get_wrapped(handler_input=self.handler_input)
+            return wrapped_output_event
+        else:
+            return None
 
     def check_everything_implemented(self):
         if self.default_fallback_handler is None:
             raise Exception(f"A skill must have a {InoftDefaultFallback} handler set with the {self.set_default_fallback_handler} function.")
 
     def handle_any_platform(self, event: dict, context: dict):
-        print(f"Crude event = {json_dumps(event)}\nCrude context = {context}")
+        from inoft_vocal_engine.platforms_handlers.discord.handler_input import DiscordHandlerInput
+
+        print(f"Crude event = {event if not isinstance(event, dict) else json_dumps(event)}\nCrude context = {context}")
         self.check_everything_implemented()
         event_safedict = SafeDict(classic_dict=event)
 
@@ -360,12 +373,12 @@ class InoftSkill:
             self.handler_input.is_alexa = True
             print(f"Event body do not need processing for Alexa : {event}")
 
-        elif self.handler_input.discord.SHOULD_BE_USED is True:
+        elif DiscordHandlerInput.SHOULD_BE_USED is True:
             self.handler_input.is_discord = True
             print(f"Event body do not need processing for Discord : {event}")
 
         else:
-            from inoft_vocal_framework.messages import ERROR_PLATFORM_NOT_SUPPORTED
+            from inoft_vocal_engine.messages import ERROR_PLATFORM_NOT_SUPPORTED
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)
 
         self.handler_input.load_event(event=event)

@@ -4,7 +4,7 @@ from typing import Tuple, Optional, Any
 
 import click
 from cerberus import Validator
-from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_engine.safe_dict import SafeDict
 
 
 class LegacySettings:

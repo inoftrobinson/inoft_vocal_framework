@@ -6,9 +6,9 @@ import botocore
 import click
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from inoft_vocal_framework.skill_builder.skill_settings import Settings
-from inoft_vocal_framework.cli.deploy.core_clients import CoreClients
-from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_engine.skill_builder.skill_settings import Settings
+from inoft_vocal_engine.cli.deploy.core_clients import CoreClients
+from inoft_vocal_engine.safe_dict import SafeDict
 
 
 class Core(CoreClients):
@@ -282,5 +282,5 @@ class Core(CoreClients):
             return False
 
 if __name__ == "__main__":
-    Core().upload_to_s3("F:\Inoft\hackaton cite des sciences 1\lambda_project\inoft_vocal_framework\cli\core\core_clients.py",
+    Core().upload_to_s3("F:\Inoft\hackaton cite des sciences 1\lambda_project\inoft_vocal_engine\cli\core\core_clients.py",
                         "letestduframeworkinoft", "eu-west-3")

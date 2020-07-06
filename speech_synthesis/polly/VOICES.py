@@ -1,4 +1,4 @@
-from inoft_vocal_framework.speech_synthesis.polly.voice_object import Voice
+from inoft_vocal_engine.speech_synthesis.polly.voice_object import Voice
 
 French_France_Female_CELINE = Voice(gender='Female', id='Celine', language_code='fr-FR', language_name='French', name='Céline', supported_engines=['standard'])
 French_France_Male_MATHIEU = Voice(gender='Male', id='Mathieu', language_code='fr-FR', language_name='French', name='Mathieu', supported_engines=['standard'])

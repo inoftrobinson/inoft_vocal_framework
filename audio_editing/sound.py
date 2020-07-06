@@ -4,8 +4,8 @@ from typing import Optional
 
 from pydub import AudioSegment
 
-from inoft_vocal_framework.audio_editing.relation import Relation
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
+from inoft_vocal_engine.audio_editing.relation import Relation
+from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type
 
 
 class SoundProps:

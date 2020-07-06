@@ -4,8 +4,8 @@ import boto3
 import click
 from pathlib import Path
 from random import choice
-import inoft_vocal_framework
-from inoft_vocal_framework.cli.aws_utils import is_valid_bucket_name, BUCKET_NAMING_MSG
+import inoft_vocal_engine
+from inoft_vocal_engine.cli.aws_utils import is_valid_bucket_name, BUCKET_NAMING_MSG
 
 
 BOTO3_CONFIG_DOCS_URL = "https://boto3.readthedocs.io/en/latest/guide/quickstart.html#configuration"
@@ -40,10 +40,10 @@ def _get_from_name_or_ask_to_select_template(selected_template_name: str = None)
                         current_template_infos_dict = None
 
                         if "infos.yaml" in files_names_in_current_template_dir:
-                            from inoft_vocal_framework.utils.general import load_yaml
+                            from inoft_vocal_engine.utils.general import load_yaml
                             current_template_infos_dict = load_yaml(filepath=os.path.join(current_template_dir_path, "infos.yaml"))
                         elif "infos.json" in files_names_in_current_template_dir:
-                            from inoft_vocal_framework.utils.general import load_json
+                            from inoft_vocal_engine.utils.general import load_json
                             current_template_infos_dict = load_json(filepath=os.path.join(current_template_dir_path, "infos.json"))
 
                         if isinstance(current_template_infos_dict, dict):
@@ -73,7 +73,7 @@ def new(template_name: str = None, project_folderpath: str = None):
     if project_folderpath is None:
         while True:
             project_folderpath = click.prompt(text="To which folder location would like to put the template ?",
-                                              default=Path(os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))).parent)
+                                              default=Path(os.path.dirname(os.path.realpath(inoft_vocal_engine.__file__))).parent)
             if not os.path.isdir(project_folderpath):
                 click.echo(f"No folder has been found at {click.style(text=project_folderpath, bold=True, fg='blue')}."
                       f"\nPlease write a valid folder path, or exit the CLI by using CTRL+C")
@@ -81,7 +81,7 @@ def new(template_name: str = None, project_folderpath: str = None):
                 break
 
             """if click.confirm("You now need to select a folder where your project (and your template) will be located. Type y"):
-                from inoft_vocal_framework.cli.gui_handlers import select_folder
+                from inoft_vocal_engine.cli.gui_handlers import select_folder
                 project_folderpath = select_folder(title="Folder for your project", initial_dir=current_folder_path.parents[1])
                 break
                 # todo: find a way to make the gui works (right now, it just freeze the script and the folderpicker window never opens)
@@ -92,7 +92,7 @@ def new(template_name: str = None, project_folderpath: str = None):
                 else:
                     click.echo("We do not know how to help you."
                           "\nIf you have questions on how the framework works, please visit or GitHub page : " +
-                          click.style("https://github.com/Robinson04/inoft_vocal_framework", fg="cyan", bold=True))"""
+                          click.style("https://github.com/Robinson04/inoft_vocal_engine", fg="cyan", bold=True))"""
 
     Path(project_folderpath).mkdir(exist_ok=True)
 
@@ -173,7 +173,7 @@ def new(template_name: str = None, project_folderpath: str = None):
     """
 
     click.echo("\nPour en savoir plus sur le framework, rendez-vous sur notre page " + click.style("GitHub", bold=True) +
-               " ici : " + click.style("https://github.com/Robinson04/inoft_vocal_framework", fg="cyan", bold=True))
+               " ici : " + click.style("https://github.com/Robinson04/inoft_vocal_engine", fg="cyan", bold=True))
     click.echo("\nExcellente journée ! ;)")
     click.echo(" ~ " + click.style("Robinson Labourdette d'Inoft", bold=True) + "!")
 

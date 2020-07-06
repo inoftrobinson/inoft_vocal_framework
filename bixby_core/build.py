@@ -28,9 +28,9 @@ function build(intent) {
   }
 }*/
 }"""""
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list
+from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list
 
-from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_engine.safe_dict import SafeDict
 
 class ActionEndpoints:
     json_key = "action-endpoints"
@@ -77,7 +77,7 @@ class ActionEndpoints:
         self.action_endpoints = self.NestedActionEndpoints()
 
 
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_engine.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 endpoints = ActionEndpoints()
 dict_object = NestedObjectToDict.get_dict_from_nested_object(object_to_process=ActionEndpoints(),
                                                              key_names_identifier_objects_to_go_into=["json_key"])
@@ -87,6 +87,6 @@ def build_endpoints():
     endpoints = SafeDict()
     endpoints.get_set("action-endpoints", dict()).get_set("action-endpoints")
 
-# from inoft_vocal_framework.utils.general import load_json
-# current_template_infos_dict = load_json(filepath="F:\Inoft\skill_histoire_decryptage\inoft_vocal_framework\bixby_core\dummy_test.json")
+# from inoft_vocal_engine.utils.general import load_json
+# current_template_infos_dict = load_json(filepath="F:\Inoft\skill_histoire_decryptage\inoft_vocal_engine\bixby_core\dummy_test.json")
 

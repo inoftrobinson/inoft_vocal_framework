@@ -1,5 +1,6 @@
 import discord
 #from discord.ext import commands
+from discord.ext.commands import Context
 
 
 def emoji_array(e_type, number):
@@ -21,9 +22,11 @@ async def send_poll(message_to_send, destination, e_type, m_type, number):
     for emoji in reactions:
         await message.add_reaction(emoji)
 
+
 # general function to send messages
-async def send_message(message_to_send, destination):
-    await destination.send(message_to_send)
+async def send_message(message_to_send: str, destination_context: Context):
+    await destination_context.send(message_to_send)
+
 
 # function with all response options to aa reaction add
 async def emojis_reaction_response(m_type, reaction, user):

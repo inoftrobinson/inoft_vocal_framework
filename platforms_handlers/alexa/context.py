@@ -1,4 +1,4 @@
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list
+from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list
 
 
 class Context:

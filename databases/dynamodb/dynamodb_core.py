@@ -3,8 +3,8 @@ import logging
 import boto3
 from boto3.session import Session, ResourceNotExistsError
 
-from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import Utils
-from inoft_vocal_framework.utils.static_logger import logger
+from inoft_vocal_engine.databases.dynamodb.dynamodb_utils import Utils
+from inoft_vocal_engine.utils.static_logger import logger
 
 class DynamoDbCoreAdapter:
     _EXISTING_DATABASE_CLIENTS = dict()

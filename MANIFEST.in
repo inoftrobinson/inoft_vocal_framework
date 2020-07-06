@@ -1,2 +1,2 @@
-recursive-include inoft_vocal_framework/templates *.yaml *.json
-recursive-include inoft_vocal_framework/platforms_handlers/simulator *.yaml *.json
+recursive-include inoft_vocal_engine/templates *.yaml *.json
+recursive-include inoft_vocal_engine/platforms_handlers/simulator *.yaml *.json

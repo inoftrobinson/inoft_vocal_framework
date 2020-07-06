@@ -1,8 +1,8 @@
 from json import dumps as json_dumps
 from typing import Optional
 
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type
+from inoft_vocal_engine.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 
 # todo: add select carousel
 # todo: add select list

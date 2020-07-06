@@ -11,11 +11,11 @@ import click
 from botocore.exceptions import ClientError
 from click import ClickException
 
-import inoft_vocal_framework
-from inoft_vocal_framework.cli.aws_utils import raise_if_bucket_name_not_valid
-from inoft_vocal_framework.cli.cli_cache import CliCache
-from inoft_vocal_framework.cli.deploy.core import Core
-from inoft_vocal_framework.skill_builder.skill_settings import Settings
+import inoft_vocal_engine
+from inoft_vocal_engine.cli.aws_utils import raise_if_bucket_name_not_valid
+from inoft_vocal_engine.cli.cli_cache import CliCache
+from inoft_vocal_engine.cli.deploy.core import Core
+from inoft_vocal_engine.skill_builder.skill_settings import Settings
 
 # todo: fix issue where when deploying we do not check if the api with the id found in the settings file do exit
 
@@ -39,7 +39,7 @@ class DeployHandler(Core):
         def prompt_user_to_select_folderpath():
             return click.prompt(text="What is the root folder path of your project ? "
                                      "This is the default if you do not write anything :",
-                                default=str(Path(os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))).parent))
+                                default=str(Path(os.path.dirname(os.path.realpath(inoft_vocal_engine.__file__))).parent))
 
         if app_project_root_folderpath is None:
             app_project_root_folderpath = prompt_user_to_select_folderpath()
@@ -197,7 +197,7 @@ class DeployHandler(Core):
                 # The topdown arg allow use to modify the dirs list in the walk, and so we can easily exclude folders.
                 dirs[:] = [dirpath for dirpath in dirs if Path(dirpath).name not in folders_names_to_excludes]
 
-                if Path(root_dirpath).name == "inoft_vocal_framework":
+                if Path(root_dirpath).name == "inoft_vocal_engine":
                     has_found_framework_in_project_files = True
 
                 relative_root_dirpath = root_dirpath.replace(app_folder_path, "")
@@ -214,15 +214,15 @@ class DeployHandler(Core):
                 # package, so that if an user download an app deployed in a different version that the current version of the framework he
                 # is using, the version of the framework that will be used will be the one included in its package, not the one installed.
 
-                # We will include the inoft_vocal_framework himself (he is not included in the lambda layers)
+                # We will include the inoft_vocal_engine himself (he is not included in the lambda layers)
                 # I do not include the framework in the lambda layer, because it would be weird for someone to update the framework,
                 # do a redeploy, and not have upgraded its deploy. Where as we can check if its layer is the right layer for the version
                 # of his framework. And mostly because it would be annoying for me to recreate a new lambda layer on each update of the
                 # framework, and that he is light enough to be included in the package and the increase in upload time to not be noticeable ;)
-                inoft_vocal_framework_folder_path = os.path.dirname(os.path.realpath(inoft_vocal_framework.__file__))
-                for root_dirpath, dirs, filenames in os.walk(inoft_vocal_framework_folder_path):
-                    relative_dirpath_with_root_included = root_dirpath.replace(str(Path(inoft_vocal_framework_folder_path).parent), "")
-                    # We only replace the parent of the framework folder path, because we want it to be in its inoft_vocal_framework folder.
+                inoft_vocal_engine_folder_path = os.path.dirname(os.path.realpath(inoft_vocal_engine.__file__))
+                for root_dirpath, dirs, filenames in os.walk(inoft_vocal_engine_folder_path):
+                    relative_dirpath_with_root_included = root_dirpath.replace(str(Path(inoft_vocal_engine_folder_path).parent), "")
+                    # We only replace the parent of the framework folder path, because we want it to be in its inoft_vocal_engine folder.
                     for filename in filenames:
                         zip_object.write(filename=os.path.join(root_dirpath, filename),
                                          arcname=os.path.join(relative_dirpath_with_root_included, filename))

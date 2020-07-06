@@ -1,14 +1,14 @@
 from typing import List
 
-from inoft_vocal_framework.cli.botpress.content_element_object import ContentElement
-from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_engine.cli.botpress.content_element_object import ContentElement
+from inoft_vocal_engine.safe_dict import SafeDict
 
 
 def get_list_content(filepath: str) -> List[ContentElement]:
-    from inoft_vocal_framework.utils.general import load_json
+    from inoft_vocal_engine.utils.general import load_json
     list_all_text_elements = load_json(filepath)
 
-    from inoft_vocal_framework.inoft_vocal_markup.deserializer import Deserializer
+    from inoft_vocal_engine.inoft_vocal_markup.deserializer import Deserializer
     inoft_vocal_markup_deserializer = Deserializer(characters_names=["Léo", "Willie", "Menu"])
 
     content_elements: List[ContentElement] = list()

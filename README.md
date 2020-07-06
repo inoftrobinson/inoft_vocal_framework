@@ -98,7 +98,7 @@ def lambda_handler(event, context):
    
 # For local development and testing, we use the simulator module
 if __name__ == "__main__":
-    from inoft_vocal_framework import Simulator
+    from inoft_vocal_engine import Simulator
     event_, context_ = Simulator(platform=Simulator.PLATFORM_GOOGLE, event_type="launch").get_event_and_context()
     print(f"\n\nFinal Output : {lambda_handler(event=event_, context=context_)}")
 ```

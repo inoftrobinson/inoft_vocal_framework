@@ -1,4 +1,4 @@
-from inoft_vocal_framework import SpeechsList, Speech
+from inoft_vocal_engine import SpeechsList, Speech
 
 MSGS_START_FACT = SpeechsList(id="startFactPhrase", speechs=[
     Speech().add_text("Did you know").set_prob(1),

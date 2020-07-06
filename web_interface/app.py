@@ -3,15 +3,15 @@ from typing import Optional
 from flask import Flask, render_template, request, jsonify
 import json
 
-from inoft_vocal_framework.safe_dict import SafeDict
-from inoft_vocal_framework.web_interface.backend import get_list_content
+from inoft_vocal_engine.safe_dict import SafeDict
+from inoft_vocal_engine.web_interface.backend import get_list_content
 
 app = Flask(__name__)
 
 @app.route("/")
 def index():
     return render_template("index.html", list_content=content_list(),
-                           filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/botpress_integration/builtin_text.json")
+                           filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/botpress_integration/builtin_text.json")
 
 @app.route("/audio-editor/<project_id>")
 def audio_editor(project_id: str):

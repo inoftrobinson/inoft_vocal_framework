@@ -1,4 +1,4 @@
-from inoft_vocal_framework.speechs.ssml_builder_core import Speech, SpeechsList
+from inoft_vocal_engine.speechs.ssml_builder_core import Speech, SpeechsList
 
 {% for msg_item in messages %}
 {{msg_item.variable_name}} = SpeechsList("{{msg_item.id}}").speechs([

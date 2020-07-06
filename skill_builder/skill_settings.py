@@ -1,8 +1,12 @@
 from typing import Optional
 
-from inoft_vocal_framework.dummy_object import dummy_object
-from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_variable_not_expected_type_and_not_none
-from inoft_vocal_framework.speech_synthesis.polly import VOICES
+from inoft_vocal_engine.dummy_object import dummy_object
+from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type, raise_if_variable_not_expected_type_and_not_none
+from inoft_vocal_engine.speech_synthesis.polly import VOICES
+
+class SessionsUsersData:
+    def __init__(self):
+        pass
 
 
 class Settings:
@@ -82,9 +86,12 @@ class Settings:
             raise_if_variable_not_expected_type(value=endpoints, expected_type=self.Endpoints, variable_name="endpoints")
             self._endpoints = endpoints
 
-    def __init__(self, characters_voices: Optional[dict] = None, deployment: Optional[Deployment] = None):
+    def __init__(self, characters_voices: Optional[dict] = None, deployment: Optional[Deployment] = None,
+                 sessions_users_data: SessionsUsersData = None):
         self.characters_voices = characters_voices
         self.deployment = deployment
+        self.sessions_users_data = sessions_users_data
+        self.default_session_data_timeout = 60
 
     @property
     def characters_voices(self) -> dict:
@@ -104,12 +111,23 @@ class Settings:
         raise_if_variable_not_expected_type_and_not_none(value=deployment, expected_type=self.Deployment, variable_name="deployment")
         self._deployment = deployment
 
+    @property
+    def sessions_users_data(self) -> SessionsUsersData:
+        return dummy_object
+        # todo: re-use users_data
+        return self._sessions_users_data if self._sessions_users_data is not None else dummy_object
+
+    @sessions_users_data.setter
+    def sessions_users_data(self, _sessions_users_data: SessionsUsersData) -> None:
+        raise_if_variable_not_expected_type_and_not_none(value=_sessions_users_data, expected_type=SessionsUsersData, variable_name="sessions_user_data")
+        self._sessions_users_data = _sessions_users_data
+
 
 def prompt_get_settings(root_folderpath: Optional[str] = None) -> Settings:
     import os
 
     if root_folderpath is None:
-        from inoft_vocal_framework.cli.components import current_project_directory
+        from inoft_vocal_engine.cli.components import current_project_directory
         root_folderpath = current_project_directory.prompt()
 
     print("Searching for your app_settings file...")

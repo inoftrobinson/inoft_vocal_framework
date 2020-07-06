@@ -30,7 +30,7 @@ class Utils:
             return dynamodb_dict
         else:
             raise Exception(f"The number of keys of the dynamodb was superior to 1. This is NOT SUPPOSED TO HAPPEN !"
-                            f"\nPlease submit an issue on the GitHub page of the framework right away (https://github.com/Robinson04/inoft_vocal_framework)."
+                            f"\nPlease submit an issue on the GitHub page of the framework right away (https://github.com/Robinson04/inoft_vocal_engine)."
                             f"\nThere is something really wrong on our side or on AWS side.")
 
     def dynamodb_to_python(self, dynamodb_object):

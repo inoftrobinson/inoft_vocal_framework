@@ -2,13 +2,13 @@ import logging
 from collections import Callable
 from typing import Optional
 
-from inoft_vocal_framework.dummy_object import DummyObject
-from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
-from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
-from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from inoft_vocal_framework.safe_dict import SafeDict
-from inoft_vocal_framework.skill_builder.skill_settings import Settings
+from inoft_vocal_engine.dummy_object import DummyObject, dummy_object
+from inoft_vocal_engine.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
+from inoft_vocal_engine.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
+from inoft_vocal_engine.platforms_handlers.notifications_subscribers import NotificationsSubscribers
+from inoft_vocal_engine.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_engine.safe_dict import SafeDict
+from inoft_vocal_engine.skill_builder.skill_settings import Settings
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
@@ -17,7 +17,10 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._use_default_settings_if_missing = use_default_settings_if_missing
 
         self.__settings = None
-        self.__session_users_data_safedict = None
+
+        # todo: reactivate that
+        """
+        self.__session_users_data_safedict = DummyObject()
 
         self.__sessions_users_data_db_table_name = None
         self.__sessions_users_data_db_region_name = None
@@ -28,10 +31,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
             # Yet, if the table_name has not been found, we disable the database (yet we do not raise, since
             # in some cases, it could be normal to not specify a table_name, for example for our unit tests)
             self.sessions_users_data_disable_database = True
+        """
 
         self._session_id = None
         self._is_invocation_new_session = None
-        self._default_session_data_timeout = self._settings.settings.get("default_session_data_timeout").to_int(default=60)
+        self._default_session_data_timeout = self._settings.default_session_data_timeout
         self._session_been_resumed = None
         self._simple_session_user_data = None
         self._smart_session_user_data = None
@@ -43,10 +47,13 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._is_option_select_request = None
         self._selected_option_identifier = None
 
+        # todo: reactivate that
+        """
         if (self.sessions_users_data_disable_database is not True
         and (not isinstance(self._sessions_users_data_db_table_name, str) or self._sessions_users_data_db_region_name is None)):
             raise Exception(f"The disable_database argument on the initialization of the InoftSkill has not been"
                             f"specified or set to True, yet the database table name or region name are missing.")
+        """
 
         self.__attributes_dynamodb_adapter = None
         self.__notifications_subscribers_dynamodb_adapter = None
@@ -57,13 +64,16 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def _settings(self) -> Settings:
         if self.__settings is None:
-            self.__settings = Settings(raise_if_not_loaded=self._use_default_settings_if_missing)
+            self.__settings = Settings()
         return self.__settings
 
     @property
     def _session_users_data_safedict(self) -> SafeDict:
+        return DummyObject()
+        # todo: return the real sessions data
+
         if self.__session_users_data_safedict is None:
-            self.__session_users_data_safedict = self._settings.settings.get("sessions_users_data").to_safedict()
+            self.__session_users_data_safedict = self._settings.sessions_users_data.to_safedict()
         return self.__session_users_data_safedict
 
     @property
@@ -181,11 +191,15 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     @property
     def smart_session_user_data(self) -> SafeDict:
+        return DummyObject()
         if self._smart_session_user_data is None:
             self._load_smart_session_user_data()
         return self._smart_session_user_data
 
     def _load_smart_session_user_data(self):
+        return DummyObject()
+        # todo: re-activate that
+        """
         # We use a separate function to load the smart session user data, and we do not include it in the property itself,
         # because this function can be called by the smart_session_user_data property or the session_been_resumed property.
         if self._smart_session_user_data is None:
@@ -198,6 +212,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             else:
                 self._smart_session_user_data = SafeDict()
         logging.debug(f"_smart_session_user_data = {self._smart_session_user_data}")
+        """
 
     @property
     def persistent_user_id(self) -> str:
@@ -208,9 +223,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 user_id = self.dialogFlowHandlerInput.get_user_id()
             elif self.is_bixby is True:
                 user_id = self.bixbyHandlerInput.request.context.userId
+            elif self.is_discord is True:
+                user_id = self.discordHandlerInput.request.author.id
 
             if not isinstance(user_id, str) or user_id.replace(" ", "") == "":
-                from inoft_vocal_framework.utils.general import generate_uuid4
+                from inoft_vocal_engine.utils.general import generate_uuid4
                 self._persistent_user_id = generate_uuid4()
                 # We need to set the persistent_user_id before memorizing it, because the memorize function will access the
                 # persistent_user_data, and if the user_id is not set, we will get stuck in an infinite recursion loop
@@ -239,19 +256,19 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def load_event(self, event: dict) -> None:
         if self.is_alexa is True:
-            from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
+            from inoft_vocal_engine.platforms_handlers.alexa.handler_input import AlexaHandlerInput
             self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.alexaHandlerInput,
                 request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
 
         elif self.is_dialogflow is True:
-            from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
+            from inoft_vocal_engine.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
             self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
                 request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
 
         elif self.is_bixby is True:
-            from inoft_vocal_framework.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
+            from inoft_vocal_engine.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
             self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
             NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request.context,
@@ -260,34 +277,37 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 request_json_dict_stringed_dict_or_list=event["parameters"], key_names_identifier_objects_to_go_into=["json_key"])
 
         elif self.is_discord is True:
-            pass
+            from inoft_vocal_engine.platforms_handlers.discord.handler_input import DiscordHandlerInput
+            from discord import Message
+            event: Message
+            self._discordHandlerInput = DiscordHandlerInput(parent_handler_input=self, request=event)
 
     def _force_load_alexa(self):
         self.is_dialogflow = False
         self.is_bixby = False
         self.is_alexa = True
-        from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
+        from inoft_vocal_engine.platforms_handlers.alexa.handler_input import AlexaHandlerInput
         self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
 
     def _force_load_dialogflow(self):
         self.is_alexa = False
         self.is_bixby = False
         self.is_dialogflow = True
-        from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
+        from inoft_vocal_engine.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
         self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
 
     def _force_load_bixby(self):
         self.is_alexa = False
         self.is_dialogflow = False
         self.is_bixby = True
-        from inoft_vocal_framework.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
+        from inoft_vocal_engine.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
         self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
     def _force_load_discord(self):
         self.is_alexa = False
         self.is_dialogflow = False
         self.is_bixby = False
-        from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
+        from inoft_vocal_engine.platforms_handlers.discord.handler_input import DiscordHandlerInput
         self._discordHandlerInput = DiscordHandlerInput(parent_handler_input=self)
 
     def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: Optional[str] = None):
@@ -351,6 +371,8 @@ class HandlerInput(CurrentUsedPlatformInfo):
             self.dialogFlowHandlerInput.say(text_or_ssml=text_or_ssml)
         elif self.is_bixby is True:
             self.bixbyHandlerInput.say(text_or_ssml=text_or_ssml)
+        elif self.is_discord is True:
+            self.discordHandlerInput.say(text_or_ssml=text_or_ssml)
 
     def reprompt(self, text_or_ssml: str) -> None:
         if self.is_alexa is True:
@@ -413,6 +435,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 self.smart_session_user_data.put(dict_key=key_item, value_to_put=value_item)
 
     def session_remember(self, data_key: str, specific_object_type=None):
+        # todo: re-activate that
+        return DummyObject()
+
         data_object = self.smart_session_user_data.get(data_key)
         if specific_object_type is None:
             return data_object.to_any()
@@ -448,7 +473,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self.persistent_user_data.pop(dict_key=data_key)
 
     def memorize_session_then_state(self, state_handler_class_type_or_name) -> None:
-        from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftStateHandler
+        from inoft_vocal_engine.skill_builder.inoft_skill_builder import InoftStateHandler
 
         if state_handler_class_type_or_name is not None:
             then_state_class_name = None
@@ -483,7 +508,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self.session_forget("thenState")
 
     def memorize_session_last_intent_handler(self, handler_class_type_instance_name) -> None:
-        from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftRequestHandler, InoftStateHandler
+        from inoft_vocal_engine.skill_builder.inoft_skill_builder import InoftRequestHandler, InoftStateHandler
 
         if handler_class_type_instance_name is not None:
             handler_class_name = None
@@ -542,7 +567,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
             self.dialogFlowHandlerInput.response.payload.google.userStorage = str(data_dict_to_store)
 
-            from inoft_vocal_framework.platforms_handlers.dialogflow.response import OutputContextItem
+            from inoft_vocal_engine.platforms_handlers.dialogflow.response import OutputContextItem
             session_user_data_context_item = OutputContextItem(session_id=self.dialogFlowHandlerInput.session_id,
                                                                name=OutputContextItem.session_data_name)
 
@@ -553,6 +578,8 @@ class HandlerInput(CurrentUsedPlatformInfo):
             output_response_dict = self.dialogFlowHandlerInput.response.to_dict()
         elif self.is_bixby is True:
             output_response_dict = self.bixbyHandlerInput.response.to_dict()
+        elif self.is_discord is True:
+            return None
 
         return output_response_dict
 
@@ -596,9 +623,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
 
 class HandlerInputWrapper:
-    from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
-    from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
-    from inoft_vocal_framework.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
+    from inoft_vocal_engine.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
+    from inoft_vocal_engine.platforms_handlers.alexa.handler_input import AlexaHandlerInput
+    from inoft_vocal_engine.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
 
     def __init__(self, parent_handler=None):
         if parent_handler is None:
