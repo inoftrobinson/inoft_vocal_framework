@@ -1,144 +1,16 @@
-import os
-from pathlib import Path
-from typing import Tuple, Optional, Any
+from typing import Optional
 
-import click
-from cerberus import Validator
-from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_framework.dummy_object import dummy_object
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_variable_not_expected_type_and_not_none
+from inoft_vocal_framework.speech_synthesis.polly import VOICES
 
 
 class Settings:
-    _settings = None
-    settings_loaded = False
-    last_settings_filepath = None
-    last_settings_file_extension_type = None
-
-    def __init__(self, raise_if_not_loaded: bool = True):
-        self.raise_if_not_loaded = raise_if_not_loaded
-
-    class ExtendedValidator(Validator):
-        def _validate_check_database_field_present(self, check_database_field_present: bool, field: str, value):
-            """ {'type': 'boolean'} """
-            if check_database_field_present is True and value not in self.document.keys():
-                self._error(field, f"The key {value} was missing from the following section : {self.document}")
-
-        def _validate_is_database_not_disabled(self, is_database_not_disabled: bool, field: str, value):
-            """ {'type': 'boolean'} """
-            if is_database_not_disabled is True and "disable_database" in self.document.keys() and self.document["disable_database"]:
-                self._error(field, f"The database is disabled in the following section : {self.document}")
-
-    @property
-    def _settings_file_validator_schema(self) -> dict:
-        return {
-            "default_session_data_timeout": {
-                "required": True,
-                "type": "integer"
-            },
-            "sessions_users_data": {
-                "required": True,
-                "type": "dict",
-                "schema": {
-                    "disable_database": {
-                        "required": False,
-                        "type": "boolean",
-                    },
-                    "database_client": {
-                        "required": True,
-                        "type": "string",
-                        "allowed": ["dynamodb"],
-                        "is_database_not_disabled": True,
-                        "check_database_field_present": True,
-                    },
-                    "dynamodb": {
-                        "type": "dict",
-                        "schema": {
-                            "table_name": {
-                                "required": True,
-                                "type": "string"
-                            },
-                            "region_name": {
-                                "required": True,
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "messages": {
-                "required": True,
-                "type": "dict",
-                "schema": {
-                    "use_database_dynamic_messages": {
-                        "required": True,
-                        "type": "boolean"
-                    },
-                    "database_client": {
-                        "type": "string",
-                        "allowed": ["dynamodb"],
-                        "required": True,
-                        "check_database_field_present": True,
-                        "dependencies": {"use_database_dynamic_messages": True}
-                    },
-                    "dynamodb": {
-                        "type": "dict",
-                        "schema": {
-                            "table_name": {
-                                "required": True,
-                                "type": "string"
-                            },
-                            "region_name": {
-                                "required": True,
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "user_notifications_subscriptions": {
-                "required": False,
-                "type": "dict",
-                "schema": {
-                    "disable_database": {
-                        "required": False,
-                        "type": "boolean",
-                    },
-                    "database_client": {
-                        "required": True,
-                        "type": "string",
-                        "allowed": ["dynamodb"],
-                        "is_database_not_disabled": True,
-                        "check_database_field_present": True,
-                    },
-                    "dynamodb": {
-                        "type": "dict",
-                        "schema": {
-                            "table_name": {
-                                "required": True,
-                                "type": "string"
-                            },
-                            "region_name": {
-                                "required": True,
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "deployment": {
-                "type": "dict",
-                "schema": {
-                    "handlerFunctionPath": {
-                        "type": "string",
-                    },
-                    "apiGatewayId": {
-                        "type": "string",
-                    },
-                    "s3_bucket_name": {
-                        "type": "string",
-                    },
-                    "lambda_name": {
-                        "type": "string",
-                    },
+    class Deployment:
+        class Endpoints:
+            pass
+            """       
+             self._endpoints = endpoints
                     "endpoints": {
                         "type": "dict",
                         "schema": {
@@ -156,117 +28,145 @@ class Settings:
                             },
                         }
                     }
-                }
-            },
-            "plugins": {
-                "required": False,
-                "type": "dict",
-                "schema": {
-                    "installed_plugins": {
-                        "required": True,
-                        "type": "list"
-                    },
-                    "activated_plugins": {
-                        "required": True,
-                        "type": "list"
-                    }
-                }
-            }
-        }
+                }"""
 
+        def __init__(self, handler_function_path: str, api_gateway_id: str, s3_bucket_name: str, lambda_name: str, endpoints: Endpoints):
+            self.handler_function_path = handler_function_path
+            self.api_gateway_id = api_gateway_id
+            self.s3_bucket_name = s3_bucket_name
+            self.lambda_name = lambda_name
+            self.endpoints = endpoints
 
+        @property
+        def handler_function_path(self) -> str:
+            return self._handler_function_path
+
+        @handler_function_path.setter
+        def handler_function_path(self, handler_function_path: str) -> None:
+            raise_if_variable_not_expected_type(value=handler_function_path, expected_type=str, variable_name="handler_function_path")
+            self._handler_function_path = handler_function_path
+
+        @property
+        def api_gateway_id(self) -> str:
+            return self._api_gateway_id
+
+        @api_gateway_id.setter
+        def api_gateway_id(self, api_gateway_id: str) -> None:
+            raise_if_variable_not_expected_type(value=api_gateway_id, expected_type=str, variable_name="api_gateway_id")
+            self._api_gateway_id = api_gateway_id
+
+        @property
+        def s3_bucket_name(self) -> str:
+            return self._s3_bucket_name
+
+        @s3_bucket_name.setter
+        def s3_bucket_name(self, s3_bucket_name: str) -> None:
+            raise_if_variable_not_expected_type(value=s3_bucket_name, expected_type=str, variable_name="s3_bucket_name")
+            self._s3_bucket_name = s3_bucket_name
+
+        @property
+        def lambda_name(self) -> str:
+            return self._lambda_name
+
+        @lambda_name.setter
+        def lambda_name(self, lambda_name: str) -> None:
+            raise_if_variable_not_expected_type(value=lambda_name, expected_type=str, variable_name="lambda_name")
+            self._lambda_name = lambda_name
+
+        @property
+        def endpoints(self) -> Endpoints:
+            return self._endpoints
+
+        @endpoints.setter
+        def endpoints(self, endpoints: Endpoints) -> None:
+            raise_if_variable_not_expected_type(value=endpoints, expected_type=self.Endpoints, variable_name="endpoints")
+            self._endpoints = endpoints
+
+    def __init__(self, characters_voices: Optional[dict] = None, deployment: Optional[Deployment] = None):
+        self.characters_voices = characters_voices
+        self.deployment = deployment
 
     @property
-    def settings(self) -> SafeDict:
-        if Settings.settings_loaded is not True:
-            if self.raise_if_not_loaded is True:
-                raise Exception(f"The settings have not yet been loaded and are : {Settings.settings}")
+    def characters_voices(self) -> dict:
+        return self._characters_voices if self._characters_voices is not None else dummy_object
+
+    @characters_voices.setter
+    def characters_voices(self, characters_voices: characters_voices) -> None:
+        raise_if_variable_not_expected_type_and_not_none(value=characters_voices, expected_type=dict, variable_name="characters_voices")
+        self._characters_voices = characters_voices
+
+    @property
+    def deployment(self) -> Deployment:
+        return self._deployment if self._deployment is not None else dummy_object
+
+    @deployment.setter
+    def deployment(self, deployment: Deployment) -> None:
+        raise_if_variable_not_expected_type_and_not_none(value=deployment, expected_type=self.Deployment, variable_name="deployment")
+        self._deployment = deployment
+
+
+def prompt_get_settings(root_folderpath: Optional[str] = None) -> Settings:
+    import os
+
+    if root_folderpath is None:
+        from inoft_vocal_framework.cli.components import current_project_directory
+        root_folderpath = current_project_directory.prompt()
+
+    print("Searching for your app_settings file...")
+
+    found_settings_filepaths = []
+    for filename in os.listdir(root_folderpath):
+        if filename in ["app_settings.py", "settings.py"]:
+            found_settings_filepaths.append(os.path.join(root_folderpath, filename))
+
+    settings_filepath = None
+    if len(found_settings_filepaths) == 0:
+        raise Exception("Did not found an app_settings.py or settings.py file.\nDid you renamed your settings file ?"
+                        "\nOr did you not navigated to the directory of your project ?"
+                        "\nTry to run the command cd 'C:/folder/subfolder/myproject'."
+                        "\nIf your project is on an external hard-drive (like F:), you must run the cd command, and also the letter name of your hard-drive."
+                        "\nSo if your project is in F:/folder/subfolder/myproject, in your command line, run   F:   then run   cd F:/folder/subfolder/myproject")
+    elif len(found_settings_filepaths) == 1:
+        print(f"Using setting file {found_settings_filepaths[0]}")
+        settings_filepath = found_settings_filepaths[0]
+    elif len(found_settings_filepaths) > 1:
+        while settings_filepath is None:
+            print(f"Found {len(found_settings_filepaths)} settings file at following paths :")
+            for i_file, file in enumerate(found_settings_filepaths):
+                print(f"{i_file + 1} - {file}")
+
+            import click
+            file_index = str(click.prompt("What is the number of the file you wish to use ?"))
+            if not file_index.isdigit() or int(file_index) > len(found_settings_filepaths) or int(file_index) < 0:
+                print("Please write a valid file index in the form of an int like 1 or 3")
             else:
-                Settings._settings = SafeDict()
-        return Settings._settings
+                selected_filepath = found_settings_filepaths[int(file_index) - 1]
+                print(f"Selected settings filepath : {click.style(text=selected_filepath, fg='blue')}")
+                settings_filepath = selected_filepath
 
-    @settings.setter
-    def settings(self, settings_dict: dict):
-        validator = self.ExtendedValidator()
-        is_valid = validator.validate(settings_dict, self._settings_file_validator_schema)
-        if is_valid is not True:
-            raise Exception(f"The settings file was not valid. Please modify it or recreate it : {validator.errors}")
+
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("plugin_core", settings_filepath)
+    current_plugin_core_module = importlib.util.module_from_spec(spec=spec)
+    spec.loader.exec_module(current_plugin_core_module)
+
+    vars_current_settings_module = vars(current_plugin_core_module)
+    if "settings" not in vars_current_settings_module.keys():
+        raise Exception(f"The variable named 'settings' is missing from the settings file you selected at {settings_filepath}")
+    else:
+        settings_instance = vars_current_settings_module["settings"]
+        if isinstance(settings_instance, Settings):
+            return settings_instance
         else:
-            Settings._settings = SafeDict(settings_dict)
-            Settings.settings_loaded = True
+            raise Exception(f"A variable named settings has been found in the file {settings_instance}, but it was not an instance of Settings type.")
+    # This code line is unreachable, no need for an additional exception
 
-    def find_load_settings_file(self, root_folderpath: str):
-        print("Searching for your app_settings file...")
 
-        found_settings_filepaths = []
-        for filename in os.listdir(root_folderpath):
-            if filename in ["app_settings.yaml", "app_settings.json"]:
-                found_settings_filepaths.append(os.path.join(root_folderpath, filename))
-
-        file_path_object = None
-        if len(found_settings_filepaths) == 0:
-            raise Exception("Did not found an app_settings.yaml or app_settings.json file."
-                            "\nDid you renamed your settings file ?"
-                            "\nOr did you not navigated to the directory of your project ?"
-                            "\nTry to run the command cd 'C:/folder/subfolder/myproject'."
-                            "\nIf your project is on an external hard-drive (like F:), you must run the cd command, and also the letter name of your hard-drive."
-                            "\nSo if your project is in F:/folder/subfolder/myproject, in your command line, run   F:   then run   cd F:/folder/subfolder/myproject")
-        elif len(found_settings_filepaths) == 1:
-            print(f"Using setting file {found_settings_filepaths[0]}")
-            file_path_object = Path(found_settings_filepaths[0])
-        elif len(found_settings_filepaths) > 1:
-            while file_path_object is None:
-                print(f"Found {len(found_settings_filepaths)} settings file at following paths :")
-                for i_file, file in enumerate(found_settings_filepaths):
-                    print(f"{i_file + 1} - {file}")
-                file_index = str(click.prompt("What is the number of the file you wish to use ?"))
-                if not file_index.isdigit() or int(file_index) > len(found_settings_filepaths) or int(file_index) < 0:
-                    print("Please write a valid file index in the form of an int like 1 or 3")
-                else:
-                    selected_filepath = found_settings_filepaths[int(file_index) - 1]
-                    print(f"Selected settings filepath : {click.style(text=selected_filepath, fg='blue')}")
-                    file_path_object = Path(selected_filepath)
-
-        if file_path_object.suffix == ".yaml":
-            self.load_yaml(file_path_object)
-        elif file_path_object.suffix == ".json":
-            self.load_json(file_path_object)
-        else:
-            raise Exception(f"The only supported settings file extension are .yaml and"
-                            f" .json but your file was in {file_path_object.suffix}")
-
-    def load_yaml(self, settings_file: str):
-        from yaml import safe_load, YAMLError
-        with open(settings_file, "r") as file_stream:
-            try:
-                self.settings = safe_load(file_stream)
-            except YAMLError as error:
-                raise Exception(f"The yaml file was not valid, and caused an error when loading."
-                                f"Please check the file or recreate it with the cli : {error}")
-        Settings.last_settings_filepath = settings_file
-        Settings.last_settings_file_extension_type = "yaml"
-
-    def load_json(self, settings_file: str):
-        from json import load as json_load
-        with open(settings_file, "r") as file_stream:
-            try:
-                self.settings = json_load(file_stream)
-            except Exception as error:
-                raise Exception(f"The json file was not valid, and caused an error when loading."
-                                f"Please check the file or recreate it with the cli : {error}")
-        Settings.last_settings_filepath = settings_file
-        Settings.last_settings_file_extension_type = "json"
-
-    def save_settings(self):
-        from json import dumps as json_dumps
-        from yaml import safe_dump as yaml_dump
-
-        if Settings.last_settings_file_extension_type in ["yaml", "json"]:
-            settings_dict = self.settings.to_dict()
-
-            with open(Settings.last_settings_filepath, "w+") as file_stream:
-                settings_dict = self.settings.to_dict()
-                file_stream.write(yaml_dump(settings_dict) if Settings.last_settings_file_extension_type == "yaml" else json_dumps(settings_dict))
-        else:
-            raise Exception("Please load a valid yaml or json settings file before attempting to save them.")
-
+if __name__ == "__main__":
+    Settings(characters_voices={
+        "Léo": VOICES.French_France_Male_MATHIEU,
+        "Willie": VOICES.French_France_Female_CELINE,
+        "Luc": VOICES.Russian_Russia_Male_MAXIM,
+        "Menu": VOICES.Icelandic_Iceland_Male_KARL,
+        "default": VOICES.French_France_Female_CELINE
+    })

@@ -172,8 +172,8 @@ class GeneratorCore:
 
                                 logic_elements.append(self.templates.set_variable_logic_template.render(action_dict=processed_action_dict))
 
-        from inoft_vocal_framework.plugins.official_audio_files_instead_of_text import core as plugin_core
-        plugin_core.execute(generator_core=self)
+        from inoft_vocal_framework.plugins.OfficialAudioFilesInsteadOfText.core import Core as PluginCore
+        PluginCore().execute(generator_core=self)
 
         for say_action in self.say_actions:
             if say_action.code is None:

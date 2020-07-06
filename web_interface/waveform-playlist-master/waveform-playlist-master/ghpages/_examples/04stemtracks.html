@@ -1,0 +1,37 @@
+---
+layout: page
+title: Stem Tracks
+lead: Multitrack scheduling allows to layer audio for simultaneous playback. Mute, solo, or set different volume levels for each audio track that makes up the composition. Control the master volume of the mix.
+excerpt: Create a playlist with multiple stem tracks. Mute, solo, or set different volume levels for each audio track. Multitrack scheduling audio simultaneous playback. Master volume adjustment.
+permalink: stem-tracks.html
+javascript: stem-tracks.js
+audio_title: Starlight
+audio_artist: Muse
+---
+
+<div id="top-bar" class="playlist-top-bar">
+  <div class="playlist-toolbar">
+    <div class="btn-group">
+      <span class="btn-pause btn btn-warning"><i class="fa fa-pause"></i></span>
+      <span class="btn-play btn btn-success"><i class="fa fa-play"></i></span>
+      <span class="btn-stop btn btn-danger"><i class="fa fa-stop"></i></span>
+      <span class="btn-rewind btn btn-success"><i class="fa fa-fast-backward"></i></span>
+      <span class="btn-fast-forward btn btn-success"><i class="fa fa-fast-forward"></i></span>
+    </div>
+    <span class="audio-pos">00:00:00.0</span>
+  </div>
+</div>
+<div id="playlist"></div>
+<form class="form-inline">
+  <div class="form-group">
+    <label for="master-gain">Master Volume</label>
+    <input type="range" min="0" max="100" value="100" class="master-gain form-control" id="master-gain">
+  </div>
+  <div class="checkbox">
+    <label>
+      <input type="checkbox" class="automatic-scroll"> Automatic Scroll
+    </label>
+  </div>
+</form>
+<div class="sound-status"></div>
+<div class="loading-data"></div>

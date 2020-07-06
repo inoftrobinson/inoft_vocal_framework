@@ -8,3 +8,6 @@ class DummyObject:
     # and error created if the function did not exist.
     def __call__(self, *args, **kwargs):
         pass
+
+dummy_object = DummyObject()
+

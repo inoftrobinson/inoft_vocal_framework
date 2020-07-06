@@ -62,9 +62,11 @@ class TextToAudacity:
             if os.path.exists(filepath_to_save_to):
                 current_synthesized_dialogue = Sound(filepath_to_save_to)
                 synthesized_dialogues.append(current_synthesized_dialogue)
+                print(f"Find and will be using existing file at {filepath_to_save_to}")
             else:
                 synthesized_dialogue_filepath = self.polly.synthesize(text=dialogue.line_content,
                     voice_id=voice_for_current_dialogue.id, filepath_to_save_to=filepath_to_save_to)
+                print(f"Synthesized new audio file to {filepath_to_save_to}")
 
                 if synthesized_dialogue_filepath is not None:
                     current_synthesized_dialogue = Sound(synthesized_dialogue_filepath)

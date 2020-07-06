@@ -31,7 +31,7 @@ class AudacityClient:
         self.client.write("SelPrevClip:")
 
     def select_track(self, track_number: int = 0):
-        self.client.write(f"SelectTracks: Track={track_number}")
+        self.client.write(f"SelectTracks: Track={track_number} Mode=Add")
 
     def import_file(self, filepath: str, track_number: int = 0):
         self.client.write(f"Select: Track={track_number}")
@@ -47,6 +47,10 @@ class AudacityClient:
         # We add all the tracks from the First to the Last to a selection
         self.client.write("RemoveTracks:")
         # Then we remove the tracks in our selection
+
+    def mix_and_render_all_elements(self):
+        self.select_all()
+        self.mix_and_render_tracks()
 
     def mix_and_render_tracks(self):
         self.client.write("MixAndRender:")
@@ -70,11 +74,12 @@ class AudacityClient:
 if __name__ == "__main__":
     client = AudacityClient()
 
-    # client.select_track(track_number=1)
+    client.mix_and_render_all_elements()
+    # client.select_track(track_number=3)
     # client.set_clip(clip_id=0, track_number=0, seconds_start=2.0)
 
-    client.import_file(filepath="C:/Users/LABOURDETTE/Documents/MAGIX/2020-05-20_01_24.wav")  # "F:/test1.mp3")
-    client.save_project(project_output_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/speech_synthesis/polly/project.aup")
+    # client.import_file(filepath="C:/Users/LABOURDETTE/Documents/MAGIX/2020-05-20_01_24.wav")  # "F:/test1.mp3")
+    # client.save_project(project_output_filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_framework/speech_synthesis/polly/project.aup")
     # To note, audacity will only accept wav files, and no spaces can be present in the filepath. So the files must
     # be moved to a temporary folder (if they have spaces) and be converted to wav files if they are not in wav.
     print("done")

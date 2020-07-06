@@ -4,17 +4,19 @@ from json import dumps as json_dumps
 from typing import Optional
 
 from inoft_vocal_framework.dummy_object import DummyObject
-from inoft_vocal_framework.exceptions import raise_if_value_not_in_list
+from inoft_vocal_framework.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
 from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput, HandlerInputWrapper
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
-from inoft_vocal_framework.skill_builder.skill_settings import Settings
 from inoft_vocal_framework.plugins.loader import plugins_load
 
 # todo: Add a prod and dev production mode, so that optisionnal status (like loading of plugins) is done only in developpement
 
 # todo: Add a class with only a CanHandle function (for cases like the Yes and No classical handlers=
+from inoft_vocal_framework.skill_builder.skill_settings import Settings
+
+
 class InoftCondition(HandlerInputWrapper):
     @abstractmethod
     def can_handle(self) -> bool:
@@ -106,30 +108,23 @@ class InoftHandlersGroup:
 
 
 class InoftSkill:
-    def __init__(self, settings_yaml_filepath: Optional[str] = None, settings_json_filepath: Optional[str] = None):
-        self.settings = Settings()
-        if settings_yaml_filepath is not None and settings_json_filepath is not None:
-            raise Exception(f"You cannot specify multiple settings files. Please specify only one")
-        elif settings_yaml_filepath is None and settings_json_filepath is None:
-            from inspect import stack, getmodule
-            frame = stack()[1]
-            module = getmodule(frame[0])
-            from pathlib import Path
-            root_folder = Path(module.__file__).parent
-            self.settings.find_load_settings_file(root_folderpath=root_folder)
-            if self.settings.settings_loaded is not True:
-                raise Exception(f"Please specify a yaml or json settings file with the settings_yaml_filepath arg or settings_json_filepath")
-        elif settings_yaml_filepath is not None:
-            self.settings.load_yaml(settings_file=settings_yaml_filepath)
-        elif settings_json_filepath is not None:
-            self.settings.load_json(settings_file=settings_json_filepath)
-
+    def __init__(self, settings_instance: Settings = None):
+        self.settings = settings_instance
         self.plugins = plugins_load(settings=self.settings)
 
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()
         self._default_fallback_handler = None
         self._handler_input = HandlerInput()
+
+    @property
+    def settings(self) -> Settings:
+        return self._settings
+
+    @settings.setter
+    def settings(self, settings: Settings) -> None:
+        raise_if_variable_not_expected_type(value=settings, expected_type=Settings, variable_name="settings")
+        self._settings = settings
 
     def add_request_handler(self, request_handler_instance_or_class) -> None:
         if request_handler_instance_or_class is not None:

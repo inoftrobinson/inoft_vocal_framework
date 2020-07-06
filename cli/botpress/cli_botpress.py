@@ -1,4 +1,5 @@
 import os
+import time
 from typing import List
 
 import click
@@ -6,6 +7,7 @@ import click
 from inoft_vocal_framework.cli.aws_core import AwsCore
 from inoft_vocal_framework.cli.cli_cache import CliCache
 from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_framework.skill_builder import skill_settings
 from inoft_vocal_framework.utils.general import get_all_files_in_dir, get_all_dirs_in_dir
 from inoft_vocal_framework.cli.botpress.content_element_object import ContentElement
 
@@ -13,6 +15,7 @@ from inoft_vocal_framework.cli.botpress.content_element_object import ContentEle
 class BotpressCore(AwsCore):
     def __init__(self):
         super().__init__(clients_to_load=[AwsCore.CLIENT_BOTO_SESSION, AwsCore.CLIENT_S3])
+        self.settings = skill_settings.prompt_get_settings()
         self.selected_bot_dirname = None
         self.selected_bot_dirpath = None
 
@@ -102,14 +105,11 @@ class BotpressCore(AwsCore):
 
         if user_need_to_select_need_root_dirpath is True:
             def prompt_user_to_select_root_dirpath_to_save_audio_project():
-                return click.prompt(
-                    text="To which dirpath to you wish to save all of the files and folders that will contain your audio ?",
-                    type=str)
+                return click.prompt(text="To which dirpath to you wish to save all of the files and folders that will contain your audio ?", type=str)
 
             root_dirpath_to_save_audio_project = prompt_user_to_select_root_dirpath_to_save_audio_project()
             while not os.path.isdir(root_dirpath_to_save_audio_project):
-                if click.confirm(
-                        f"The dirpath {root_dirpath_to_save_audio_project} did not exist. Do you want to create it ?"):
+                if click.confirm(f"The dirpath {root_dirpath_to_save_audio_project} did not exist. Do you want to create it ?"):
                     os.makedirs(root_dirpath_to_save_audio_project)
                 else:
                     root_dirpath_to_save_audio_project = prompt_user_to_select_root_dirpath_to_save_audio_project()
@@ -121,18 +121,11 @@ class BotpressCore(AwsCore):
 
     def _content_elements_to_audacity(self, content_elements: List[ContentElement]):
         from inoft_vocal_framework.audacity.text_to_audacity import TextToAudacity
-        from inoft_vocal_framework.speech_synthesis.polly import VOICES
-        client = TextToAudacity(character_names_to_voices={
-            "Léo": VOICES.French_France_Male_MATHIEU,
-            "Willie": VOICES.French_France_Female_CELINE,
-            "Luc": VOICES.Russian_Russia_Male_MAXIM,
-            "Menu": VOICES.Icelandic_Iceland_Male_KARL,
-            "default": VOICES.French_France_Female_LEA
-        })
-        # todo: add possibility to set the character names and their voices
+        client = TextToAudacity(character_names_to_voices=self.settings.characters_voices)
         root_dirpath_to_save_audio_project = self.prompt_get_root_dirpath_to_save_audio()
 
-        for content_element in content_elements[400:]:
+        num_content_elements = len(content_elements)
+        for i, content_element in enumerate(content_elements):
             if isinstance(content_element.dialogues_lines, list) and len(content_element.dialogues_lines) > 0:
                 if content_element.id is None:
                     click.echo(f"Warning ! The content element with the following lines : "
@@ -149,15 +142,20 @@ class BotpressCore(AwsCore):
                                                                  dirpath_to_save_to=current_project_dirpath)
 
                     client.audacity.save_project(project_output_filepath=audacity_project_filepath)
+                    client.audacity.mix_and_render_all_elements()
+                    # todo: find a way to combine all of the audio elements, without mixing them in the same audio clip
                     client.audacity.select_all()
                     client.audacity.export(filepath=wav_final_render_filepath)
+
+                    while not os.path.exists(wav_final_render_filepath):
+                        time.sleep(0.1)
+                        print(f"Waiting for file {wav_final_render_filepath} to be created by Audacity.")
 
                     from pydub import AudioSegment
                     final_render_audio_segment = AudioSegment.from_file(file=wav_final_render_filepath, format="wav", frame_rate=16000)
                     final_render_audio_segment.export(out_f=compressed_final_render_filepath, format="mp3", bitrate="48k")
 
-                    print("done")
-                    input()
+                    print(f"Completed file {i}/{num_content_elements}")
 
     def upload_audio_contents(self):
         bucket_name = "test-vocal-export-inoft"

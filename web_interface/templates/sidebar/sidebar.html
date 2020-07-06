@@ -1,0 +1,55 @@
+<div class="sidebar-container light-mode">
+    <div id="dark-mode-button-container"></div>
+    <div class="standard-button">
+        Contenu
+    </div>
+</div>
+
+
+
+<script type="text/jsx">
+class DarkModeButton extends React.Component {
+    constructor() {
+        super()
+        this.is_dark = false;
+        this.is_light = true;
+        this.state = {
+            text: "Mode Sombre"
+        }
+    }
+
+  handleClick() {
+    if (this.is_light === true) {
+        let $light_mode_elements = $(".light-mode");
+        $light_mode_elements.addClass("dark-mode");
+        $light_mode_elements.removeClass("light-mode");
+        this.is_light = false;
+        this.is_dark = true;
+        this.setState({text: "Mode Clair"});
+    } else if (this.is_dark === true) {
+        let $dark_mode_elements = $(".dark-mode");
+        $dark_mode_elements.addClass("light-mode");
+        $dark_mode_elements.removeClass("dark-mode");
+        this.is_dark = false;
+        this.is_light = true;
+        this.setState({text: "Mode Sombre"});
+    }
+        $(".dark-mode-switch").click();
+    //document.documentElement.setAttribute('data-theme', 'dartheme');
+  }
+
+  render() {
+    return (
+        <div className="dark-mode-button-switch-container" onClick={() => this.handleClick()}>
+            <div className="standard-button dark-mode-button light-mode">{this.state.text}</div>
+            <label className="switch dark-mode-switch">
+                <input type="checkbox"></input>
+                    <span className="slider round">
+                    </span>
+            </label>
+        </div>);
+  }
+}
+
+ReactDOM.render(<DarkModeButton/>, document.getElementById('dark-mode-button-container'));
+</script>

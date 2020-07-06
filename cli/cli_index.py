@@ -35,6 +35,20 @@ def deploy():
     deployHandler().handle()
 
 @cli.group()
+def codegen():
+    pass
+
+@codegen.group()
+def botpress():
+    pass
+
+@botpress.command()
+def text_to_audio():
+    from inoft_vocal_framework.cli.botpress.cli_botpress import BotpressCore
+    botpress_core = BotpressCore()
+    botpress_core.generate_audio_contents_from_texts()
+
+@cli.group()
 def messages():
     pass
 
@@ -71,5 +85,5 @@ def nice_quit():
     CliCache.save_cache_to_yaml()
 
 if __name__ == '__main__':
-    new()
+    text_to_audio()
 

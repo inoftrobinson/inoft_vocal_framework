@@ -16,6 +16,7 @@ from inoft_vocal_framework.platforms_handlers.discord.discord_static_infos impor
 bot_client = commands.Bot(command_prefix=DiscordStaticInfos.COMMAND_PREFIX)
 private_state = False
 m_type = 'launch'
+eee = e
 
 @bot_client.event
 async def on_ready():

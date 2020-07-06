@@ -1,0 +1,11 @@
+/node_modules
+/coverage
+
+# compiled files
+/lib
+.sass-cache
+/styles
+
+.DS_Store
+test/.DS_Store
+ghpages/.jekyll-cache/

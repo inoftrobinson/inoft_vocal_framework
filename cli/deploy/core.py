@@ -145,7 +145,7 @@ class Core(CoreClients):
             self.add_lambda_permission_to_call_api_resource(lambda_arn=lambda_arn, api_id=api_id, route_key=route_name)
             api_route_url = f"{api_gateway_root_url}/{route_name}"
             click.echo(f"Api route {click.style(route_name, fg='green')} creation complete accessible on {api_route_url}")
-            self.settings.settings.get_set("deployment", {}).get_set("endpoints", {}).put(
+            self.settings.get_set("deployment", {}).get_set("endpoints", {}).put(
                 route_names_to_settings_keys[route_name], api_route_url).reset_navigated_dict()
             # We reset the navigated dict after a final put
 

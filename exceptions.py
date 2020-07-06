@@ -1,6 +1,6 @@
 def raise_invalid_variable_type(variable_value, expected_type, variable_name: str = None):
-    raise Exception(f"Invalid type. Received {variable_value} of type {type(variable_value)} for the {variable_name} variable,"
-                    if variable_name is None else f"but was expecting a variable of type {expected_type}.")
+    raise Exception(f"Invalid type. Received {variable_value} of type {type(variable_value)} for the\n"
+                    f"{variable_name} variable, but was expecting a variable of type {expected_type}.")
 
 def raise_if_variable_not_expected_type(value, expected_type, variable_name: str = None):
     if not isinstance(value, expected_type):

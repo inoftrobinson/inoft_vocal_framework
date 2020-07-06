@@ -34,7 +34,7 @@ class DeployHandler(Core):
 
     def handle(self):
         changed_root_folderpath = False
-        app_project_root_folderpath = CliCache.cache().get("last_app_project_root_folderpath").to_str(default=None)
+        app_project_root_folderpath = CliCache.cache().get("lastAppProjectRootFolderpath").to_str(default=None)
 
         def prompt_user_to_select_folderpath():
             return click.prompt(text="What is the root folder path of your project ? "
@@ -58,13 +58,13 @@ class DeployHandler(Core):
                 exit(200)
 
         if changed_root_folderpath is True:
-            CliCache.cache().put("last_app_project_root_folderpath", app_project_root_folderpath)
+            CliCache.cache().put("lastAppProjectRootFolderpath", app_project_root_folderpath)
             CliCache.save_cache_to_yaml()
             click.echo(f"Saved the folderpath of your project for {click.style(text='faster load next time', fg='blue')}")
 
         self.settings.find_load_settings_file(root_folderpath=app_project_root_folderpath)
 
-        handler_function_path = self.settings.settings.get_set("deployment", {}).get("handlerFunctionPath").to_str(default=None)
+        handler_function_path = self.settings.deployment.handler_function_path
         if handler_function_path is not None and handler_function_path != "":
             if not click.confirm(f"Do you wish to keep using the following path to your lambda handler function ? : {handler_function_path}"):
                 handler_function_path = None

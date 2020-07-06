@@ -1,0 +1,15 @@
+<div class="content-element-item">
+    <a href="/audio-editor/{{item.id}}">
+        <h4 class="title">
+            {{item.id}}
+        </h4>
+        <div class="lines-container">
+            {% for line in item.dialogues_lines %}
+            <div class="line-item">
+                <h5>{{line.character_name}}</h5>
+                <p>{{line.line_content}}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </a>
+</div>
