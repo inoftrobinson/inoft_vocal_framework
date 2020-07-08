@@ -1,11 +1,12 @@
 function deepstringify(sourceObject) {
-    var newe = {};
+    let newe = {};
     for (key in sourceObject) {
+        let currentObject = sourceObject[key];
         console.log(key);
-        if (typeof sourceObject[key] == "object") {
-            newe[key] = deepstringify(sourceObject[key]);
+        if (typeof currentObject == "object") {
+            newe[key] = deepstringify(currentObject);
         } else {
-            newe[key] = JSON.stringify(sourceObject[key]);
+            newe[key] = JSON.stringify(currentObject);
         }
     }
     return newe;

@@ -78,19 +78,69 @@
 <script src="{{url_for('static', filename='js/audio-editor/libs/recursive_json.js')}}"></script>
 <script>
     function save_project() {
-        console.log(deepstringify(Audiee));
+        // todo: sauvegarder l'entièreté de la variable Audiee dans un
+        //  fichier temporaire puis envoyer le fichier dans la requête ajax,
+        //  et ensuite le récupérer dans la backend python (le fichier app.py)
+
+        let result = AudieePersonnalParser(Audiee);
+        console.log("my parser :" + result);
+
         $.ajax({
             type: 'POST',
             url: '/audio-editor/{{project_id}}/save',
-            data: JSON.stringify({"Audiee": Audiee}),
+            data: JSON.stringify(result),
             contentType: 'application/json',
             success: function (response_data) {
-                /*let $container = $("#list-content");
-            $container.empty();
-            $container.append(response_data.html);*/
+                let $container = $("#list-content");
+                $container.empty();
+                $container.append(response_data.html);
                 console.log("Yay");
             }
         });
+
+
+
+        function AudieePersonnalParser(Audiee){
+            let AudieeData = {
+                Collections: {
+                    Tracks: {
+                        models: [] //tableau
+                    }
+                }
+            }
+
+            for (var i = 0; i < Audiee.Collections.Tracks.models.length; i++) {
+                AudieeData.Collections.Tracks.models[i] = {
+                    attributes: {
+                        buffer: {
+                            duration: Audiee.Collections.Tracks.models[i].attributes.buffer.duration, //number
+                            length: Audiee.Collections.Tracks.models[i].attributes.buffer.length, //number
+                            numberOfChannels: Audiee.Collections.Tracks.models[i].attributes.buffer.numberOfChannels, //should be 2 if stereo or 1 if mono, or >2 if you're a genius
+                            sampleRate: Audiee.Collections.Tracks.models[i].attributes.buffer.sampleRate //number depends, could be 41000 or 48000, or 96000
+                        },
+                        color: Audiee.Collections.Tracks.models[i].attributes.color, //hex : #FFFFFF
+                        file: {
+                            lastModified: Audiee.Collections.Tracks.models[i].attributes.file.lastModified, //freaking bid int
+                            name: Audiee.Collections.Tracks.models[i].attributes.file.name, //string file name
+                            size: Audiee.Collections.Tracks.models[i].attributes.file.size, //also a big int
+                            type: Audiee.Collections.Tracks.models[i].attributes.file.type, //string type of audio : "audio/<type>"
+                            webkitRelativePath: Audiee.Collections.Tracks.models[i].attributes.file.webkitRelativePath // i saw path so i tought it was useful
+                        },
+                        gain: Audiee.Collections.Tracks.models[i].attributes.gain, //number (float)
+                        length: Audiee.Collections.Tracks.models[i].attributes.length,
+                        muted: Audiee.Collections.Tracks.models[i].attributes.muted, //bool
+                        name: Audiee.Collections.Tracks.models[i].attributes.name, //string track name
+                        pan: Audiee.Collections.Tracks.models[i].attributes.pan, //number (float)
+                        solo: Audiee.Collections.Tracks.models[i].attributes.solo, //bool
+                        cid: Audiee.Collections.Tracks.models[i].attributes.cid //code
+                    }
+                };
+            }
+
+            return AudieeData;
+        }
+
+        return result;
     }
 </script>
 </html>

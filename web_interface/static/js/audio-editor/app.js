@@ -94,8 +94,9 @@ define(function(require) {
 			return 'By leaving this page, all changes will be lost.';
 		};
 	};
-	
 	return {	
 		initialize: init
 	};
+
+
 });
