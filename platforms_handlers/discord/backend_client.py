@@ -2,6 +2,8 @@
 # token :
 
 import json
+
+import aiohttp
 import discord
 import time
 from discord.ext import commands
@@ -14,6 +16,10 @@ from inoft_vocal_engine.platforms_handlers.discord.discord_static_infos import D
 
 
 bot_client = commands.Bot(command_prefix=DiscordStaticInfos.COMMAND_PREFIX)
+# If you have the error CERTIFICATE_VERIFY_FAILED, you have an issue with a missing SSL certificate on your computer.
+# Go to this link : https://crt.sh/?id=2835394 and click on "Download Certificate: PEM" at the bottom right of the page,
+# it will download a SSL Certificate, that you must install. PS : The certificate is only valid until 2038 !
+
 private_state = False
 m_type = 'launch'
 

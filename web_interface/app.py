@@ -11,22 +11,31 @@ app = Flask(__name__)
 @app.route("/")
 def index():
     return render_template("index.html", list_content=content_list(),
-                           filepath="F:/Inoft/skill_histoire_decryptage_1/inoft_vocal_engine/botpress_integration/builtin_text.json")
+                           filepath="F:/Inoft/anvers_1944_project/inoft_vocal_engine/botpress_integration/builtin_text.json")
 
 @app.route("/audio-editor/<project_id>")
 def audio_editor(project_id: str):
-    return render_template("audio-editor/index.html", project_id=project_id)
+    # todo: look for project id in database
+    static_data = {'Collections': {'Tracks': {'models': [{'attributes': {
+        'buffer': {'duration': 167.714, 'length': 8050272, 'numberOfChannels': 2, 'sampleRate': 48000},
+        'color': '#00a0b0', 'file': {'lastModified': 1591264478848, 'name': 'jean sablon - alexa.mp3', 'size': 1007568,
+                                     'type': 'audio/mpeg', 'webkitRelativePath': ''}, 'gain': 1, 'length': 1920,
+        'muted': False, 'name': 'Track 1', 'pan': 0.5, 'solo': False}}]}}}
+
+    return render_template("audio-editor/index.html", project_id=project_id, project_data=static_data)
 
 @app.route("/audio-editor/<project_id>/save", methods=["POST"])
 def audio_editor_save(project_id: str):
     print(f"Saved for {project_id}")
-    print(request)
-    print(request.get_data())
     print(request.get_json())
     data = SafeDict(request.get_json())
     audiee_object = data.get("Audiee").to_dict(default=None)
     print(audiee_object)
     return jsonify({"success": True})
+
+@app.route("/diagrams")
+def diagrams():
+    return render_template("diagrams/index.html")
 
 
 @app.route("/project_dir",  methods=["POST"])

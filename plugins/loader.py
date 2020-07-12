@@ -2,18 +2,17 @@ import os
 from typing import List
 
 from inoft_vocal_engine.plugins.plugin_base import PluginBase, PluginCodeGenerationBase
-from inoft_vocal_engine.skill_builder.skill_settings import Settings
+from inoft_vocal_engine.skill_settings.skill_settings import Settings
 
 
 def plugins_load(settings: Settings) -> List[PluginCodeGenerationBase]:
     plugins_dir_path = os.path.dirname(os.path.abspath(__file__))
-    activated_plugins_dir_names = settings.settings.get("plugins").get("activated_plugins").to_list()
-
     cores_instances_of_code_generation_plugins: List[PluginCodeGenerationBase] = list()
     # We separate the different type of plugins in different lists, because different plugins will
     # not be executed at the same time, or need to same arguments in their execute function.
 
-    for plugin_dir_name in activated_plugins_dir_names:
+    # The activated plugins variable is a list containing with the dir name of all the activated plugins
+    for plugin_dir_name in settings.plugins.activated_plugings:
         current_plugin_dirpath = os.path.join(plugins_dir_path, plugin_dir_name)
         if not os.path.isdir(current_plugin_dirpath):
             raise Exception(f"The plugin named {plugin_dir_name} has not been found at {current_plugin_dirpath}. Did you type the name right ?")
@@ -49,6 +48,5 @@ def plugins_load(settings: Settings) -> List[PluginCodeGenerationBase]:
                             raise Exception(f"No valid type of Plugin parent class had been found for the Core class found at {current_plugin_core_filepath}")
 
     print(cores_instances_of_code_generation_plugins)
-    input()
 
 

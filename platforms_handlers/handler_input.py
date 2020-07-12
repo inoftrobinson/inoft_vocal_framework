@@ -2,40 +2,30 @@ import logging
 from collections import Callable
 from typing import Optional
 
-from inoft_vocal_engine.dummy_object import DummyObject, dummy_object
+from inoft_vocal_engine.dummy_object import DummyObject
 from inoft_vocal_engine.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
 from inoft_vocal_engine.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
 from inoft_vocal_engine.platforms_handlers.notifications_subscribers import NotificationsSubscribers
 from inoft_vocal_engine.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_engine.safe_dict import SafeDict
-from inoft_vocal_engine.skill_builder.skill_settings import Settings
+from inoft_vocal_engine.skill_settings.skill_settings import Settings
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
-    def __init__(self, use_default_settings_if_missing: bool = False):
+    def __init__(self, settings_instance: Settings, use_default_settings_if_missing: bool = False):
         super().__init__()
         self._use_default_settings_if_missing = use_default_settings_if_missing
 
-        self.__settings = None
+        self.settings = settings_instance
 
-        # todo: reactivate that
-        """
-        self.__session_users_data_safedict = DummyObject()
-
-        self.__sessions_users_data_db_table_name = None
-        self.__sessions_users_data_db_region_name = None
-        if self._sessions_users_data_db_table_name is not None:
-            # If the user do not specify that the database should be disable, then we set it to False
-            self.sessions_users_data_disable_database = self._session_users_data_safedict.get("disable_database").to_bool(default=False)
-        else:
-            # Yet, if the table_name has not been found, we disable the database (yet we do not raise, since
+        if self.settings.database_sessions_users_data.db_table_name is None:
+            # If the table_name has not been found, we disable the database (yet we do not raise, since
             # in some cases, it could be normal to not specify a table_name, for example for our unit tests)
-            self.sessions_users_data_disable_database = True
-        """
+            self.settings.database_sessions_users_data.disable_database = True
 
         self._session_id = None
         self._is_invocation_new_session = None
-        self._default_session_data_timeout = self._settings.default_session_data_timeout
+        self._default_session_data_timeout = self.settings.default_session_data_timeout
         self._session_been_resumed = None
         self._simple_session_user_data = None
         self._smart_session_user_data = None
@@ -46,14 +36,6 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
         self._is_option_select_request = None
         self._selected_option_identifier = None
-
-        # todo: reactivate that
-        """
-        if (self.sessions_users_data_disable_database is not True
-        and (not isinstance(self._sessions_users_data_db_table_name, str) or self._sessions_users_data_db_region_name is None)):
-            raise Exception(f"The disable_database argument on the initialization of the InoftSkill has not been"
-                            f"specified or set to True, yet the database table name or region name are missing.")
-        """
 
         self.__attributes_dynamodb_adapter = None
         self.__notifications_subscribers_dynamodb_adapter = None
@@ -68,33 +50,13 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self.__settings
 
     @property
-    def _session_users_data_safedict(self) -> SafeDict:
-        return DummyObject()
-        # todo: return the real sessions data
-
-        if self.__session_users_data_safedict is None:
-            self.__session_users_data_safedict = self._settings.sessions_users_data.to_safedict()
-        return self.__session_users_data_safedict
-
-    @property
-    def _sessions_users_data_db_table_name(self):
-        if self.__sessions_users_data_db_table_name is None:
-            self.__sessions_users_data_db_table_name = self._session_users_data_safedict.get("dynamodb").get("table_name").to_str(default=None)
-        return self.__sessions_users_data_db_table_name
-
-    @property
-    def _sessions_users_data_db_region_name(self):
-        if self.__sessions_users_data_db_region_name is None:
-            self.__sessions_users_data_db_region_name = self._session_users_data_safedict.get("dynamodb").get("region_name").to_str(default=None)
-        return self.__sessions_users_data_db_region_name
-
-    @property
     def _attributes_dynamodb_adapter(self) -> DynamoDbAttributesAdapter:
         if self.__attributes_dynamodb_adapter is None:
-            if self.sessions_users_data_disable_database is False:
-                self.__attributes_dynamodb_adapter = DynamoDbAttributesAdapter(table_name=self._sessions_users_data_db_table_name,
-                                                                               region_name=self._sessions_users_data_db_region_name,
-                                                                               primary_key_name="id", create_table=True)
+            if self.settings.database_sessions_users_data.disable_database is False:
+                self.__attributes_dynamodb_adapter = DynamoDbAttributesAdapter(
+                    table_name=self.settings.database_sessions_users_data.db_table_name,
+                    region_name=self.settings.database_sessions_users_data.db_region_name,
+                    primary_key_name="id", create_table=True)
         return self.__attributes_dynamodb_adapter
 
     @property
@@ -106,24 +68,10 @@ class HandlerInput(CurrentUsedPlatformInfo):
                                 f"section in your app_settings file.\nPlease refer to the documentation to see the format "
                                 f"and parameters of the user_notifications_subscriptions setting.")
 
-            user_notifications_subscriptions_settings = self._settings.settings.get("user_notifications_subscriptions").to_safedict(default=None)
-            if user_notifications_subscriptions_settings is None:
-                raise_exception_parameter_missing(parameter_name="user_notifications_subscriptions")
-
-            dynamodb_settings = user_notifications_subscriptions_settings.get("dynamodb").to_safedict(default=None)
-            if dynamodb_settings is None:
-                raise_exception_parameter_missing(parameter_name="dynamodb")
-
-            region_name = dynamodb_settings.get("region_name").to_str(default=None)
-            if dynamodb_settings is None:
-                raise_exception_parameter_missing(parameter_name="region_name")
-
-            table_name = dynamodb_settings.get("table_name").to_str(default=None)
-            if dynamodb_settings is None:
-                raise_exception_parameter_missing(parameter_name="table_name")
-
             self.__notifications_subscribers_dynamodb_adapter = DynamoDbNotificationsSubscribers(
-                table_name=table_name, region_name=region_name, create_table=True)
+                table_name=self.settings.database_users_notifications_subscriptions.db_table_name,
+                region_name=self.settings.database_users_notifications_subscriptions.db_region_name,
+                create_table=True)
 
         return self.__notifications_subscribers_dynamodb_adapter
 
@@ -203,7 +151,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         # We use a separate function to load the smart session user data, and we do not include it in the property itself,
         # because this function can be called by the smart_session_user_data property or the session_been_resumed property.
         if self._smart_session_user_data is None:
-            if self.sessions_users_data_disable_database is False:
+            if self.database_sessions_users_data_disable_database is False:
                 self._smart_session_user_data, self._session_been_resumed = self._attributes_dynamodb_adapter.get_smart_session_attributes(
                     user_id=self.persistent_user_id, session_id=self.session_id, timeout_seconds=self.default_session_data_timeout)
 
@@ -241,7 +189,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def persistent_user_data(self) -> SafeDict:
         if self._persistent_user_data is None:
-            if self.sessions_users_data_disable_database is False:
+            if self.database_sessions_users_data_disable_database is False:
                 self._persistent_user_data = self._attributes_dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
             if not isinstance(self._persistent_user_data, SafeDict):
                 self._persistent_user_data = SafeDict()
@@ -545,10 +493,10 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def save_attributes_if_need_to(self):
         if self.data_for_database_has_been_modified is True:
-            if self.sessions_users_data_disable_database is False:
+            if self.settings.database_sessions_users_data.disable_database is not True:
                 self._attributes_dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
-                                                      smart_session_attributes=self.smart_session_user_data.to_dict(),
-                                                      persistent_attributes=self.persistent_user_data.to_dict())
+                                                                  smart_session_attributes=self.smart_session_user_data.to_dict(),
+                                                                  persistent_attributes=self.persistent_user_data.to_dict())
 
     def to_platform_dict(self) -> dict:
         output_response_dict = None
@@ -621,6 +569,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def discord(self):
         return self.discordHandlerInput
 
+    @property
+    def rick_roll(self):
+        return self.call_rick_roll()
 
 class HandlerInputWrapper:
     from inoft_vocal_engine.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput

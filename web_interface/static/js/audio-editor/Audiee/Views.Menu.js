@@ -106,7 +106,6 @@ define([
 
         // adds a new track
         addTrack: function() {
-            console.log("Adding new track");
             var tpl = (_.template(ModalT))(),
                 $tpl = $(tpl);
 

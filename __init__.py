@@ -7,7 +7,7 @@ from .audio_editing.audioclip import AudioClip, Sound, Track, Relation
 
 from .platforms_handlers.discord.handler_input import start_discord_listening
 
-from .skill_builder.skill_settings import Settings
+from inoft_vocal_engine.skill_settings.skill_settings import Settings
 
 
 # todo: if the framework do not find the AWS credentials, ask with a dialog

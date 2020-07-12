@@ -1,8 +1,17 @@
-from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type
+from typing import List, get_type_hints, TypedDict
+
+from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type, \
+    raise_if_variable_not_expected_type_and_not_none
 
 
-class Tracks:
+class TrackModel(TypedDict):
+    attributes = None
+
+
+class Tracks(TypedDict):
     def __init__(self):
+        self._models: List[TrackModel] = None
+
         self._name = None
         self._color = None
         self._gain = None
@@ -12,6 +21,7 @@ class Tracks:
         self._length = None
         self._buffer = None
         self._file = None
+        """
         'name': 'Track 1',
         'color': '#00a0b0',
         'gain': 1,
@@ -21,6 +31,42 @@ class Tracks:
         'length': 1920,
         'buffer': {},
         'file': {}
+        """
+
+    @property
+    def models(self) -> List[TrackModel]:
+        return self._models
+
+    @models.setter
+    def models(self, models: List[TrackModel]) -> None:
+        raise_if_variable_not_expected_type_and_not_none(value=models, expected_type=TrackModel, variable_name="models")
+        self._models = models
+
+"""{'Collections': {'Tracks': {'models': [{'attributes': {'buffer': {'duration': 167.71401360544218, 'length': 7396188, 'numberOfChannels': 2, 'sampleRate': 44100}, 'color': '#00a0b0', 'file': {'lastModified': 1591264478848, 'name': 'jean sablon - alexa.mp3', 'size': 1007568, 'type': 'audio/mpeg', 'webkitRelativePath': ''}, 'gain': 1, 'length': 1920, 'muted': False, 'name': 'Track 1', 'pan': 0.5, 'solo': False}}]}}}"""
+
+t= {'Collections': {'Tracks': {'models': [{'attributes': {
+    'buffer': {
+        'duration': 167.71401360544218,
+        'length': 7396188,
+        'numberOfChannels': 2,
+        'sampleRate': 44100,
+        },
+    'color': '#00a0b0',
+    'file': {
+        'lastModified': 1591264478848,
+        'name': 'jean sablon - alexa.mp3',
+        'size': 1007568,
+        'type': 'audio/mpeg',
+        'webkitRelativePath': '',
+        },
+    'gain': 1,
+    'length': 1920,
+    'muted': False,
+    'name': 'Track 1',
+    'pan': 0.5,
+    'solo': False,
+    }}]}}}
+
 
 
 class Collections:
@@ -33,7 +79,7 @@ class Collections:
 
     @Tracks.setter
     def Tracks(self, tracks: Tracks) -> None:
-        raise_if_variable_not_expected_type(value=tracks, expected_type=, variable_name="Tracks")
+        # raise_if_variable_not_expected_type(value=tracks, expected_type=, variable_name="Tracks")
         self._Tracks = tracks
 
 
@@ -224,3 +270,14 @@ class Audiee:
   }
 }
 """
+
+amodels: List[TrackModel] = None
+
+if __name__ == "__main__":
+    TrackModel().
+
+    import __main__
+    r = get_type_hints(__main__)["amodels"]
+    r._name
+    print(get_type_hints(Tracks))
+    print(r)

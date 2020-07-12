@@ -7,7 +7,7 @@ import click
 from inoft_vocal_engine.cli.aws_core import AwsCore
 from inoft_vocal_engine.cli.cli_cache import CliCache
 from inoft_vocal_engine.safe_dict import SafeDict
-from inoft_vocal_engine.skill_builder import skill_settings
+from inoft_vocal_engine.skill_settings import skill_settings
 from inoft_vocal_engine.utils.general import get_all_files_in_dir, get_all_dirs_in_dir
 from inoft_vocal_engine.cli.botpress.content_element_object import ContentElement
 

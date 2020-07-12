@@ -29,23 +29,22 @@ import logging
 import threading
 import traceback
 
-from discord import VoiceClient
-
-from . import rtp
-from .utils import Defaultdict
-from .rtp import SilencePacket
-from .opus import Decoder, BufferedDecoder
-from .errors import DiscordException
+from inoft_vocal_engine.platforms_handlers.discord.lib_customs import rtp
+from inoft_vocal_engine.platforms_handlers.discord.lib_customs.opus import Decoder, BufferedDecoder
+from inoft_vocal_engine.platforms_handlers.discord.voice_client import VoiceClient
+from discord.errors import DiscordException
 
 try:
     import nacl.secret
     from nacl.exceptions import CryptoError
 except ImportError:
-    pass
+    nacl = None
+    # Just to avoid type checking errors
 
 log = logging.getLogger(__name__)
 
 __all__ = [
+    DiscordException,
     'AudioSink',
     'WaveSink',
     'PCMVolumeTransformerFilter',
@@ -83,7 +82,7 @@ class AudioSink:
         pass
 
     def pack_data(self, data, user=None, packet=None):
-        return VoiceData(data, user, packet) # is this even necessary?
+        return VoiceData(data, user, packet)  # is this even necessary?
 
 class WaveSink(AudioSink):
     def __init__(self, destination):
@@ -403,3 +402,7 @@ class AudioReader(threading.Thread):
 
     def is_listening(self):
         return not self._end.is_set()
+
+
+if __name__ == "__main__":
+    AudioReader()

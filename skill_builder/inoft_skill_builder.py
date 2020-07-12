@@ -1,7 +1,6 @@
 import logging
 from abc import abstractmethod
 from json import dumps as json_dumps
-from typing import Optional
 
 from inoft_vocal_engine.dummy_object import DummyObject
 from inoft_vocal_engine.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
@@ -14,7 +13,7 @@ from inoft_vocal_engine.plugins.loader import plugins_load
 # todo: Add a prod and dev production mode, so that optisionnal status (like loading of plugins) is done only in developpement
 
 # todo: Add a class with only a CanHandle function (for cases like the Yes and No classical handlers=
-from inoft_vocal_engine.skill_builder.skill_settings import Settings
+from inoft_vocal_engine.skill_settings.skill_settings import Settings
 
 
 class InoftCondition(HandlerInputWrapper):
@@ -110,13 +109,13 @@ class InoftHandlersGroup:
 class InoftSkill:
     def __init__(self, settings_instance: Settings = None):
         self.settings = settings_instance
-        # self.plugins = plugins_load(settings=self.settings)
+        self.plugins = plugins_load(settings=self.settings)
         # todo: reactivate plugins
 
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()
         self._default_fallback_handler = None
-        self._handler_input = HandlerInput()
+        self._handler_input = HandlerInput(settings_instance=settings_instance)
 
     @property
     def settings(self) -> Settings:

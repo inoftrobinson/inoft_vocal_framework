@@ -11,9 +11,12 @@ __pycache__/
 *.aup
 *.wav
 *.mp3
+*.HMP
+*.HM2
 
 # Exclusion of static discord bot token
 platforms_handlers/discord/static_token.py
+web_interface/node_modules/*
 
 # Distribution / packaging
 .Python

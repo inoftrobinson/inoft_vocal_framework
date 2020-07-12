@@ -78,10 +78,6 @@
 <script src="{{url_for('static', filename='js/audio-editor/libs/recursive_json.js')}}"></script>
 <script>
     function save_project() {
-        // todo: sauvegarder l'entièreté de la variable Audiee dans un
-        //  fichier temporaire puis envoyer le fichier dans la requête ajax,
-        //  et ensuite le récupérer dans la backend python (le fichier app.py)
-
         let result = AudieePersonnalParser(Audiee);
         console.log("my parser :" + result);
 

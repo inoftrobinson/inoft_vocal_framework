@@ -1,11 +1,8 @@
-import inspect
 import os
 import time
 import zipfile
-from concurrent.futures.thread import ThreadPoolExecutor
 from pathlib import Path
 
-import boto3
 import botocore
 import click
 from botocore.exceptions import ClientError
@@ -15,9 +12,11 @@ import inoft_vocal_engine
 from inoft_vocal_engine.cli.aws_utils import raise_if_bucket_name_not_valid
 from inoft_vocal_engine.cli.cli_cache import CliCache
 from inoft_vocal_engine.cli.deploy.core import Core
-from inoft_vocal_engine.skill_builder.skill_settings import Settings
+
 
 # todo: fix issue where when deploying we do not check if the api with the id found in the settings file do exit
+from inoft_vocal_engine.skill_settings import skill_settings
+
 
 class DeployHandler(Core):
     def __init__(self):
@@ -27,6 +26,7 @@ class DeployHandler(Core):
         click.echo(f"Took {click.style(text=f'{round(time.time() - start_time, 2)}s', fg='white')} to initiate AWS clients")
         # todo: make the initialization even more asynchronous, by calling the handle function while the AWS ressources are initializing.
         #  Right now, the initialization of the resources are async, but we must wait for their completion in order to call the handle function.
+        self.settings = skill_settings.prompt_get_settings()
 
     """def handle(self):
         # result = self.pool.submit(super().__init__, {"pool": self.pool})
@@ -61,8 +61,6 @@ class DeployHandler(Core):
             CliCache.cache().put("lastAppProjectRootFolderpath", app_project_root_folderpath)
             CliCache.save_cache_to_yaml()
             click.echo(f"Saved the folderpath of your project for {click.style(text='faster load next time', fg='blue')}")
-
-        self.settings.find_load_settings_file(root_folderpath=app_project_root_folderpath)
 
         handler_function_path = self.settings.deployment.handler_function_path
         if handler_function_path is not None and handler_function_path != "":

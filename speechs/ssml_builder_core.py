@@ -4,7 +4,7 @@ import re
 from typing import Optional
 
 from inoft_vocal_engine.safe_dict import SafeDict
-from inoft_vocal_engine.skill_builder.skill_settings import Settings
+from inoft_vocal_engine.skill_settings.skill_settings import Settings
 from inoft_vocal_engine.session_utils import add_new_played_category  # todo: remove this dependance
 from inoft_vocal_engine.general_utils import pick_msg # todo: and remove this dependance too
 from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type

@@ -1,97 +1,35 @@
 from typing import Optional
 
+import click
+
 from inoft_vocal_engine.dummy_object import dummy_object
 from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type, raise_if_variable_not_expected_type_and_not_none
+from inoft_vocal_engine.skill_settings.settings_components.deployment import Deployment
+from inoft_vocal_engine.skill_settings.settings_components.dynamodb_databases import DatabaseSessionsUsersData, \
+    DatabaseMessagesContent, DatabaseUsersNotificationsSubscriptions
+from inoft_vocal_engine.skill_settings.settings_components.plugins import Plugins
 from inoft_vocal_engine.speech_synthesis.polly import VOICES
 
-class SessionsUsersData:
-    def __init__(self):
-        pass
+
+def prompt_database_warning_message(variable_name: str, instance_type: type):
+    click.echo(click.style(f"\nWarning ! The variable {variable_name} for the {instance_type.__name__} instance was not properly set.\n"
+                           f"If you do not need this database client, please set the disable_database variable to True on this instance.",
+                           fg="yellow"))
 
 
 class Settings:
-    class Deployment:
-        class Endpoints:
-            pass
-            """       
-             self._endpoints = endpoints
-                    "endpoints": {
-                        "type": "dict",
-                        "schema": {
-                            "alexaApiEndpointUrlNotRecommendedToUse": {
-                                "type": "string"
-                            },
-                            "googleAssistantApiEndointUrl": {
-                                "type": "string"
-                            },
-                            "samsungBixbyApiEndointUrl": {
-                                "type": "string"
-                            },
-                            "siriApiEndointUrl": {
-                                "type": "string"
-                            },
-                        }
-                    }
-                }"""
-
-        def __init__(self, handler_function_path: str, api_gateway_id: str, s3_bucket_name: str, lambda_name: str, endpoints: Endpoints):
-            self.handler_function_path = handler_function_path
-            self.api_gateway_id = api_gateway_id
-            self.s3_bucket_name = s3_bucket_name
-            self.lambda_name = lambda_name
-            self.endpoints = endpoints
-
-        @property
-        def handler_function_path(self) -> str:
-            return self._handler_function_path
-
-        @handler_function_path.setter
-        def handler_function_path(self, handler_function_path: str) -> None:
-            raise_if_variable_not_expected_type(value=handler_function_path, expected_type=str, variable_name="handler_function_path")
-            self._handler_function_path = handler_function_path
-
-        @property
-        def api_gateway_id(self) -> str:
-            return self._api_gateway_id
-
-        @api_gateway_id.setter
-        def api_gateway_id(self, api_gateway_id: str) -> None:
-            raise_if_variable_not_expected_type(value=api_gateway_id, expected_type=str, variable_name="api_gateway_id")
-            self._api_gateway_id = api_gateway_id
-
-        @property
-        def s3_bucket_name(self) -> str:
-            return self._s3_bucket_name
-
-        @s3_bucket_name.setter
-        def s3_bucket_name(self, s3_bucket_name: str) -> None:
-            raise_if_variable_not_expected_type(value=s3_bucket_name, expected_type=str, variable_name="s3_bucket_name")
-            self._s3_bucket_name = s3_bucket_name
-
-        @property
-        def lambda_name(self) -> str:
-            return self._lambda_name
-
-        @lambda_name.setter
-        def lambda_name(self, lambda_name: str) -> None:
-            raise_if_variable_not_expected_type(value=lambda_name, expected_type=str, variable_name="lambda_name")
-            self._lambda_name = lambda_name
-
-        @property
-        def endpoints(self) -> Endpoints:
-            return self._endpoints
-
-        @endpoints.setter
-        def endpoints(self, endpoints: Endpoints) -> None:
-            raise_if_variable_not_expected_type(value=endpoints, expected_type=self.Endpoints, variable_name="endpoints")
-            self._endpoints = endpoints
-
     def __init__(self, characters_voices: Optional[dict] = None, deployment: Optional[Deployment] = None,
-                 sessions_users_data: SessionsUsersData = None):
+                 database_sessions_users_data: DatabaseSessionsUsersData = DatabaseSessionsUsersData(),
+                 database_messages_content: DatabaseMessagesContent = DatabaseMessagesContent(),
+                 database_users_notifications_subscriptions: DatabaseUsersNotificationsSubscriptions = DatabaseUsersNotificationsSubscriptions(),
+                 plugins: Plugins = Plugins()):
         self.characters_voices = characters_voices
         self.deployment = deployment
-        self.sessions_users_data = sessions_users_data
+        self.database_sessions_users_data = database_sessions_users_data
+        self.database_messages_content = database_messages_content if database_messages_content is not None else dummy_object
+        self.database_users_notifications_subscriptions = database_users_notifications_subscriptions if database_users_notifications_subscriptions is not None else dummy_object
         self.default_session_data_timeout = 60
+        self.plugins = plugins if plugins is not None else list()  # We use a list instead of dummy object, since there is multiple for loop calls on this object
 
     @property
     def characters_voices(self) -> dict:
@@ -110,17 +48,6 @@ class Settings:
     def deployment(self, deployment: Deployment) -> None:
         raise_if_variable_not_expected_type_and_not_none(value=deployment, expected_type=self.Deployment, variable_name="deployment")
         self._deployment = deployment
-
-    @property
-    def sessions_users_data(self) -> SessionsUsersData:
-        return dummy_object
-        # todo: re-use users_data
-        return self._sessions_users_data if self._sessions_users_data is not None else dummy_object
-
-    @sessions_users_data.setter
-    def sessions_users_data(self, _sessions_users_data: SessionsUsersData) -> None:
-        raise_if_variable_not_expected_type_and_not_none(value=_sessions_users_data, expected_type=SessionsUsersData, variable_name="sessions_user_data")
-        self._sessions_users_data = _sessions_users_data
 
 
 def prompt_get_settings(root_folderpath: Optional[str] = None) -> Settings:
