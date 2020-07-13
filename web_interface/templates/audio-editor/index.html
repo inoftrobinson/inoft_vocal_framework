@@ -77,6 +77,8 @@
 <script src="{{url_for('static', filename='js/audio-editor/libs/deepstringify_homemade.js')}}"></script>
 <script src="{{url_for('static', filename='js/audio-editor/libs/recursive_json.js')}}"></script>
 <script>
+    console.log('{{project_data|tojson}}');
+
     function save_project() {
         let result = AudieePersonnalParser(Audiee);
         console.log("my parser :" + result);
