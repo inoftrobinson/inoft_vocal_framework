@@ -644,7 +644,7 @@ input[type="image"],input[type="checkbox"],input[type="radio"] {
 	line-height: normal;
 	border: 0;
 	cursor: pointer;
-	border-radius: 0 \0/
+	border-radius: 0;
 }
 
 input[type="file"] {
@@ -736,7 +736,7 @@ input:focus,textarea:focus {
 	-moz-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075),0 0 8px rgba(82,168,236,0.6);
 	box-shadow: inset 0 1px 1px rgba(0,0,0,0.075),0 0 8px rgba(82,168,236,0.6);
 	outline: 0;
-	outline: thin dotted \9
+	outline: thin dotted;
 }
 
 input[type="file"]:focus,input[type="checkbox"]:focus,select:focus {
@@ -1995,7 +1995,6 @@ table .span12 {
 	-moz-box-shadow: inset 0 2px 4px rgba(0,0,0,0.15),0 1px 2px rgba(0,0,0,0.05);
 	box-shadow: inset 0 2px 4px rgba(0,0,0,0.15),0 1px 2px rgba(0,0,0,0.05);
 	background-color: #e6e6e6;
-	background-color: #d9d9d9 \9;
 	color: rgba(0,0,0,0.5);
 	outline: 0
 }
@@ -2063,7 +2062,7 @@ table .span12 {
 }
 
 .btn-primary:active,.btn-primary.active {
-	background-color: #039 \9
+	background-color: #039;
 }
 
 .btn-warning {
@@ -2086,7 +2085,7 @@ table .span12 {
 }
 
 .btn-warning:active,.btn-warning.active {
-	background-color: #c67605 \9
+	background-color: #c67605;
 }
 
 .btn-danger {
@@ -2105,11 +2104,11 @@ table .span12 {
 }
 
 .btn-danger:hover,.btn-danger:active,.btn-danger.active,.btn-danger.disabled,.btn-danger[disabled] {
-	background-color: #bd362f
+	background-color: #bd362f;
 }
 
 .btn-danger:active,.btn-danger.active {
-	background-color: #942a25 \9
+	background-color: #942a25;
 }
 
 .btn-success {
@@ -2132,7 +2131,7 @@ table .span12 {
 }
 
 .btn-success:active,.btn-success.active {
-	background-color: #408140 \9
+	background-color: #408140;
 }
 
 .btn-info {
@@ -2155,7 +2154,7 @@ table .span12 {
 }
 
 .btn-info:active,.btn-info.active {
-	background-color: #24748c \9
+	background-color: #24748c;
 }
 
 button.btn,input[type="submit"].btn {
@@ -2742,7 +2741,7 @@ button.btn.small,input[type="submit"].btn.small {
 }
 
 .btn-navbar:active,.btn-navbar.active {
-	background-color: #080808 \9
+	background-color: #080808;
 }
 
 .btn-navbar .icon-bar {
@@ -3969,7 +3968,7 @@ body {
 }
 
 .navbar #playback-controls .playing:active,.navbar #playback-controls .playing.active {
-	background-color: #fa9f1e \9
+	background-color: #fa9f1e;
 }
 
 .navbar #playback-controls #time-display {
@@ -4011,7 +4010,7 @@ body {
 	position: relative;
 	overflow: scroll;
 	margin-top: 100px;
-	background-color: #343838;
+	background-color: #f8f8ff;
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
 	-khtml-user-select: none;

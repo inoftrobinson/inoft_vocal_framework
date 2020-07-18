@@ -57,6 +57,29 @@ class ProjectsTextContentsDynamoDbClient(DynamoDbCoreAdapter):
         except Exception as e:
             raise Exception(f"Failed to save attributes to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
+    def update_content_element(self, element_id: str, dialogue_line_index: int, element_text: str) -> Response:
+        # todo: add support for dialogue line, because currently we are replacing the lines by a single text
+        try:
+            table = self.dynamodb.Table(self.table_name)
+            dialogue_line = DialogueLine(character_name="Default", line_content=element_text, additional_character_metadata=None)
+            # Todo: add support for character name and additional character metadata
+
+            response = table.update_item(
+                Key={"elementId": element_id},
+                UpdateExpression=f"set dialogueLines[{dialogue_line_index}]=:dialogueLine",
+                ExpressionAttributeValues={
+                    ':dialogueLine': dialogue_line.dict(),
+                },
+                ReturnValues="UPDATED_NEW"
+            )
+            print(response)
+            return response
+
+        except ResourceNotExistsError:
+            raise Exception( f"DynamoDb table {self.table_name} doesn't exist. Failed to update attributes to DynamoDb table.")
+        except Exception as e:
+            raise Exception(f"Failed to update attributes to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
+
     def _get_latest(self, index_name: str, num_latest_items: int, exclusive_start_key: Optional[dict] = None) -> Response:
         query = {
             "TableName": self.table_name,

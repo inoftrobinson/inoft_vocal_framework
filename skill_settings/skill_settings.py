@@ -46,7 +46,7 @@ class Settings:
 
     @deployment.setter
     def deployment(self, deployment: Deployment) -> None:
-        raise_if_variable_not_expected_type_and_not_none(value=deployment, expected_type=self.Deployment, variable_name="deployment")
+        raise_if_variable_not_expected_type_and_not_none(value=deployment, expected_type=Deployment, variable_name="deployment")
         self._deployment = deployment
 
 

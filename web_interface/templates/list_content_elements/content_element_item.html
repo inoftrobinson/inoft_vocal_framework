@@ -1,3 +1,4 @@
+<!--
 <div class="content-element-item">
     <a href="/audio-editor/{{item.elementId}}">
         <h4 class="title">
@@ -13,4 +14,41 @@
             {% endfor %}
         </div>
     </a>
+</div>
+-->
+
+<div class="content-element-item">
+    <div class="content-element-item-wrapper">
+        <div class="upper-container">
+            <div class="element-id">
+                {{item.elementId}}
+            </div>
+            <!--<div class="col-7 auth__link"><a>Don't have an account?</a></div>
+            <div class="col-5"><button class="btn-primary btn-block" type="submit">Sign in</button></div>-->
+            <div class="buttons-container">
+                <a class=icon-link" href="/audio-editor/{{item.elementId}}">
+                    <div class="icon-wrapper edit-icon" href="/audio-editor/{{item.elementId}}">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                </a>
+                <a class=icon-link" href="/audio-editor/{{item.elementId}}">
+                    <div class="icon-wrapper audio-icon" href="/audio-editor/{{item.elementId}}">
+                        <i class="far fa-file-audio"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <div class="lines-container">
+            {% for line in item.dialogueLines %}
+            <div class="line-item">
+                <h5>{{line.character_name}}</h5>
+                <div class="text" ondblclick="myFunction()">
+                    <div class="text-editor-target" data-elementId="{{item.elementId}}" data-dialogueLineIndex="{{loop.index0}}">
+                        {{line.line_content}}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </div>
