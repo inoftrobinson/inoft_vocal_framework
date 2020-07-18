@@ -64,11 +64,14 @@ class ProjectsTextContentsDynamoDbClient(DynamoDbCoreAdapter):
             dialogue_line = DialogueLine(character_name="Default", line_content=element_text, additional_character_metadata=None)
             # Todo: add support for character name and additional character metadata
 
+            from time import time
             response = table.update_item(
                 Key={"elementId": element_id},
-                UpdateExpression=f"set dialogueLines[{dialogue_line_index}]=:dialogueLine",
+                UpdateExpression=f"SET dialogueLines[{dialogue_line_index}]=:dialogueLine, lastModificationTimestamp=:timestamp",
                 ExpressionAttributeValues={
                     ':dialogueLine': dialogue_line.dict(),
+                    ":timestamp": round(time())
+                    # We need the timestamp to be an int, not a float, so we round it.
                 },
                 ReturnValues="UPDATED_NEW"
             )
