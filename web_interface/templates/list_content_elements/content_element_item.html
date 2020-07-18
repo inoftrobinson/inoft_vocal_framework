@@ -1,10 +1,11 @@
 <div class="content-element-item">
-    <a href="/audio-editor/{{item.id}}">
+    <a href="/audio-editor/{{item.elementId}}">
         <h4 class="title">
-            {{item.id}}
+            {{item.elementId}}
         </h4>
+        <p>{{item.lastModificationTimestamp}}</p>
         <div class="lines-container">
-            {% for line in item.dialogues_lines %}
+            {% for line in item.dialogueLines %}
             <div class="line-item">
                 <h5>{{line.character_name}}</h5>
                 <p>{{line.line_content}}</p>
