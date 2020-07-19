@@ -14,7 +14,7 @@
   'use strict';
   const {CompositeDecorator, Editor, EditorState, ContentState, convertToRaw} = Draft;
 
-  class TweetEditorExample extends React.Component {
+  class InlineTextEditor extends React.Component {
     constructor(props) {
       super(props);
       const compositeDecorator = new CompositeDecorator([
@@ -44,8 +44,11 @@
     save() {
       $(".save-icon").addClass("load");
 
+      const data = convertToRaw(this.state.editorState.getCurrentContent()).text;
+      console.log("data = " + data);
       const blocks = convertToRaw(this.state.editorState.getCurrentContent()).blocks;
-      const value = blocks.map(block => (!block.text.trim() && '\n') || block.text).join('\n');
+      console.log("block = " + blocks);
+      const value = blocks.map(block => (!block.text.trim() && '\n') || block.text).join('\n').trim();
       console.log("value : " + value);
 
       $.ajax({
@@ -160,13 +163,13 @@
 
   let text_editor_targets = document.getElementsByClassName('text-editor-target');
   for (let i=0; i < text_editor_targets.length; i++) {
-      let textContent = text_editor_targets[i].textContent;
+      let textContent = text_editor_targets[i].textContent.trim();
       let elementId = text_editor_targets[i].getAttribute("data-elementId");
       let dialogueLineIndex = text_editor_targets[i].getAttribute("data-dialogueLineIndex");
       // Todo: apply check to make sure that the element is owned by the owner, because currently,
       //  anyone could modify the HTML of the page, and potentially modify any element with any id
       ReactDOM.render(
-          <TweetEditorExample
+          <InlineTextEditor
               elementId={elementId}
               dialogueLineIndex={dialogueLineIndex}
               textContent={textContent}
@@ -175,7 +178,7 @@
       );
   }
   /*ReactDOM.render(
-    <TweetEditorExample />,
+    <InlineTextEditor />,
     document.getElementsByClassName('text-editor-target')[0]
   );*/
 </script>
