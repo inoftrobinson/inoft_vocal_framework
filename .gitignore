@@ -17,6 +17,7 @@ __pycache__/
 # Exclusion of static discord bot token
 platforms_handlers/discord/static_token.py
 web_interface/node_modules/*
+web_interface/static/node_modules/*
 
 # Distribution / packaging
 .Python

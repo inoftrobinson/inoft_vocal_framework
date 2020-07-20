@@ -89,8 +89,6 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
 
         try:
             print(f"Saving attributes : {item_dict}")
-            # todo: fix issue where bool are converted to int (it happens when the data is send to dynamodb, but the weird stuff is
-            #  that it happens in the framework, but not if i do the same thing and send the same data in a python console... *-*
             self.dynamodb.put_item(TableName=self.table_name, Item=self.utils.python_to_dynamodb(item_dict))
         except ResourceNotExistsError:
             raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")

@@ -1,14 +1,14 @@
 from typing import Optional, List
 
+from pydantic import BaseModel
+
 from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type
 
 
-class DialogueLine:
-    def __init__(self, character_name: str = None, line_content: str = None, additional_character_metadata: Optional[str] = None):
-        self.character_name = character_name
-        self.line_content = line_content
-        self.additional_character_metadata = additional_character_metadata
-
+class DialogueLine(BaseModel):
+    character_name: str = None
+    line_content: str = None
+    additional_character_metadata: Optional[str] = None
 
 class Deserializer:
     def __init__(self, characters_names: Optional[list] = None):

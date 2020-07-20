@@ -9,12 +9,17 @@
   <!-- scripts -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="../waveform-playlist-master/waveform-playlist-master/src/app.js"></script>
+  <link href="{{url_for('static', filename='libs/fontawesome-free-5.14.0/css/all.css')}}" rel="stylesheet">
 </head>
 <body>
   <div class="main-container flex-container">
     {% include "sidebar/sidebar.html" %}
 
     <div class="main-panel container light-mode">
+      <div class="save-icon">
+        <img src="{{url_for('static', filename='icons/iconmonstr-upload-17.svg')}}">
+      </div>
+
       <br>
       <div id="projectDirField"></div>
       <div id="list-content">
@@ -26,12 +31,58 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+
+  {% include "text-editor/inlineTextEditorDefinition.html" %}
+
+
   <!--
 <script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
   -->
   <script src="http://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/JSXTransformer.js"></script>
   <script type="text/jsx">
+    class TextEditor extends React.Component {
+        constructor(props) {
+          super(props);
+          // this.text = {value: props };
+
+          this.handleChange = this.handleChange.bind(this);
+          this.handleSubmit = this.handleSubmit.bind(this);
+        }
+
+        handleChange(event) {
+          this.setState({value: event.target.value});
+        }
+
+        handleSubmit(event) {
+          $.ajax({
+              type: 'POST',
+              url: '/project_dir',
+              data: JSON.stringify({filepath: this.state.value}),
+              contentType: 'application/json',
+              success: function (response_data) {
+                let $container = $("#list-content");
+                $container.empty();
+                $container.append(response_data.html);
+              }
+          });
+
+          event.preventDefault();
+        }
+
+        render() {
+          return (
+            <form onSubmit={this.handleSubmit}>
+              <label>
+                Name:
+                <input type="text" value={this.state.value} onChange={this.handleChange} />
+              </label>
+              <input type="submit" value="Submit" />
+            </form>
+          );
+        }
+      }
+
     class ProjectDirectory extends React.Component {
         constructor(props) {
           super(props);

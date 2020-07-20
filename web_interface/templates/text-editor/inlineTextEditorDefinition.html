@@ -1,0 +1,184 @@
+
+<link rel="stylesheet" href="{{url_for('static', filename='node_modules/draft-js/dist/Draft.css')}}" />
+<script src="{{url_for('static', filename='node_modules/react/umd/react.development.js')}}"></script>
+<script src="{{url_for('static', filename='node_modules/react-dom/umd/react-dom.development.js')}}"></script>
+<script src="{{url_for('static', filename='node_modules/immutable/dist/immutable.js')}}"></script>
+<script src="{{url_for('static', filename='node_modules/es6-shim/es6-shim.js')}}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.js"></script>
+<script src="{{url_for('static', filename='node_modules/draft-js/dist/Draft.js')}}"></script>
+<script src="{{url_for('static', filename='node_modules/draft-js/lib/ContentState.js')}}"></script>
+
+<!--<div id="target"></div>-->
+
+<script type="text/babel">
+  'use strict';
+  const {CompositeDecorator, Editor, EditorState, ContentState, convertToRaw} = Draft;
+
+  class InlineTextEditor extends React.Component {
+    constructor(props) {
+      super(props);
+      const compositeDecorator = new CompositeDecorator([
+        {
+          strategy: handleStrategy,
+          component: HandleSpan,
+        },
+        {
+          strategy: hashtagStrategy,
+          component: HashtagSpan,
+        },
+      ]);
+
+      this.state = {
+          editorState: EditorState.createWithContent(ContentState.createFromText(props.textContent), compositeDecorator),
+      }
+      this.elementId = props.elementId;
+      this.dialogueLineIndex = props.dialogueLineIndex;
+
+      this.focus = () => this.refs.editor.focus();
+      this.onChange = (editorState) => this.setState({editorState});
+      this.logState = () => console.log(this.state.editorState.toJS());
+
+      this.save = this.save.bind(this);
+    }
+
+    save() {
+      $(".save-icon").addClass("load");
+
+      const data = convertToRaw(this.state.editorState.getCurrentContent()).text;
+      console.log("data = " + data);
+      const blocks = convertToRaw(this.state.editorState.getCurrentContent()).blocks;
+      console.log("block = " + blocks);
+      const value = blocks.map(block => (!block.text.trim() && '\n') || block.text).join('\n').trim();
+      console.log("value : " + value);
+
+      $.ajax({
+          type: 'POST',
+          url: '/text-contents/update/' + this.elementId,
+          data: JSON.stringify({dialogueLineIndex: this.dialogueLineIndex, text: value}),
+          contentType: 'application/json',
+          success: function (response_data) {
+              console.log("success !");
+              setTimeout(
+                  function() {
+                      $(".save-icon").removeClass("load");
+                  },
+                  1000
+              )
+          }
+      });
+    }
+
+    render() {
+      return (
+        <div className="text-editor">
+            <div className="root">
+              <div style={styles.editor} onClick={this.focus}>
+                <Editor
+                  editorState={this.state.editorState}
+                  onChange={this.onChange}
+                  placeholder="Ecrivez votre ligne de dialogue"
+                  ref="editor"
+                  spellCheck={true}
+                />
+              </div>
+              <input
+                onClick={this.save}
+                style={styles.button}
+                type="button"
+                value="Save"
+              />
+            </div>
+        </div>
+      );
+    }
+  }
+
+  /**
+   * Super simple decorators for handles and hashtags, for demonstration
+   * purposes only. Don't reuse these regexes.
+   */
+  const HANDLE_REGEX = /@[\w]+/g;
+  const HASHTAG_REGEX = /#[\w\u0590-\u05ff]+/g;
+
+  function handleStrategy(contentBlock, callback, contentState) {
+    findWithRegex(HANDLE_REGEX, contentBlock, callback);
+  }
+
+  function hashtagStrategy(contentBlock, callback, contentState) {
+    findWithRegex(HASHTAG_REGEX, contentBlock, callback);
+  }
+
+  function findWithRegex(regex, contentBlock, callback) {
+    const text = contentBlock.getText();
+    let matchArr, start;
+    while ((matchArr = regex.exec(text)) !== null) {
+      start = matchArr.index;
+      callback(start, start + matchArr[0].length);
+    }
+  }
+
+  const HandleSpan = (props) => {
+    return (
+      <span
+        style={styles.handle}
+        data-offset-key={props.offsetKey}
+      >
+        {props.children}
+      </span>
+    );
+  };
+
+  const HashtagSpan = (props) => {
+    return (
+      <span
+        style={styles.hashtag}
+        data-offset-key={props.offsetKey}
+      >
+        {props.children}
+      </span>
+    );
+  };
+
+  const styles = {
+    editor: {
+      border: '1px solid #ddd',
+      cursor: 'text',
+      fontSize: 16,
+      minHeight: 40,
+      padding: 10,
+    },
+    button: {
+      marginTop: 10,
+      textAlign: 'center',
+    },
+    handle: {
+      color: 'rgba(98, 177, 254, 1.0)',
+      direction: 'ltr',
+      unicodeBidi: 'bidi-override',
+    },
+    hashtag: {
+      color: 'rgba(95, 184, 138, 1.0)',
+    },
+  };
+
+  let text_editor_targets = document.getElementsByClassName('text-editor-target');
+  for (let i=0; i < text_editor_targets.length; i++) {
+      let textContent = text_editor_targets[i].textContent.trim();
+      let elementId = text_editor_targets[i].getAttribute("data-elementId");
+      let dialogueLineIndex = text_editor_targets[i].getAttribute("data-dialogueLineIndex");
+      // Todo: apply check to make sure that the element is owned by the owner, because currently,
+      //  anyone could modify the HTML of the page, and potentially modify any element with any id
+      ReactDOM.render(
+          <InlineTextEditor
+              elementId={elementId}
+              dialogueLineIndex={dialogueLineIndex}
+              textContent={textContent}
+          />,
+          text_editor_targets[i]
+      );
+  }
+  /*ReactDOM.render(
+    <InlineTextEditor />,
+    document.getElementsByClassName('text-editor-target')[0]
+  );*/
+</script>
