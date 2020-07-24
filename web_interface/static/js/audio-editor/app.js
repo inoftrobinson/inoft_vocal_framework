@@ -10,6 +10,8 @@
  * Redistributions of files must retain the above copyright notice.
  */
 
+import { data_to_audiee } from "./data_to_audiee"
+
 define(function(require) {
 	// general
 	var $ = require('jquery'),
@@ -47,6 +49,7 @@ define(function(require) {
 		Models: {},
 		Views: {},
 	};
+
 	Audiee.Display = new DisplayH;
 	Audiee.Player = new PlayerH;
 
@@ -93,10 +96,17 @@ define(function(require) {
 			// for Chrome, Safari and Opera 12+
 			return 'By leaving this page, all changes will be lost.';
 		};
+
+		data_to_audiee(resumed_project_data, Audiee);
 	};
+
+	
+
 	return {	
 		initialize: init
 	};
 
-
 });
+
+
+

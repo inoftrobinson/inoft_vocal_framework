@@ -50,8 +50,47 @@
 
 
     <!-- JavaScript at the bottom for fast page loading -->
+    <script>
+        const rs = "{{project_data}}";
+        const resumed_project_data = JSON.parse(rs.replace(/&#34;/g, '"'));
+    </script>
     <script data-main="/static/js/audio-editor/main" src="{{url_for('static', filename='js/audio-editor/libs/require/require.js')}}"></script>
 </body>
+<script>
+
+        /*
+        const rs = "{{project_data}}";
+        const resumed_project_data = JSON.parse(rs.replace(/&#34;/g, '"'));
+        for (let i = 0; i < resumed_project_data.Collections.Tracks.models.length; i++) {
+            Audiee.Collections.Tracks.models.push ({
+                attributes: {
+                    buffer: {
+                        duration: resumed_project_data.Collections.Tracks.models[i].attributes.buffer.duration, //number
+                        length: resumed_project_data.Collections.Tracks.models[i].attributes.buffer.length, //number
+                        numberOfChannels: resumed_project_data.Collections.Tracks.models[i].attributes.buffer.numberOfChannels, //should be 2 if stereo or 1 if mono, or >2 if you're a genius
+                        sampleRate: resumed_project_data.Collections.Tracks.models[i].attributes.buffer.sampleRate //number depends, could be 41000 or 48000, or 96000
+                    },
+                    color: resumed_project_data.Collections.Tracks.models[i].attributes.color, //hex : #FFFFFF
+                    file: {
+                        lastModified: resumed_project_data.Collections.Tracks.models[i].attributes.file.lastModified, //freaking bid int
+                        name: resumed_project_data.Collections.Tracks.models[i].attributes.file.name, //string file name
+                        size: resumed_project_data.Collections.Tracks.models[i].attributes.file.size, //also a big int
+                        type: resumed_project_data.Collections.Tracks.models[i].attributes.file.type, //string type of audio : "audio/<type>"
+                        webkitRelativePath: resumed_project_data.Collections.Tracks.models[i].attributes.file.webkitRelativePath // i saw path so i tought it was useful
+                    },
+                    gain: resumed_project_data.Collections.Tracks.models[i].attributes.gain, //number (float)
+                    length: resumed_project_data.Collections.Tracks.models[i].attributes.length,
+                    muted: resumed_project_data.Collections.Tracks.models[i].attributes.muted, //bool
+                    name: resumed_project_data.Collections.Tracks.models[i].attributes.name, //string track name
+                    pan: resumed_project_data.Collections.Tracks.models[i].attributes.pan, //number (float)
+                    solo: resumed_project_data.Collections.Tracks.models[i].attributes.solo, //bool
+                    cid: resumed_project_data.Collections.Tracks.models[i].attributes.cid //code
+                }
+            });
+        }
+         */
+
+</script>
 <script type="text/javascript" src="{{url_for('static', filename='js/audio-editor/libs/shortcut/shortcut.js')}}"></script>
 <script>
     $(window).on('wheel', function(event){
@@ -73,6 +112,7 @@
         console.log("Success");
     });
 </script>
+
 <script src="{{url_for('static', filename='js/audio-editor/libs/JSON.prune.js')}}"></script>
 <script src="{{url_for('static', filename='js/audio-editor/libs/deepstringify_homemade.js')}}"></script>
 <script src="{{url_for('static', filename='js/audio-editor/libs/recursive_json.js')}}"></script>
@@ -141,4 +181,7 @@
         return result;
     }
 </script>
+
+
+
 </html>

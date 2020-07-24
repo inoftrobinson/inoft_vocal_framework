@@ -20,7 +20,7 @@ projects_text_contents_dynamodb_static_client = ProjectsTextContentsDynamoDbClie
 @app.route("/")
 def index():
     return render_template("index.html", list_content=content_list(),
-                           filepath="F:/Inoft/anvers_1944_project/inoft_vocal_engine/botpress_integration/builtin_text.json")
+                           filepath="../botpress_integration/builtin_text.json")
 
 @app.route("/text")
 def text():
@@ -29,6 +29,7 @@ def text():
 @app.route("/audio-editor/<project_id>")
 def audio_editor(project_id: str):
     # todo: look for project id in database
+<<<<<<< Updated upstream
     project_data, request_success = audio_edtor_projects_dynamodb_static_client.get_project_data_by_project_id(project_id=project_id)
     print(f"resumed data = {project_data}")
 
@@ -39,6 +40,15 @@ def audio_editor(project_id: str):
         'muted': False, 'name': 'Track 1', 'pan': 0.5, 'solo': False}}]}}}
 
     return render_template("audio-editor/index.html", project_id=project_id, project_data=project_data)
+=======
+    static_data = {"Collections": {"Tracks": {"models": [{"attributes": {
+        "buffer": {"duration": 167.714, "length": 8050272, "numberOfChannels": 2, "sampleRate": 48000},
+        "color": "#00a0b0", "file": {"lastModified": 1591264478848, "name": "jean sablon - alexa.mp3", "size": 1007568,
+                                     "type": "audio/mpeg", "webkitRelativePath": ""}, "gain": 1, "length": 1920,
+        "muted": False, "name": "Track 1", "pan": 0.5, "solo": False}}]}}}
+
+    return render_template("audio-editor/index.html", project_id=project_id, project_data=json.dumps(static_data))
+>>>>>>> Stashed changes
 
 @app.route("/audio-editor/<project_id>/save", methods=["POST"])
 def audio_editor_save(project_id: str):
