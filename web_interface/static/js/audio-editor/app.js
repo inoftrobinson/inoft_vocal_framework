@@ -55,8 +55,6 @@ define(function(require) {
 
 	// application initialization
 	var init = function() {
-		//todo: finish this :'(
-
 		window.Audiee = Audiee;						// global reference to object
 		
 		Audiee.Collections.Tracks = new TracksC;	// tracks collection
