@@ -10,8 +10,6 @@
  * Redistributions of files must retain the above copyright notice.
  */
 
-import { data_to_audiee } from "./data_to_audiee"
-
 define(function(require) {
 	// general
 	var $ = require('jquery'),
@@ -24,6 +22,8 @@ define(function(require) {
 
 	// models
 		ProjectM = require('Audiee/Models.Project'),
+		// This line will cause the equalizer to not work, and fuck up its jquery
+
 
 	// collections
 		TracksC = require('Audiee/Collections.Tracks'),
@@ -34,7 +34,8 @@ define(function(require) {
 		EditorV = require('Audiee/Views.Editor'),
 		TracksV = require('Audiee/Views.Tracks'),
 		MenuV = require('Audiee/Views.Menu'),
-		TimelineV = require('Audiee/Views.Timeline'),
+		TimelineV = require('Audiee/Views.Timeline'); //,
+
 
 	// templates
 		AlertT = require('text!templates/AlertModal.html');
@@ -49,24 +50,23 @@ define(function(require) {
 		Models: {},
 		Views: {},
 	};
-
 	Audiee.Display = new DisplayH;
 	Audiee.Player = new PlayerH;
 
 	// application initialization
 	var init = function() {
 		window.Audiee = Audiee;						// global reference to object
-		
+
 		Audiee.Collections.Tracks = new TracksC;	// tracks collection
-		
+
 		Audiee.Models.Project = new ProjectM;		// default project model
-		
+
 		Audiee.Views.Editor = new EditorV({			// editor wrapper view
 			model: Audiee.Models.Project
-		});	
-		
+		});
+
 		Audiee.Views.Timeline = new TimelineV;		// editor timeline view
-		
+
 		Audiee.Views.Tracks = new TracksV({			// tracks collection view
 			collection: Audiee.Collections.Tracks,
 			el: '#tracks'
@@ -77,36 +77,27 @@ define(function(require) {
 			el: '#project-name',
 			hasColor: false
 		});
-		
+
 		Audiee.Views.PlaybackControls = new PlaybackControlsV({	// playback controls view
 			model: Audiee.Models.Project
 		});
 
-		if (typeof webkitAudioContext !== 'undefined' || typeof AudioContext !== 'undefined') 
+		if (typeof webkitAudioContext !== 'undefined' || typeof AudioContext !== 'undefined')
 			Audiee.Views.Menu = new MenuV;			// show menu only if app is supported
 
 		// prompts user before leaving the app page
 		window.onbeforeunload = function(e) {
 			e = e || window.event;
-			
+
 			// for IE and Firefox prior to version 4
-			if (e) 
+			if (e)
 		    	e.returnValue = 'By leaving this page, all changes will be lost.';
-		  	
+
 			// for Chrome, Safari and Opera 12+
 			return 'By leaving this page, all changes will be lost.';
 		};
-
-		data_to_audiee(resumed_project_data, Audiee);
 	};
-
-	
-
-	return {	
+	return {
 		initialize: init
 	};
-
 });
-
-
-
