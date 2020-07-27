@@ -149,9 +149,9 @@ class Utils:
                 elif first_key == Utils.TYPE_NUMBER:
                     return Utils._dynamodb_number_to_python(number_string=first_item)
                 elif first_key == Utils.TYPE_STRING:
-                    return dynamodb_object
+                    return first_item
                 elif first_key in Utils.ALL_TYPES_WHERE_VALUE_DO_NOT_NEED_MODIFICATIONS:
-                    return dynamodb_object
+                    return first_item
                 elif first_key == Utils.TYPE_MAP:
                     return dict([(key, Utils.dynamodb_to_python(element)) for key, element in first_item.items()])
                 elif first_key == Utils.TYPE_LIST:

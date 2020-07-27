@@ -1,25 +1,3 @@
-/*
- Copyright (c) 2012-2018 Open Lab
- Written by Roberto Bicchierai and Silvia Chelazzi http://roberto.open-lab.com
- Permission is hereby granted, free of charge, to any person obtaining
- a copy of this software and associated documentation files (the
- "Software"), to deal in the Software without restriction, including
- without limitation the rights to use, copy, modify, merge, publish,
- distribute, sublicense, and/or sell copies of the Software, and to
- permit persons to whom the Software is furnished to do so, subject to
- the following conditions:
-
- The above copyright notice and this permission notice shall be
- included in all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
- NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
- LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
- OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
- WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
 function GanttMaster() {
   this.tasks = [];
   this.deletedTaskIds = [];
@@ -699,24 +677,25 @@ GanttMaster.prototype.saveGantt = function (forTransaction) {
 
   ret.deletedTaskIds = this.deletedTaskIds;  //this must be consistent with transactions and undo
 
-  if (!forTransaction) {
-    ret.resources = this.resources;
-    ret.roles = this.roles;
-    ret.canAdd = this.permissions.canAdd;
-    ret.canWrite = this.permissions.canWrite;
-    ret.canWriteOnParent = this.permissions.canWriteOnParent;
-    ret.zoom = this.gantt.zoom;
+  ret.resources = this.resources;
+  ret.roles = this.roles;
+  ret.canAdd = this.permissions.canAdd;
+  ret.canWrite = this.permissions.canWrite;
+  ret.canWriteOnParent = this.permissions.canWriteOnParent;
+  ret.zoom = this.gantt.zoom;
 
-    //save collapsed tasks on localStorage
-    this.storeCollapsedTasks();
+  //save collapsed tasks on localStorage
+  this.storeCollapsedTasks();
 
-    //mark un-changed task and assignments
-    this.markUnChangedTasksAndAssignments(ret);
+  //mark un-changed task and assignments
+  this.markUnChangedTasksAndAssignments(ret);
 
-    //si aggiunge il commento al cambiamento di date/status
-    ret.changesReasonWhy=$("#LOG_CHANGES").val();
+  //si aggiunge il commento al cambiamento di date/status
+  ret.changesReasonWhy=$("#LOG_CHANGES").val();
 
-  }
+  console.log("for transaction = " + forTransaction);
+  console.log("ret = ");
+  console.log(ret);
 
   //prof.stop();
   return ret;
@@ -1697,3 +1676,5 @@ GanttMaster.prototype.setHoursOn = function(startWorkingHour,endWorkingHour,date
   Date.workingPeriodResolution=resolution;
   millisInWorkingDay=endWorkingHour-startWorkingHour;
 };
+
+// export {GanttMaster}

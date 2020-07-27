@@ -1,5 +1,5 @@
 
-function data_to_audiee(json_object, audiee_instance) {
+function data_to_audiee(json_object: any, audiee_instance: any) {
     for (let i = 0; i < json_object.Collections.Tracks.models.length; i++) {
         audiee_instance.Collections.Tracks.models.push({
             attributes: {

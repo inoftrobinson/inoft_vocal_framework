@@ -1,4 +1,3 @@
-"use strict";
 /*
 import createEngine, {
     DefaultLinkModel,
@@ -41,33 +40,25 @@ const model = new DiagramModel();
 model.addAll(node1, node2, link);
 engine.setModel(model);
 */
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const ReactDOM = __importStar(require("react-dom"));
-require("./main.css");
-const react_diagrams_1 = __importStar(require("@projectstorm/react-diagrams"));
-const TSCustomNodeFactory_1 = require("./TSCustomNodeFactory");
-const TSCustomNodeModel_1 = require("./TSCustomNodeModel");
+import * as ReactDOM from 'react-dom';
+import './main.css';
+import createEngine, { DefaultLinkModel, DiagramModel } from '@projectstorm/react-diagrams';
+import { TSCustomNodeFactory } from "./TSCustomNodeFactory";
+import { TSCustomNodeModel } from "./TSCustomNodeModel";
 // create an instance of the engine
-const engine = react_diagrams_1.default();
+const engine = createEngine();
 // register the two engines
 // engine.getNodeFactories().registerFactory(new JSCustomNodeFactory() as any);
-engine.getNodeFactories().registerFactory(new TSCustomNodeFactory_1.TSCustomNodeFactory());
+engine.getNodeFactories().registerFactory(new TSCustomNodeFactory());
 // create a diagram model
-const model = new react_diagrams_1.DiagramModel();
+const model = new DiagramModel();
 //####################################################
 // now create two nodes of each type, and connect them
 // const node1 = new JSCustomNodeModel({ color: 'rgb(192,255,0)' });
 // node1.setPosition(50, 50);
-const node2 = new TSCustomNodeModel_1.TSCustomNodeModel({ color: 'rgb(0,192,255)' });
+const node2 = new TSCustomNodeModel({ color: 'rgb(0,192,255)' });
 node2.setPosition(200, 50);
-const link1 = new react_diagrams_1.DefaultLinkModel();
+const link1 = new DefaultLinkModel();
 // link1.setSourcePort(node1.getPort('out'));
 // link1.setTargetPort(node2.getPort('in'));
 // model.addAll(node1, node2, link1);

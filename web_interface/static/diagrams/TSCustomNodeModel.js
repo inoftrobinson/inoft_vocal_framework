@@ -1,16 +1,14 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const react_diagrams_1 = require("@projectstorm/react-diagrams");
-class TSCustomNodeModel extends react_diagrams_1.NodeModel {
+import { NodeModel, DefaultPortModel } from '@projectstorm/react-diagrams';
+export class TSCustomNodeModel extends NodeModel {
     constructor(options = {}) {
         super(Object.assign(Object.assign({}, options), { type: 'ts-custom-node' }));
         this.color = options.color || 'red';
         // setup an in and out port
-        this.addPort(new react_diagrams_1.DefaultPortModel({
+        this.addPort(new DefaultPortModel({
             in: true,
             name: 'in'
         }));
-        this.addPort(new react_diagrams_1.DefaultPortModel({
+        this.addPort(new DefaultPortModel({
             in: false,
             name: 'out'
         }));
@@ -24,4 +22,3 @@ class TSCustomNodeModel extends react_diagrams_1.NodeModel {
         // todo: readd color property setter
     }
 }
-exports.TSCustomNodeModel = TSCustomNodeModel;
