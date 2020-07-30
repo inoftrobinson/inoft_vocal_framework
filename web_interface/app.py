@@ -10,7 +10,7 @@ from inoft_vocal_engine.safe_dict import SafeDict
 from inoft_vocal_engine.web_interface.backend.audio_editor import audio_editor_blueprint
 from inoft_vocal_engine.web_interface.backend.diagrams import diagrams_blueprint
 from inoft_vocal_engine.web_interface.backend.team_organization import organization_blueprint
-from inoft_vocal_engine.web_interface.static_clients import StaticClients
+from inoft_vocal_engine.web_interface.static_clients import project_resources
 
 app = Flask(__name__)
 app.register_blueprint(audio_editor_blueprint)
@@ -40,7 +40,7 @@ def change_project_dir():
 
 def content_list():
     # contents_items = get_list_content(filepath=filepath)
-    content_items = StaticClients().projects_text_contents_dynamodb_static_client.get_latest_updated(num_latest_items=30).items
+    content_items = project_resources.project_text_contents_dynamodb_client.get_latest_updated(num_latest_items=30).items
     return render_template("list_content_elements/list.html", elements=content_items)
 
 @app.route("/text-contents/update/<element_id>", methods=["POST"])
@@ -50,7 +50,7 @@ def update_text_content(element_id: str):
     dialogue_line_index = request_json_data.get("dialogueLineIndex").to_int(default=None)
     element_text = request_json_data.get("text").to_str(default=None)
 
-    StaticClients().projects_text_contents_dynamodb_static_client.update_content_element(
+    project_resources.project_text_contents_dynamodb_client.update_content_element(
         element_id=element_id, dialogue_line_index=dialogue_line_index, element_text=element_text)
 
     print(request_json_data)

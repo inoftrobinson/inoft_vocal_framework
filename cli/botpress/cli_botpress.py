@@ -4,7 +4,7 @@ from typing import List
 
 import click
 
-from inoft_vocal_engine.cli.aws_core import AwsCore
+from inoft_vocal_engine.cloud_providers.aws.aws_core import AwsCore
 from inoft_vocal_engine.cli.cli_cache import CliCache
 from inoft_vocal_engine.safe_dict import SafeDict
 from inoft_vocal_engine.skill_settings import skill_settings

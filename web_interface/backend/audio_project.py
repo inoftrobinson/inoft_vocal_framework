@@ -3,25 +3,25 @@ from typing import List
 
 
 class AudioProject(BaseModel):
-    class Collections(BaseModel):
-        class Tracks(BaseModel):
-            class Model(BaseModel):
-                class Attributes(BaseModel):
-                    class File(BaseModel):
+    class _Collections(BaseModel):
+        class _Tracks(BaseModel):
+            class _Model(BaseModel):
+                class _Attributes(BaseModel):
+                    class _File(BaseModel):
                         name: str
                         webkitRelativePath: str
                         lastModified: int
                         size: int
                         type: str
 
-                    class Buffer(BaseModel):
+                    class _Buffer(BaseModel):
                         duration: float
                         length: int
                         sampleRate: int
                         numberOfChannels: int
 
-                    file: File
-                    buffer: Buffer
+                    file: _File
+                    buffer: _Buffer
                     color: str
                     length: float
                     name: str
@@ -29,21 +29,21 @@ class AudioProject(BaseModel):
                     pan: int
                     muted: bool
                     gain: float
-                attributes: Attributes
-            models: List[Model]
-        tracks: Tracks
+                attributes: _Attributes
+            models: List[_Model]
+        tracks: _Tracks
     projectId: str
-    collections: Collections
+    collections: _Collections
 
     def add_track(self, color: str = "e", gain: float = 1.0, pan: int = 0, solo: bool = False, muted: bool = False):
         dummy = {}
         self.collections.tracks.models.append(
-            self.Collections.Tracks.Model(
-                attributes=self.Collections.Tracks.Model.Attributes(
-                    file=self.Collections.Tracks.Model.Attributes.File(
+            self._Collections._Tracks._Model(
+                attributes=self._Collections._Tracks._Model._Attributes(
+                    file=self._Collections._Tracks._Model._Attributes._File(
                         name="e", webkitRelativePath="e", lastModified=0, size=0, type="e"
                     ),
-                    buffer=self.Collections.Tracks.Model.Attributes.Buffer(
+                    buffer=self._Collections._Tracks._Model._Attributes._Buffer(
                         duration=0.0, length=1, sampleRate=1, numberOfChannels=2
                     ),
                     color=color, length=100.0, name="Default", solo=solo, pan=pan, muted=muted, gain=gain

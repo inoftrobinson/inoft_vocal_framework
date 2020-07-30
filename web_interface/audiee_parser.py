@@ -42,9 +42,9 @@ class Tracks(TypedDict):
         raise_if_variable_not_expected_type_and_not_none(value=models, expected_type=TrackModel, variable_name="models")
         self._models = models
 
-"""{'Collections': {'Tracks': {'models': [{'attributes': {'buffer': {'duration': 167.71401360544218, 'length': 7396188, 'numberOfChannels': 2, 'sampleRate': 44100}, 'color': '#00a0b0', 'file': {'lastModified': 1591264478848, 'name': 'jean sablon - alexa.mp3', 'size': 1007568, 'type': 'audio/mpeg', 'webkitRelativePath': ''}, 'gain': 1, 'length': 1920, 'muted': False, 'name': 'Track 1', 'pan': 0.5, 'solo': False}}]}}}"""
+"""{'collections': {'Tracks': {'models': [{'attributes': {'buffer': {'duration': 167.71401360544218, 'length': 7396188, 'numberOfChannels': 2, 'sampleRate': 44100}, 'color': '#00a0b0', 'file': {'lastModified': 1591264478848, 'name': 'jean sablon - alexa.mp3', 'size': 1007568, 'type': 'audio/mpeg', 'webkitRelativePath': ''}, 'gain': 1, 'length': 1920, 'muted': False, 'name': 'Track 1', 'pan': 0.5, 'solo': False}}]}}}"""
 
-t= {'Collections': {'Tracks': {'models': [{'attributes': {
+t= {'collections': {'Tracks': {'models': [{'attributes': {
     'buffer': {
         'duration': 167.71401360544218,
         'length': 7396188,

@@ -346,7 +346,7 @@ class NestedObjectToDict:
     """
     {
       'projectId': 'builtin_text-lbs0Re',
-      'Collections': {
+      'collections': {
         'Tracks': {
           'models': [{
             'attributes': {

@@ -143,6 +143,20 @@ function loadI18n() {
     };
 }
 
+function saveGanttOnServer() {
+  let prj = ge.saveGantt();
+
+  $.ajax({
+    type: 'POST',
+    url: '/organization/save/' + project_id,
+    data: JSON.stringify(prj),
+    contentType: 'application/json',
+    success: function (response_data) {
+      console.log("Yay");
+    }
+  });
+}
+
 function initializeHistoryManagement(taskId){
 
   //retrieve from server the list of history points in millisecond that represent the instant when the data has been recorded

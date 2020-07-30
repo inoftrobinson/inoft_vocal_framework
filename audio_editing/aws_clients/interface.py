@@ -1,6 +1,6 @@
 import os
 
-from inoft_vocal_engine.cli.aws_core import AwsCore
+from inoft_vocal_engine.cloud_providers.aws.aws_core import AwsCore
 
 a = 9
 
