@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, StrictStr
 from typing import List
 
 
@@ -32,7 +32,7 @@ class AudioProject(BaseModel):
                 attributes: _Attributes
             models: List[_Model]
         tracks: _Tracks
-    projectId: str
+    projectId: StrictStr
     collections: _Collections
 
     def add_track(self, color: str = "e", gain: float = 1.0, pan: int = 0, solo: bool = False, muted: bool = False):

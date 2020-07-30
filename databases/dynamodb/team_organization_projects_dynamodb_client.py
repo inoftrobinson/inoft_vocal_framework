@@ -10,9 +10,9 @@ class TeamOrganizationProjectsDynamoDbClient(DynamoDbCoreAdapter):
 
     def save_project_data(self, project_id: str, project_data: dict) -> bool:
         try:
-            print(f"Saving project data {project_data}")
             item = Utils.python_to_dynamodb(project_data)
             item["projectId"] = project_id
+            print(f"Saving team organization project data {item}")
             table = self.dynamodb.Table(self.table_name)
             table.put_item(Item=item)
             return True

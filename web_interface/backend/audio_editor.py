@@ -7,7 +7,7 @@ from inoft_vocal_engine.web_interface.static_clients import project_resources
 audio_editor_blueprint = Blueprint("audio-editor", __name__, template_folder="templates")
 
 dice = {
-    'projectId': 'builtin_text-lbs0Re',
+    'projectId': True,
     'collections': {
         'tracks': {
             'models': [{
@@ -34,7 +34,7 @@ dice = {
                     'gain': 1.0,
                 }
             }]
-        }
+        },
     }
 }
 
