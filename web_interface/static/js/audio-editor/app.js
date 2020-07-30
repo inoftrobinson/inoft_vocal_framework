@@ -1,16 +1,4 @@
-/**
- * Application entry point
- *
- * @file        app.js
- * @author      Jan Myler <honza.myler[at]gmail.com>
- * @copyright   Copyright 2012, Jan Myler (http://janmyler.com)
- * @license     MIT License (http://www.opensource.org/licenses/mit-license.php)
- *
- * Licensed under The MIT License
- * Redistributions of files must retain the above copyright notice.
- */
 
-import { data_to_audiee } from "./data_to_audiee"
 
 define(function(require) {
 	// general
@@ -97,15 +85,12 @@ define(function(require) {
 			return 'By leaving this page, all changes will be lost.';
 		};
 
-		data_to_audiee(resumed_project_data, Audiee);
-	};
 
-	
+	};
 
 	return {	
 		initialize: init
 	};
-
 });
 
 

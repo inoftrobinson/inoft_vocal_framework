@@ -30,6 +30,7 @@ class Index(BaseModel):
     sort_key_variable_python_type: Optional[Type]
     index_custom_name: Optional[str]
 
+
 class PrimaryIndex(Index):
     pass
 

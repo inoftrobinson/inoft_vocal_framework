@@ -1,5 +1,4 @@
-
-function data_to_audiee(json_object, audiee_instance) {
+export function data_to_audiee(json_object, audiee_instance) {
     for (let i = 0; i < json_object.Collections.Tracks.models.length; i++) {
         audiee_instance.Collections.Tracks.models.push({
             attributes: {
@@ -28,5 +27,3 @@ function data_to_audiee(json_object, audiee_instance) {
         });
     }
 }
-
-export { data_to_audiee };

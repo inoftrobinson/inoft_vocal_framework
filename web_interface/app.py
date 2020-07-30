@@ -9,12 +9,12 @@ from inoft_vocal_engine.databases.dynamodb.projects_text_contents_dynamodb_clien
 from inoft_vocal_engine.safe_dict import SafeDict
 
 app = Flask(__name__)
-audio_edtor_projects_dynamodb_static_client = AudioEditorProjectsDynamoDbClient(
+"""audio_editor_projects_dynamodb_static_client = AudioEditorProjectsDynamoDbClient(
     table_name="inoft-vocal-engine-audio-projects-data", region_name="eu-west-2"
 )
 projects_text_contents_dynamodb_static_client = ProjectsTextContentsDynamoDbClient(
     table_name="inoft-vocal-engine-project-test-2", region_name="eu-west-2"
-)
+)"""
 
 
 @app.route("/")
@@ -29,18 +29,11 @@ def text():
 @app.route("/audio-editor/<project_id>")
 def audio_editor(project_id: str):
     # todo: look for project id in database
-<<<<<<< Updated upstream
-    project_data, request_success = audio_edtor_projects_dynamodb_static_client.get_project_data_by_project_id(project_id=project_id)
-    print(f"resumed data = {project_data}")
 
-    static_data = {'Collections': {'Tracks': {'models': [{'attributes': {
-        'buffer': {'duration': 167.714, 'length': 8050272, 'numberOfChannels': 2, 'sampleRate': 48000},
-        'color': '#00a0b0', 'file': {'lastModified': 1591264478848, 'name': 'jean sablon - alexa.mp3', 'size': 1007568,
-                                     'type': 'audio/mpeg', 'webkitRelativePath': ''}, 'gain': 1, 'length': 1920,
-        'muted': False, 'name': 'Track 1', 'pan': 0.5, 'solo': False}}]}}}
+    # project_data, request_success = audio_editor_projects_dynamodb_static_client.get_project_data_by_project_id(project_id=project_id)
+    # print(f"resumed data = {project_data}")
 
-    return render_template("audio-editor/index.html", project_id=project_id, project_data=project_data)
-=======
+
     static_data = {"Collections": {"Tracks": {"models": [{"attributes": {
         "buffer": {"duration": 167.714, "length": 8050272, "numberOfChannels": 2, "sampleRate": 48000},
         "color": "#00a0b0", "file": {"lastModified": 1591264478848, "name": "jean sablon - alexa.mp3", "size": 1007568,
@@ -48,7 +41,6 @@ def audio_editor(project_id: str):
         "muted": False, "name": "Track 1", "pan": 0.5, "solo": False}}]}}}
 
     return render_template("audio-editor/index.html", project_id=project_id, project_data=json.dumps(static_data))
->>>>>>> Stashed changes
 
 @app.route("/audio-editor/<project_id>/save", methods=["POST"])
 def audio_editor_save(project_id: str):
@@ -57,7 +49,7 @@ def audio_editor_save(project_id: str):
     request_json_data = request.get_json()
     request_json_data["projectId"] = project_id
     if request_json_data is not None:
-        request_success = audio_edtor_projects_dynamodb_static_client.save_project_data(project_data=request_json_data)
+        request_success = audio_editor_projects_dynamodb_static_client.save_project_data(project_data=request_json_data)
     else:
         request_success = False
 
