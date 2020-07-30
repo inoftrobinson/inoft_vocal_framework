@@ -174,5 +174,5 @@ class BotpressCore(AwsCore):
 
 
 if __name__ == "__main__":
-    # BotpressCore().generate_audio_contents_from_texts()
-    BotpressCore().upload_audio_contents()
+    BotpressCore().generate_audio_contents_from_texts()
+    # BotpressCore().upload_audio_contents()

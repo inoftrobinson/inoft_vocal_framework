@@ -1,9 +1,7 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var process = require("process");
-var path = require('path');
-var production = process.env.NODE_ENV === 'production';
-var TerserPlugin = require('terser-webpack-plugin');
+import * as process from "process";
+const path = require('path');
+const production = process.env.NODE_ENV === 'production';
+const TerserPlugin = require('terser-webpack-plugin');
 module.exports = {
     mode: production ? 'production' : 'development',
     devtool: 'inline-source-map',

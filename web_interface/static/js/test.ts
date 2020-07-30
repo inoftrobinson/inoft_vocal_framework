@@ -40,7 +40,7 @@ const model = new DiagramModel();
 model.addAll(node1, node2, link);
 engine.setModel(model);
 
-
+/*
 function greeter(person) {
     return "Hi, " + person;
 }
@@ -48,3 +48,4 @@ function greeter(person) {
 let user = "Jane User";
 
 document.body.textContent = greeter(user);
+ */

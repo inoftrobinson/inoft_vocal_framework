@@ -124,7 +124,9 @@ class Utils:
 
     @staticmethod
     def dynamodb_to_python(dynamodb_object: Any):
-        if isinstance(dynamodb_object, list):
+        if isinstance(dynamodb_object, Decimal):
+            return Utils._decimal_to_python(decimal_number=dynamodb_object)
+        elif isinstance(dynamodb_object, list):
             for i, item in enumerate(dynamodb_object):
                 dynamodb_object[i] = Utils.dynamodb_to_python(dynamodb_object=item)
             return dynamodb_object
@@ -138,7 +140,8 @@ class Utils:
 
                 # First do we thing, is check if the value is a Decimal value (which happens often).
                 if isinstance(first_item, Decimal):
-                    return Utils._decimal_to_python(decimal_number=first_item)
+                    dynamodb_object[0] = Utils._decimal_to_python(decimal_number=first_item)
+                    return dynamodb_object
 
                 # Then the order of the elif statement is based on what we personally use the most at Inoft.
                 # For example, we always use the numbers, string, list and dictionaries (maps) but always
@@ -164,16 +167,11 @@ class Utils:
                 elif first_key == Utils.TYPE_BINARY_SET:
                     from boto3.dynamodb.types import Binary
                     return set(map(Utils._dynamodb_binary_to_python, first_item))
-                else:
-                    # Otherwise, we simply return the value without modifying it
-                    return first_item
 
             # If the dict was a classic dict, with its first key not in the keys used by DynamoDB
             for key, item in dynamodb_object.items():
                 dynamodb_object[key] = Utils.dynamodb_to_python(dynamodb_object=item)
             return dynamodb_object
-        elif isinstance(dynamodb_object, Decimal):
-            return Utils._decimal_to_python(decimal_number=dynamodb_object)
         else:
             return dynamodb_object
 

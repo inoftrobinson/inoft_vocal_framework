@@ -1,19 +1,17 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var react_diagrams_1 = require("@projectstorm/react-diagrams");
+import createEngine, { DefaultNodeModel } from '@projectstorm/react-diagrams';
 // create an instance of the engine with all the defaults
-var engine = react_diagrams_1.default();
+const engine = createEngine();
 // node 1
-var node1 = new react_diagrams_1.DefaultNodeModel({
+const node1 = new DefaultNodeModel({
     name: 'Node 1',
     color: 'rgb(0,192,255)',
 });
 node1.setPosition(100, 100);
-var port1 = node1.addOutPort('Out');
+let port1 = node1.addOutPort('Out');
 // node 2
-var node2 = new react_diagrams_1.DefaultNodeModel({
+const node2 = new DefaultNodeModel({
     name: 'Node 1',
     color: 'rgb(0,192,255)',
 });
 node2.setPosition(100, 100);
-var port2 = node2.addOutPort('Out');
+let port2 = node2.addOutPort('Out');

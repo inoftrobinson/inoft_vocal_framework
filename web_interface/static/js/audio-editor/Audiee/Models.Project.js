@@ -10,6 +10,7 @@
  * Redistributions of files must retain the above copyright notice.
  */
 
+
 define([
     'underscore',
     'backbone'
@@ -22,7 +23,7 @@ define([
             user: 'Guest', 
             changed: false
         },
-
+        /*
         // initialization
         initialize: function() {
             this.bind('error', function(model, err) {
@@ -36,6 +37,7 @@ define([
             if (!regex.test(attribs.name))
                 return "Project name is invalid.";
         }
+         */
     });
 
     return Project;
