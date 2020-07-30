@@ -51,7 +51,7 @@ class ProjectResources:
 
     def deploy_lambda(self):
         import inoft_vocal_engine
-        inoft_vocal_engine_root_dirpath = os.path.dirname(os.path.abspath(inoft_vocal_engine.__file__))
+        inoft_vocal_engine_root_dirpath = os.path.dirname(os.path.dirname(os.path.abspath(inoft_vocal_engine.__file__)))
         DeployHandler().deploy(lambda_files_root_folderpath=inoft_vocal_engine_root_dirpath,
                                bucket_name="inoft-vocal-engine-web-test",
                                bucket_region_name="eu-west-3",

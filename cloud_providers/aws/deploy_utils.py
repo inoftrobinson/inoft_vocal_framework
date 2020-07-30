@@ -116,7 +116,8 @@ class DeployHandler(AwsCore):
         archive_destination_filepath = os.path.join(Path(app_folder_path).parent, f"{Path(app_folder_path).name}.zip")
         click.echo(f"Making an archive from all the files and folders in {app_folder_path} to {archive_destination_filepath}")
 
-        folders_names_to_excludes = [".aws-sam", ".idea", ".git", "__pycache__", "venv", "node_modules", "libs", "speech_synthesis/export"]
+        folders_names_to_excludes = [".aws-sam", ".idea", ".git", "__pycache__", "venv", "dist", "node_modules", "libs", "lambda_layer",
+                                     "speech_synthesis\\export", "speech_synthesis\\polly\\project_data",]
         # todo: re-include node_modules for production
 
         has_found_engine_in_project_files = False
@@ -133,9 +134,10 @@ class DeployHandler(AwsCore):
                 # Where the code below, will check, if the names or paths of all the folder names or paths to exclude,
                 # have been found in the dirpath. This approach allow to check for both folder name, and folder paths.
                 for folder_name in folders_names_to_excludes:
-                    for dirpath in dirs:
-                        if dirpath in folder_name:
-                            dirs.remove(dirpath)
+                    for dirname in dirs:
+                        dirpath = os.path.join(root_dirpath, dirname)
+                        if folder_name in dirpath:
+                            dirs.remove(dirname)
 
                 if Path(root_dirpath).name == "inoft_vocal_engine":
                     has_found_engine_in_project_files = True
