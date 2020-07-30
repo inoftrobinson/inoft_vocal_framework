@@ -1,4 +1,4 @@
-from inoft_vocal_engine.speechs.ssml_builder_core import SpeechsList, Speech
+from inoft_vocal_engine.inoft_vocal_framework.speechs.ssml_builder_core import SpeechsList, Speech
 
 MSGS_WELCOME = SpeechsList(id="welcome", speechs=[
     Speech().add_text("Hello world friend !").set_prob(1),

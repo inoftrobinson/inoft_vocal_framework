@@ -2,31 +2,103 @@ import os
 import time
 import zipfile
 from pathlib import Path
-from typing import Optional
 
 import botocore
 import click
 from botocore.exceptions import ClientError
 from click import ClickException
 
+import inoft_vocal_engine
+from inoft_vocal_engine.inoft_vocal_framework.cli.aws_utils import raise_if_bucket_name_not_valid
+from inoft_vocal_engine.inoft_vocal_framework.cli import CliCache
+from inoft_vocal_engine.inoft_vocal_framework.cli.deploy.core import Core
+
+
 # todo: fix issue where when deploying we do not check if the api with the id found in the settings file do exit
-from inoft_vocal_engine.cloud_providers.aws.aws_core import AwsCore
+from inoft_vocal_engine.inoft_vocal_framework.skill_settings import skill_settings
 
 
-class DeployHandler(AwsCore):
+class DeployHandler(Core):
     def __init__(self):
         click.echo("Initializing AWS clients... (this can take a few seconds)")
         start_time = time.time()
-        super().__init__(clients_to_load=[AwsCore.CLIENT_S3, AwsCore.CLIENT_LAMBDA, AwsCore.CLIENT_API_GATEWAY,
-                                          AwsCore.CLIENT_IAM, AwsCore.CLIENT_BOTO_SESSION])
+        super().__init__()
         click.echo(f"Took {click.style(text=f'{round(time.time() - start_time, 2)}s', fg='white')} to initiate AWS clients")
         # todo: make the initialization even more asynchronous, by calling the handle function while the AWS ressources are initializing.
         #  Right now, the initialization of the resources are async, but we must wait for their completion in order to call the handle function.
+        self.settings = skill_settings.prompt_get_settings()
 
-    def deploy(self, lambda_files_root_folderpath: str, bucket_name: str, bucket_region_name: str,
-               lambda_name: str, lambda_handler: str, runtime="python3.7", upload_zip: bool = True,
-               existing_zip_filepath: Optional[str] = None, lambda_description: str = "Inoft Vocal Engine Deployment",
-               lambda_timeout_seconds: int = 30, lambda_memory_size: int = 512, publish: bool = True):
+    """def handle(self):
+        # result = self.pool.submit(super().__init__, {"pool": self.pool})
+        self._handle()"""
+
+    def handle(self):
+        changed_root_folderpath = False
+        app_project_root_folderpath = CliCache.cache().get("lastAppProjectRootFolderpath").to_str(default=None)
+
+        def prompt_user_to_select_folderpath():
+            return click.prompt(text="What is the root folder path of your project ? "
+                                     "This is the default if you do not write anything :",
+                                default=str(Path(os.path.dirname(os.path.realpath(inoft_vocal_engine.__file__))).parent))
+
+        if app_project_root_folderpath is None:
+            app_project_root_folderpath = prompt_user_to_select_folderpath()
+            changed_root_folderpath = True
+        else:
+            if not click.confirm(f"Do you want to deploy the project that is present in the following folder : {app_project_root_folderpath}"):
+                app_project_root_folderpath = prompt_user_to_select_folderpath()
+                changed_root_folderpath = True
+
+        while not os.path.exists(app_project_root_folderpath):
+            if click.confirm(text="The root folder path of the project has not been found."
+                                  "Do you want to select a new folderpath ? Otherwise the CLI will close."):
+                app_project_root_folderpath = prompt_user_to_select_folderpath()
+                changed_root_folderpath = True
+            else:
+                exit(200)
+
+        if changed_root_folderpath is True:
+            CliCache.cache().put("lastAppProjectRootFolderpath", app_project_root_folderpath)
+            CliCache.save_cache_to_yaml()
+            click.echo(f"Saved the folderpath of your project for {click.style(text='faster load next time', fg='blue')}")
+
+        handler_function_path = self.settings.deployment.handler_function_path
+        if handler_function_path is not None and handler_function_path != "":
+            if not click.confirm(f"Do you wish to keep using the following path to your lambda handler function ? : {handler_function_path}"):
+                handler_function_path = None
+        if handler_function_path is None:
+            handler_function_path = click.prompt("Please write a valid file and function path to your lambda handler, relative to your project directory."
+                                               "\nBy default with the all the templates, the path should be app.lambda_handler", type=str, default="app.lambda_handler")
+            self.settings.settings.get_set("deployment", {}).put("handlerFunctionPath", handler_function_path).reset_navigated_dict()
+
+
+        # I cannot create a variable that contain the deployment settings, otherwise it will be hell with the resets of the safedict.
+        bucket_name = self.settings.settings.get_set("deployment", {}).get("s3_bucket_name").to_str(default=None)
+        if bucket_name is None:
+            bucket_name = click.prompt("What will be your S3 bucket name to host your deployment files ?", type=str)
+            self.settings.settings.get_set("deployment", {}).put("s3_bucket_name", bucket_name).reset_navigated_dict()
+        raise_if_bucket_name_not_valid(bucket_name=bucket_name)
+
+        lambda_name = self.settings.settings.get_set("deployment", {}).get("lambda_name").to_str(default=None)
+        if lambda_name is None:
+            lambda_name = click.prompt("What will be your Lambda (which act as the 'server' for your app) name ?", type=str)
+            self.settings.settings.get_set("deployment", {}).put("lambda_name", lambda_name).reset_navigated_dict()
+
+        self.settings.save_settings()
+        click.echo(f"Saved your settings to your app_settings file at : {click.style(text=str(self.settings.last_settings_filepath), fg='yellow')}")
+
+        # todo: ask and check lambda handler file/function path
+
+        self.deploy( app_project_root_folderpath=app_project_root_folderpath, bucket_name=bucket_name,
+                     lambda_name=lambda_name, lambda_handler=handler_function_path, upload_zip=True)
+
+    def deploy(self, app_project_root_folderpath: str, bucket_name: str, lambda_name: str, lambda_handler: str,
+               upload_zip: bool = True, app_project_existing_zip_filepath: str = None,
+               lambda_description: str = "Inoft Vocal Framework Deployment",
+               lambda_timeout_seconds=30, lambda_memory_size=512, publish=True, runtime="python3.7"):
+
+        if self.settings.settings_loaded is False:
+            self.settings.find_load_settings_file(root_folderpath=app_project_root_folderpath)
 
         # Make sure this isn't already deployed.
         """deployed_versions = self.get_lambda_function_versions(lambda_name)
@@ -41,18 +113,18 @@ class DeployHandler(AwsCore):
 
         zip_filepath, upload_success = None, None
         if upload_zip is True:
-            if existing_zip_filepath is None:
+            if app_project_existing_zip_filepath is None:
                 # Create the Lambda Zip
-                zip_filepath = self.create_package(app_folder_path=lambda_files_root_folderpath)
+                zip_filepath = self.create_package(app_folder_path=app_project_root_folderpath)
             else:
-                if not os.path.isfile(existing_zip_filepath):
-                    raise Exception(f"Existing app project zip file do not exist at filepath : {existing_zip_filepath}")
-                zip_filepath = existing_zip_filepath
+                if not os.path.isfile(app_project_existing_zip_filepath):
+                    raise Exception(f"Existing app project zip file do not exist at filepath : {app_project_existing_zip_filepath}")
+                zip_filepath = app_project_existing_zip_filepath
 
             # Upload it to S3
-            click.echo("Uploading the lambda zip file to S3")
+            click.echo("Uploading the app zip file to S3")
             upload_success = self.upload_to_s3(filepath=zip_filepath, object_key_name=Path(zip_filepath).name,
-                                               bucket_name=bucket_name, region_name=bucket_region_name)
+                                               bucket_name=bucket_name, region_name="eu-west-3")
             if not upload_success:
                 raise ClickException("Unable to upload to S3. Look in the logs what caused the errors,"
                                      " and modify your app_settings file in order to fix the issue."
@@ -79,7 +151,7 @@ class DeployHandler(AwsCore):
                 click.echo(f"Created the lambda function : {lambda_name}")
             except Exception as e:
                 click.echo(f"Error while updating the function by giving it a S3 path. Trying to update the"
-                           f"function with a byte_stream of the zip file of the deployment package : {e}")
+                      f"function with a byte_stream of the zip file of the deployment package : {e}")
 
                 with open(zip_filepath, mode="rb") as file_stream:
                     byte_stream = file_stream.read()
@@ -92,14 +164,12 @@ class DeployHandler(AwsCore):
 
         # Create and configure the API Gateway
         need_to_create_api = False
-        # api_gateway_id = self.settings.settings.get("deployment").get("apiGatewayId").to_str(default=None)
-        api_gateway_id = "hpq2ph5fv3"  # None  # todo: store the id of the api in a database
+        api_gateway_id = self.settings.settings.get("deployment").get("apiGatewayId").to_str(default=None)
         if api_gateway_id is None or self.api_gateway_v2_url(api_gateway_id) is None:
-            api_id = self.create_api_gateway(lambda_arn=lambda_arn, lambda_name=lambda_name, route_names=[""])
+            api_id = self.create_api_gateway(lambda_arn=lambda_arn, lambda_name=lambda_name)
             click.echo(f"Created a new {click.style(text='API Gateway', bold=True)}")
-            print(f"api_id = {api_id}")
-            # self.settings.settings.get("deployment").put("apiGatewayId", api_id)
-            # self.settings.save_settings()
+            self.settings.settings.get("deployment").put("apiGatewayId", api_id)
+            self.settings.save_settings()
         else:
             click.echo(f"Using the existing ApiGatewayV2 with id {click.style(text=api_gateway_id, bold=True, fg='green')}")
 
@@ -115,46 +185,30 @@ class DeployHandler(AwsCore):
         archive_destination_filepath = os.path.join(Path(app_folder_path).parent, f"{Path(app_folder_path).name}.zip")
         click.echo(f"Making an archive from all the files and folders in {app_folder_path} to {archive_destination_filepath}")
 
-        folders_names_to_excludes = [".aws-sam", ".idea", ".git", "__pycache__", "venv", "dist", "node_modules", "libs", "lambda_layer",
-                                     "speech_synthesis\\export", "speech_synthesis\\polly\\project_data",]
-        # todo: re-include node_modules for production
+        folders_names_to_excludes = [".aws-sam", ".idea", "__pycache__", "venv"]
 
-        has_found_engine_in_project_files = False
         with zipfile.ZipFile(archive_destination_filepath, "w") as zip_object:
             has_found_framework_in_project_files = False
 
             # Include the projects files
             for root_dirpath, dirs, filenames in os.walk(app_folder_path, topdown=True):
                 # The topdown arg allow use to modify the dirs list in the walk, and so we can easily exclude folders.
-
-                # dirs[:] = [dirpath for dirpath in dirs if Path(dirpath).name not in folders_names_to_excludes]
-                # This code would only check if the name of the directory is found in the folders names to exclude
-
-                # Where the code below, will check, if the names or paths of all the folder names or paths to exclude,
-                # have been found in the dirpath. This approach allow to check for both folder name, and folder paths.
-                for folder_name in folders_names_to_excludes:
-                    for dirname in dirs:
-                        dirpath = os.path.join(root_dirpath, dirname)
-                        if folder_name in dirpath:
-                            dirs.remove(dirname)
+                dirs[:] = [dirpath for dirpath in dirs if Path(dirpath).name not in folders_names_to_excludes]
 
                 if Path(root_dirpath).name == "inoft_vocal_engine":
-                    has_found_engine_in_project_files = True
+                    has_found_framework_in_project_files = True
 
                 relative_root_dirpath = root_dirpath.replace(app_folder_path, "")
-
                 for filename in filenames:
-                    print(os.path.join(relative_root_dirpath, filename))
                     zip_object.write(filename=os.path.join(root_dirpath, filename),
                                      arcname=os.path.join(relative_root_dirpath, filename))
 
             # todo: when doing a redeploy, check that the lambda layer used, is the right layer for the current framework version
 
-            """
-            if has_found_engine_in_project_files is False:
-                # On the condition that we have not found the engine in the project files. This function exist both for development sake,
-                # where i can deploy with a dev version of the engine without having to publish to pip, while stile using the command line
-                # interface from the pip package. And also since the engine (and its correct version) will be included in the deployment
+            if has_found_framework_in_project_files is False:
+                # On the condition that we have not found the framework in the project files. This function exist both for development sake,
+                # where i can deploy with a dev version of the framework without having to publish to pip, while stile using the command line
+                # interface from the pip package. And also since the framework (and its correct version) will be included in the deployment
                 # package, so that if an user download an app deployed in a different version that the current version of the framework he
                 # is using, the version of the framework that will be used will be the one included in its package, not the one installed.
 
@@ -170,7 +224,6 @@ class DeployHandler(AwsCore):
                     for filename in filenames:
                         zip_object.write(filename=os.path.join(root_dirpath, filename),
                                          arcname=os.path.join(relative_dirpath_with_root_included, filename))
-            """
 
 
         # from shutil import make_archive
@@ -183,3 +236,7 @@ class DeployHandler(AwsCore):
             click.echo("Warning: Application zip package is likely to be too large for AWS Lambda. Try to make it smaller")
 
         return archive_destination_filepath
+
+
+if __name__ == "__main__":
+    DeployHandler().handle()

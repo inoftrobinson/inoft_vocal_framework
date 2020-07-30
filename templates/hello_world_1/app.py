@@ -1,5 +1,4 @@
 from inoft_vocal_engine import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
-from messages import *
 import os
 
 
@@ -58,7 +57,7 @@ def lambda_handler(event, context):
     return skill_builder.handle_any_platform(event=event, context=context)
 
 if __name__ == "__main__":
-    from inoft_vocal_engine.platforms_handlers.simulator.simulator_core import Simulator
+    from inoft_vocal_engine.inoft_vocal_framework.platforms_handlers.simulator import Simulator
     event_, context_ = Simulator(event_type="google-assistant-v1_start-request").get_event_and_context()
     print(f"\n\nFinal Output : {lambda_handler(event=event_, context=context_)}")
 

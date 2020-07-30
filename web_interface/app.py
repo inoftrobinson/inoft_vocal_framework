@@ -21,7 +21,7 @@ app.register_blueprint(diagrams_blueprint)
 @app.route("/")
 def index():
     return render_template("index.html", list_content=content_list(),
-                           filepath="F:/Inoft/anvers_1944_project/inoft_vocal_engine/botpress_integration/builtin_text.json")
+                           filepath="/inoft_vocal_engine/inoft_vocal_framework/botpress_integration/builtin_text.json")
 
 @app.route("/text")
 def text():

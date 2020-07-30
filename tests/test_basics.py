@@ -1,4 +1,5 @@
-from inoft_vocal_engine.platforms_handlers import handler_input
+from inoft_vocal_engine.inoft_vocal_framework.platforms_handlers import handler_input
+
 
 def basic_messages():
     handler = handler_input.HandlerInput()

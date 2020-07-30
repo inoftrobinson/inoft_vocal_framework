@@ -1,7 +1,3 @@
-from typing import Type
-
-from pydantic import BaseModel
-
 from inoft_vocal_engine.safe_dict import SafeDict
 from json import loads as json_loads
 
@@ -341,61 +337,5 @@ class NestedObjectToDict:
     @staticmethod
     def get_json_key_from_variable_name(variable_name: str):
         return NestedObjectToDict._remove_start_underscores_from_string_key(variable_name)
-
-    """
-    {
-      'projectId': 'builtin_text-lbs0Re',
-      'collections': {
-        'Tracks': {
-          'models': [{
-            'attributes': {
-              'file': {
-                'name': 'jean sablon - alexa.mp3',
-                'webkitRelativePath': '',
-                'lastModified': 1591264478848.0,
-                'size': 1007568.0,
-                'type': 'audio/mpeg'
-              },
-              'color': '#00a0b0',
-              'length': 1920.0,
-              'name': 'Track 1',
-              'solo': False,
-              'buffer': {
-                'duration': 167.71,
-                'length': 7396188.0,
-                'sampleRate': 44100.0,
-                'numberOfChannels': 2.0
-              },
-              'pan': 0,
-              'muted': False,
-              'gain': 1.0
-            }
-          }]
-        }
-      }
-    }"""
-
-    # deprecated in favor of simply using pydantic
-    @staticmethod
-    def dict_to_typed_class(class_type: Type, data_dict: dict):
-        current_class_output_kwargs = dict()
-
-        from inspect import signature
-        kwargs_parameters = signature(class_type).parameters
-        print(kwargs_parameters)
-        for kwarg_key, kwarg_parameter in kwargs_parameters.items():
-            print(f"kwarg = {kwarg_key} & parameter = {kwarg_parameter.annotation}")
-            current_parameter_annotation = kwarg_parameter.annotation
-            if BaseModel in current_parameter_annotation.__bases__:
-                if kwarg_key in data_dict.keys():
-                    current_class_output_kwargs[kwarg_key] = NestedObjectToDict.dict_to_typed_class(
-                        class_type=current_parameter_annotation, data_dict=data_dict[kwarg_key])
-            else:
-                print("not class !")
-                if kwarg_key in data_dict.keys():
-                    current_class_output_kwargs[kwarg_key] = data_dict[kwarg_key]
-
-        print(current_class_output_kwargs)
-        return class_type(**current_class_output_kwargs)
 
 

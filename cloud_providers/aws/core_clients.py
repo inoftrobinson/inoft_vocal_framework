@@ -4,8 +4,7 @@ from concurrent.futures.thread import ThreadPoolExecutor
 import boto3
 from typing import List
 
-from inoft_vocal_engine.cli.deploy.policies import ATTACH_POLICY, ASSUME_POLICY
-from inoft_vocal_engine.dummy_object import dummy_object
+from inoft_vocal_engine.inoft_vocal_framework.cli import ATTACH_POLICY, ASSUME_POLICY
 
 
 class AwsCoreClients:

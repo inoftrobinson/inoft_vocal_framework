@@ -1,12 +1,12 @@
 from datetime import datetime
 from typing import List
-from inoft_vocal_engine.cli.botpress.content_element_object import ContentElement
+from inoft_vocal_engine.inoft_vocal_framework.cli.botpress import ContentElement
 from inoft_vocal_engine.databases.dynamodb.projects_text_contents_dynamodb_client import ProjectsTextContentsDynamoDbClient
 from inoft_vocal_engine.safe_dict import SafeDict
 
 
 def botpress_content_to_list_content_elements(filepath: str) -> List[ContentElement]:
-    from inoft_vocal_engine.utils.general import load_json
+    from inoft_vocal_engine.inoft_vocal_framework.utils.general import load_json
     list_all_text_elements = load_json(filepath)
 
     from inoft_vocal_engine.inoft_vocal_markup.deserializer import Deserializer

@@ -6,7 +6,7 @@ from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type
 
 from inoft_vocal_engine.databases.dynamodb.dynamodb_core import DynamoDbCoreAdapter
 from inoft_vocal_engine.safe_dict import SafeDict
-from inoft_vocal_engine.speechs.ssml_builder_core import Speech, SpeechsList
+from inoft_vocal_engine.inoft_vocal_framework.speechs.ssml_builder_core import Speech, SpeechsList
 
 
 class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
