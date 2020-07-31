@@ -1,5 +1,5 @@
-from inoft_vocal_framework.platforms_handlers.samsungbixby import Request
-from inoft_vocal_framework.platforms_handlers.samsungbixby import Response
+from inoft_vocal_framework.platforms_handlers.samsungbixby.request import Request
+from inoft_vocal_framework.platforms_handlers.samsungbixby.response import Response
 
 
 class BixbyHandlerInput:

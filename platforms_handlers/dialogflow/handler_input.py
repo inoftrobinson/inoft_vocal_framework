@@ -1,6 +1,6 @@
 from collections import Callable
 
-from inoft_vocal_engine.dummy_object import DummyObject
+from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.dialogflow.request import Request
 from inoft_vocal_framework.platforms_handlers.dialogflow.response import Response, Image, ImageDisplayOptions
 from inoft_vocal_framework.safe_dict import SafeDict

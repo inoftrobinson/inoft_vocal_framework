@@ -8,7 +8,8 @@ from inoft_vocal_framework.skill_settings.settings_components.deployment import 
 from inoft_vocal_framework.skill_settings.settings_components.dynamodb_databases import DatabaseSessionsUsersData, \
     DatabaseMessagesContent, DatabaseUsersNotificationsSubscriptions
 from inoft_vocal_framework.skill_settings.settings_components.plugins import Plugins
-from inoft_vocal_engine.speech_synthesis.polly import VOICES
+# from inoft_vocal_engine.speech_synthesis.polly import VOICES
+# todo: currently, the voices setting is deprecated since the split between the inoft_vocal_framework and the inoft_vocal_engine
 
 
 def prompt_database_warning_message(variable_name: str, instance_type: type):
@@ -108,10 +109,11 @@ def prompt_get_settings(root_folderpath: Optional[str] = None) -> Settings:
 
 
 if __name__ == "__main__":
-    Settings(characters_voices={
-        "Léo": VOICES.French_France_Male_MATHIEU,
-        "Willie": VOICES.French_France_Female_CELINE,
-        "Luc": VOICES.Russian_Russia_Male_MAXIM,
-        "Menu": VOICES.Icelandic_Iceland_Male_KARL,
-        "default": VOICES.French_France_Female_CELINE
-    })
+    Settings(characters_voices={})
+    """
+    "Léo": VOICES.French_France_Male_MATHIEU,
+    "Willie": VOICES.French_France_Female_CELINE,
+    "Luc": VOICES.Russian_Russia_Male_MAXIM,
+    "Menu": VOICES.Icelandic_Iceland_Male_KARL,
+    "default": VOICES.French_France_Female_CELINE
+    """

@@ -2,10 +2,10 @@ import logging
 from collections import Callable
 from typing import Optional
 
-from inoft_vocal_engine.dummy_object import DummyObject
+from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
-from inoft_vocal_engine.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
-from inoft_vocal_framework.platforms_handlers import NotificationsSubscribers
+from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
+from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
@@ -574,9 +574,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self.call_rick_roll()
 
 class HandlerInputWrapper:
-    from inoft_vocal_framework.platforms_handlers.dialogflow import DialogFlowHandlerInput
+    from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
     from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
-    from inoft_vocal_framework.platforms_handlers.samsungbixby import BixbyHandlerInput
+    from inoft_vocal_framework.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
 
     def __init__(self, parent_handler=None):
         if parent_handler is None:

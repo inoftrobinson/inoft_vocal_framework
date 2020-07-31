@@ -1,0 +1,1 @@
+# todo: remove the audio_editor, projects_text and team_organization clients

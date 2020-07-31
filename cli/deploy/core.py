@@ -282,5 +282,5 @@ class Core(CoreClients):
             return False
 
 if __name__ == "__main__":
-    Core().upload_to_s3("F:\Inoft\hackaton cite des sciences 1\lambda_project\inoft_vocal_engine\cli\core\core_clients.py",
+    Core().upload_to_s3("F:\Inoft\hackaton cite des sciences 1\lambda_project\inoft_vocal_framework\cli\core\core_clients.py",
                         "letestduframeworkinoft", "eu-west-3")

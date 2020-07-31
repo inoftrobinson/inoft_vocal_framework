@@ -2,7 +2,7 @@ from typing import Type
 
 from pydantic import BaseModel
 
-from inoft_vocal_engine.safe_dict import SafeDict
+from inoft_vocal_framework.safe_dict import SafeDict
 from json import loads as json_loads
 
 

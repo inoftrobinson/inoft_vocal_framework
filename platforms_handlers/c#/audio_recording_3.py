@@ -62,7 +62,7 @@ def callback(indata, frames, time, status):
 
 class AudioRecording:
     def __init__(self):
-        self.target_filepath = "/inoft_vocal_engine/inoft_vocal_framework/platforms_handlers/c#/test.wav"
+        self.target_filepath = "/inoft_vocal_framework/platforms_handlers/c#/test.wav"
         # todo: add support for mp3
         self.samplerate = 44100
         self.num_channels = 2

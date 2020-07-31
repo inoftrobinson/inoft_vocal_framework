@@ -1,6 +1,6 @@
 import logging
 
-from inoft_vocal_engine.dummy_object import DummyObject
+from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list, raise_if_variable_not_expected_type_and_not_none
 from inoft_vocal_framework.safe_dict import SafeDict
 

@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from pydantic import BaseModel
 
-from inoft_vocal_engine.inoft_vocal_markup.deserializer import DialogueLine
+from inoft_vocal_framework.inoft_vocal_markup.deserializer import DialogueLine
 
 
 class ContentElement(BaseModel):

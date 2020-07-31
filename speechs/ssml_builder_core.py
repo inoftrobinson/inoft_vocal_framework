@@ -21,6 +21,7 @@ class SpeechsList:
     @property
     def use_database_dynamic_messages(self):
         if self._use_database_dynamic_messages is None:
+            raise Exception("Re-implement this setting")
             self._use_database_dynamic_messages = Settings().settings.get("use_database_dynamic_messages").to_bool()
         return self._use_database_dynamic_messages
 
@@ -39,7 +40,7 @@ class SpeechsList:
 
     def pick(self, ids_messages_to_exclude=None) -> str:
         if self.use_database_dynamic_messages is True:
-            from inoft_vocal_engine.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
+            from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
             self.speechs_list = DynamoDbMessagesAdapter(table_name="test_messages", region_name="eu-west-3").get_speechs_list(messages_list_id=self.id)
         return pick_msg(self.speechs_list)
 

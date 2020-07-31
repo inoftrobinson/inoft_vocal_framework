@@ -3,7 +3,7 @@ import os
 import click
 
 from inoft_vocal_framework.cli.cli_cache import CliCache
-from inoft_vocal_engine.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
+from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
 from inoft_vocal_framework.speechs.ssml_builder_core import SpeechsList
 
 """"

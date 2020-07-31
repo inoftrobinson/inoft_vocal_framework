@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from json import dumps as json_dumps
 
-from inoft_vocal_engine.dummy_object import DummyObject
+from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
 from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput, HandlerInputWrapper
@@ -377,7 +377,7 @@ class InoftSkill:
             print(f"Event body do not need processing for Discord : {event}")
 
         else:
-            from inoft_vocal_engine.messages import ERROR_PLATFORM_NOT_SUPPORTED
+            from inoft_vocal_framework.messages import ERROR_PLATFORM_NOT_SUPPORTED
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)
 
         self.handler_input.load_event(event=event)
