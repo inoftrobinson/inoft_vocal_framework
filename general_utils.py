@@ -47,7 +47,7 @@ def pick_msg(speechs_list: list) -> str:
 
 def pick_msg_old(msgs) -> str:
     """ The key of a dict element is the message, and the value its probabilities """
-    from inoft_vocal_engine.inoft_vocal_framework.speechs.ssml_builder_core import SpeechsList
+    from inoft_vocal_framework.speechs.ssml_builder_core import SpeechsList
 
     if isinstance(msgs, SpeechsList):
         msgs_dict = msgs.speechs_list
