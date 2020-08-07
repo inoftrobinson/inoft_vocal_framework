@@ -1,11 +1,10 @@
 import logging
 
-from inoft_vocal_engine.safe_dict import SafeDict
-from inoft_vocal_engine.skill_builder.inoft_skill_builder import InoftHandlersGroup
+from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftHandlersGroup
 
 
 class AlexaAudioPlayerHandlers(InoftHandlersGroup):
-    from inoft_vocal_engine.skill_builder.inoft_skill_builder import InoftRequestHandler
+    from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftRequestHandler
 
     def __init__(self, parent_handler, additional_pause_intents_names: list = None,
                  additional_resume_intent_names: list = None):

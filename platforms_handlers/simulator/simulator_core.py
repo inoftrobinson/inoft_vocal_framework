@@ -1,8 +1,7 @@
 import os
-from json import load as json_load
 from typing import Optional
 
-from inoft_vocal_engine.utils.general import load_json
+from inoft_vocal_framework.utils.general import load_json
 
 
 class Simulator:

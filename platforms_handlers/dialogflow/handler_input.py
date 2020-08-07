@@ -1,10 +1,9 @@
 from collections import Callable
-from typing import Optional
 
-from inoft_vocal_engine.dummy_object import DummyObject
-from inoft_vocal_engine.platforms_handlers.dialogflow.request import Request
-from inoft_vocal_engine.platforms_handlers.dialogflow.response import Response, Image, ImageDisplayOptions
-from inoft_vocal_engine.safe_dict import SafeDict
+from inoft_vocal_framework.dummy_object import DummyObject
+from inoft_vocal_framework.platforms_handlers.dialogflow.request import Request
+from inoft_vocal_framework.platforms_handlers.dialogflow.response import Response, Image, ImageDisplayOptions
+from inoft_vocal_framework.safe_dict import SafeDict
 from json import loads as json_loads
 
 
@@ -25,7 +24,7 @@ class SurfaceCapabilities:
 
 
 class DialogFlowHandlerInput(SurfaceCapabilities):
-    from inoft_vocal_engine.platforms_handlers.handler_input import HandlerInput
+    from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
 
     def __init__(self, parent_handler_input: HandlerInput):
         self.parent_handler_input = parent_handler_input
@@ -169,7 +168,7 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
         if content_formatted_text is None and image is None:
             raise Exception("A google assistant basic card cannot have both the content_formatted_text and the image variable as None")
 
-        from inoft_vocal_engine.platforms_handlers.dialogflow.response import BasicCard
+        from inoft_vocal_framework.platforms_handlers.dialogflow import BasicCard
         basic_card_object = BasicCard(title=title, subtitle=subtitle, formatted_text=content_formatted_text,
                                       image=image, image_display_options=image_display_options, buttons=buttons)
         self.response.add_response_item_to_show(item_object=basic_card_object)

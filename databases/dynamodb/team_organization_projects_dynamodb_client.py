@@ -3,7 +3,7 @@ from inoft_vocal_framework.databases.dynamodb.dynamodb_core import DynamoDbCoreA
 from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import Utils
 
 
-class AudioEditorProjectsDynamoDbClient(DynamoDbCoreAdapter):
+class TeamOrganizationProjectsDynamoDbClient(DynamoDbCoreAdapter):
     def __init__(self, table_name: str, region_name: str):
         primary_index = PrimaryIndex(hash_key_name="projectId", hash_key_variable_python_type=str)
         super().__init__(table_name=table_name, region_name=region_name, primary_index=primary_index, create_table=True)
@@ -12,7 +12,7 @@ class AudioEditorProjectsDynamoDbClient(DynamoDbCoreAdapter):
         try:
             item = Utils.python_to_dynamodb(project_data)
             item["projectId"] = project_id
-            print(f"Saving audio editor project data {item}")
+            print(f"Saving team organization project data {item}")
             table = self.dynamodb.Table(self.table_name)
             table.put_item(Item=item)
             return True

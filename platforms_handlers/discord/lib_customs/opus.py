@@ -28,10 +28,8 @@ import array
 import ctypes
 import ctypes.util
 import logging
-import sys
 import time
 import math
-import struct
 import os.path
 import sys
 import bisect
@@ -42,7 +40,7 @@ from collections import deque
 from bisect import insort
 
 from . import utils
-from .rtp import RTPPacket, RTCPPacket, SilencePacket, FECPacket
+from .rtp import RTPPacket, SilencePacket, FECPacket
 from .errors import DiscordException
 
 log = logging.getLogger(__name__)

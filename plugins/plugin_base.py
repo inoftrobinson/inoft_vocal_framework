@@ -7,7 +7,7 @@ class PluginBase:
 
 
 class PluginCodeGenerationBase(PluginBase):
-    from inoft_vocal_engine.botpress_integration.generator import GeneratorCore
+    from inoft_vocal_framework.botpress_integration.generator import GeneratorCore
 
     @abstractmethod
     def execute(self, generator_core: GeneratorCore):

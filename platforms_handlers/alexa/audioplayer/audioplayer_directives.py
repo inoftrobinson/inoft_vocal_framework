@@ -1,9 +1,8 @@
 import logging
 
-from inoft_vocal_engine.dummy_object import DummyObject
-from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list, raise_if_variable_not_expected_type_and_not_none
-from inoft_vocal_engine.platforms_handlers.alexa.response.response import Response
-from inoft_vocal_engine.safe_dict import SafeDict
+from inoft_vocal_framework.dummy_object import DummyObject
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list, raise_if_variable_not_expected_type_and_not_none
+from inoft_vocal_framework.safe_dict import SafeDict
 
 
 class AudioPlayer:
@@ -221,7 +220,7 @@ class AudioPlayerWrapper:
         self._audioPlayer = audioPlayer
         self.parent_handler_input.alexa.response.directives.append(audioPlayer)
 
-        from inoft_vocal_engine.platforms_handlers.alexa.audioplayer.audioplayer_handlers import AlexaAudioPlayerHandlers
+        from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_handlers import AlexaAudioPlayerHandlers
         self.parent_handler_input.alexa.save_audioplayer_handlers_group_class(handlers_group_class_type=AlexaAudioPlayerHandlers)
 
     def play(self, identifier: str, mp3_file_url: str, title: str, subtitle: str = None, icon_image_url: str = None, background_image_url: str = None,

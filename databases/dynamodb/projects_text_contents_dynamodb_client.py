@@ -3,10 +3,10 @@ from boto3.dynamodb.conditions import Key
 from boto3.exceptions import ResourceNotExistsError
 from pydantic import BaseModel
 
-from inoft_vocal_engine.databases.dynamodb.dynamodb_core import DynamoDbCoreAdapter, GlobalSecondaryIndex, PrimaryIndex, \
+from inoft_vocal_framework.databases.dynamodb.dynamodb_core import DynamoDbCoreAdapter, GlobalSecondaryIndex, PrimaryIndex, \
     Response
-from inoft_vocal_engine.databases.dynamodb.dynamodb_utils import Utils
-from inoft_vocal_engine.inoft_vocal_markup.deserializer import DialogueLine
+from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import Utils
+from inoft_vocal_framework.inoft_vocal_markup.deserializer import DialogueLine
 
 
 class ContentItem(BaseModel):
@@ -96,7 +96,7 @@ class ProjectsTextContentsDynamoDbClient(DynamoDbCoreAdapter):
 
         table = self.dynamodb.Table(self.table_name)
         response = table.query(**query)
-        print(response)
+
         # We use a scan instead of a query, since we just want the latest items without any conditions.
         if "Items" in response:
             return Response(Utils.dynamodb_to_python(dynamodb_object=response))  # , text_decoding_type="utf-8"))
@@ -123,15 +123,14 @@ class ProjectsTextContentsDynamoDbClient(DynamoDbCoreAdapter):
             raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
         except Exception as e:
             raise Exception(f"Failed to save project data to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
-        
-    def get_project_data_by_project_id(self, project_id: str) -> (dict, bool):
-        # If the value from get_field is of dict or list type, the SafeDict will be populated, otherwise it will be empty without errors.
+    """
+
+    def get_by_id(self, project_id: str) -> (dict, bool):
         try:
-            response = self.dynamodb.get_item(TableName=self.table_name,
-                                              Key={"projectId": self.utils.python_to_dynamodb(project_id)},
-                                              ConsistentRead=True)
+            table = self.dynamodb.Table(self.table_name)
+            response = table.get_item(TableName=self.table_name, Key={"elementId": project_id}, ConsistentRead=True)
             if "Item" in response:
-                return self.utils.decimal_deserializer(self.utils.dynamodb_to_python(response["Item"])), True
+                return Utils.dynamodb_to_python(dynamodb_object=response["Item"]), True
             else:
                 return dict(), False
         except ResourceNotExistsError:
@@ -140,7 +139,6 @@ class ProjectsTextContentsDynamoDbClient(DynamoDbCoreAdapter):
         except Exception as e:
             raise Exception(f"Failed to retrieve attributes from DynamoDb table."
                             f"Exception of type {type(e).__name__} occurred: {str(e)}")
-    """
 
 
 if __name__ == "__main__":

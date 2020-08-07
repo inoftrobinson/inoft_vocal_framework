@@ -1,8 +1,8 @@
 import os
 from typing import List
 
-from inoft_vocal_engine.plugins.plugin_base import PluginBase, PluginCodeGenerationBase
-from inoft_vocal_engine.skill_settings.skill_settings import Settings
+from inoft_vocal_framework.plugins.plugin_base import PluginBase, PluginCodeGenerationBase
+from inoft_vocal_framework.skill_settings.skill_settings import Settings
 
 
 def plugins_load(settings: Settings) -> List[PluginCodeGenerationBase]:

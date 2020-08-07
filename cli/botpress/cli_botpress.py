@@ -4,12 +4,12 @@ from typing import List
 
 import click
 
-from inoft_vocal_engine.cli.aws_core import AwsCore
-from inoft_vocal_engine.cli.cli_cache import CliCache
-from inoft_vocal_engine.safe_dict import SafeDict
-from inoft_vocal_engine.skill_settings import skill_settings
-from inoft_vocal_engine.utils.general import get_all_files_in_dir, get_all_dirs_in_dir
-from inoft_vocal_engine.cli.botpress.content_element_object import ContentElement
+from inoft_vocal_framework.cloud_providers.aws.aws_core import AwsCore
+from inoft_vocal_framework.cli.cli_cache import CliCache
+from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_framework.skill_settings import skill_settings
+from inoft_vocal_framework.utils.general import get_all_files_in_dir, get_all_dirs_in_dir
+from inoft_vocal_framework.cli.botpress.content_element_object import ContentElement
 
 
 class BotpressCore(AwsCore):
@@ -20,6 +20,10 @@ class BotpressCore(AwsCore):
         self.selected_bot_dirpath = None
 
     def generate_audio_contents_from_texts(self):
+        raise Exception(f"generate_audio_contents_from_texts is temporarily being deprecated since when the "
+                        f"inoft_vocal_framework and the inoft_vocal_engine have been splitted.")
+        # todo: should we decide to re-implement the Polly integration inside the framework, or reserve it to the engine ?
+
         def prompt_user_to_select_botpress_dirpath():
             return click.prompt(text="What is the installation folderpath of your Botpress ?\n"
                                      "For example C:/Program Files (x86)/botpress-v12_8_1-win-x64")
@@ -69,10 +73,10 @@ class BotpressCore(AwsCore):
         if not os.path.isfile(builtin_text_filepath):
             raise Exception(f"No file has been found at {builtin_text_filepath}")
         else:
-            from inoft_vocal_engine.utils.general import load_json
+            from inoft_vocal_framework.utils.general import load_json
             list_all_text_elements = load_json(builtin_text_filepath)
 
-            from inoft_vocal_engine.inoft_vocal_markup.deserializer import Deserializer
+            from inoft_vocal_framework.inoft_vocal_markup.deserializer import Deserializer
             inoft_vocal_markup_deserializer = Deserializer(characters_names=["Léo", "Willie", "Menu"])
 
             content_elements: List[ContentElement] = list()
@@ -120,6 +124,9 @@ class BotpressCore(AwsCore):
         return root_dirpath_to_save_audio_project
 
     def _content_elements_to_audacity(self, content_elements: List[ContentElement]):
+        raise Exception(f"_content_elements_to_audacity function has been deprecated when the "
+                        f"inoft_vocal_framework and the inoft_vocal_engine have been splitted.")
+
         from inoft_vocal_engine.audacity.text_to_audacity import TextToAudacity
         client = TextToAudacity(character_names_to_voices=self.settings.characters_voices)
         root_dirpath_to_save_audio_project = self.prompt_get_root_dirpath_to_save_audio()
@@ -174,5 +181,5 @@ class BotpressCore(AwsCore):
 
 
 if __name__ == "__main__":
-    # BotpressCore().generate_audio_contents_from_texts()
-    BotpressCore().upload_audio_contents()
+    BotpressCore().generate_audio_contents_from_texts()
+    # BotpressCore().upload_audio_contents()

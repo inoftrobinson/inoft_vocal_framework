@@ -1,5 +1,5 @@
-from inoft_vocal_engine.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from inoft_vocal_engine.safe_dict import SafeDict
+from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+from inoft_vocal_framework.safe_dict import SafeDict
 
 
 class IntentSlot:

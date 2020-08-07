@@ -1,4 +1,5 @@
-from decimal import Decimal, Context, Clamped, Overflow, Inexact, Rounded, Underflow
+import decimal
+from decimal import Decimal, Context, Clamped, Overflow, Inexact, Rounded, Underflow, ROUND_UP
 from typing import Any
 
 
@@ -15,8 +16,9 @@ class Utils:
     TYPE_LIST = 'L'
     ALL_TYPES_WHERE_VALUE_DO_NOT_NEED_MODIFICATIONS = [TYPE_STRING, TYPE_BOOLEAN]
 
-    DECIMAL_DYNAMODB_CONTEXT = Context(Emin=-128, Emax=126, prec=38,
-                                       traps=[Clamped, Overflow, Inexact, Rounded, Underflow])
+    DECIMAL_DYNAMODB_CONTEXT = Context(prec=38, rounding=decimal.ROUND_HALF_EVEN, Emin=-128, Emax=126,
+                                       capitals=1, clamp=0, flags=[], traps=[])
+    # 38 is the maximum numbers of Decimals numbers that DynamoDB can support.
 
     from boto3.dynamodb.types import TypeSerializer, TypeDeserializer
     # The serializer and deserializer can be static, even in a lambda,
@@ -100,31 +102,33 @@ class Utils:
         :return:
         """
 
-        # if isinstance()
-        if isinstance(python_object, list):
-            for item in python_object:
-                Utils.python_to_dynamodb(python_object=item)
-
-        Utils.float_serializer(python_object=python_object)
-        dynamodb_dict = Utils.serializer().serialize(python_object)
-
-        dynamodb_dict_keys = list(dynamodb_dict.keys())
-        if len(dynamodb_dict_keys) == 1:
-            if dynamodb_dict_keys[0] == "M":
-                # With a dict, DynamoDB is not expecting the first 'M' key (stands for Map)
-                return dynamodb_dict["M"]
-            else:
-                return dynamodb_dict
-        elif len(dynamodb_dict_keys) == 0:
-            return dynamodb_dict
+        object_type = type(python_object)
+        if object_type in [int, float]:
+            return {Utils.TYPE_NUMBER: Utils._python_to_decimal(python_number=python_object)}
+        elif object_type == list:
+            for i, item in enumerate(python_object):
+                python_object[i] = Utils.python_to_dynamodb(python_object=item)
+            return {Utils.TYPE_LIST: python_object}
+        elif object_type == dict:
+            for key, item in python_object.items():
+                python_object[key] = Utils.python_to_dynamodb(python_object=item)
+            return {Utils.TYPE_MAP: python_object}
+        elif object_type == bool:
+            return {Utils.TYPE_BOOLEAN: python_object}
+        elif object_type == str:
+            return {Utils.TYPE_STRING: python_object}
+        elif object_type == type(None):
+            return {Utils.TYPE_NULL: True}
+        elif object_type == bytes:
+            return {Utils.TYPE_BINARY: python_object}
         else:
-            raise Exception(f"The number of keys of the dynamodb was superior to 1. This is NOT SUPPOSED TO HAPPEN !"
-                            f"\nPlease submit an issue on the GitHub page of the framework right away (https://github.com/Robinson04/inoft_vocal_engine)."
-                            f"\nThere is something really wrong on our side or on AWS side.")
+            return python_object
 
     @staticmethod
     def dynamodb_to_python(dynamodb_object: Any):
-        if isinstance(dynamodb_object, list):
+        if isinstance(dynamodb_object, Decimal):
+            return Utils._decimal_to_python(decimal_number=dynamodb_object)
+        elif isinstance(dynamodb_object, list):
             for i, item in enumerate(dynamodb_object):
                 dynamodb_object[i] = Utils.dynamodb_to_python(dynamodb_object=item)
             return dynamodb_object
@@ -138,7 +142,8 @@ class Utils:
 
                 # First do we thing, is check if the value is a Decimal value (which happens often).
                 if isinstance(first_item, Decimal):
-                    return Utils._decimal_to_python(decimal_number=first_item)
+                    dynamodb_object[0] = Utils._decimal_to_python(decimal_number=first_item)
+                    return dynamodb_object
 
                 # Then the order of the elif statement is based on what we personally use the most at Inoft.
                 # For example, we always use the numbers, string, list and dictionaries (maps) but always
@@ -164,16 +169,11 @@ class Utils:
                 elif first_key == Utils.TYPE_BINARY_SET:
                     from boto3.dynamodb.types import Binary
                     return set(map(Utils._dynamodb_binary_to_python, first_item))
-                else:
-                    # Otherwise, we simply return the value without modifying it
-                    return first_item
 
             # If the dict was a classic dict, with its first key not in the keys used by DynamoDB
             for key, item in dynamodb_object.items():
                 dynamodb_object[key] = Utils.dynamodb_to_python(dynamodb_object=item)
             return dynamodb_object
-        elif isinstance(dynamodb_object, Decimal):
-            return Utils._decimal_to_python(decimal_number=dynamodb_object)
         else:
             return dynamodb_object
 
@@ -183,6 +183,10 @@ class Utils:
             return float(decimal_number)
         else:
             return int(decimal_number)
+
+    @staticmethod
+    def _python_to_decimal(python_number: int or float) -> Decimal:
+        return Utils.DECIMAL_DYNAMODB_CONTEXT.create_decimal(python_number)
 
     @staticmethod
     def _dynamodb_number_to_python(number_string: str):

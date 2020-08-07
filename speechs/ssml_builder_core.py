@@ -3,11 +3,11 @@
 import re
 from typing import Optional
 
-from inoft_vocal_engine.safe_dict import SafeDict
-from inoft_vocal_engine.skill_settings.skill_settings import Settings
-from inoft_vocal_engine.session_utils import add_new_played_category  # todo: remove this dependance
-from inoft_vocal_engine.general_utils import pick_msg # todo: and remove this dependance too
-from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type
+from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_framework.skill_settings.skill_settings import Settings
+from inoft_vocal_framework.session_utils import add_new_played_category  # todo: remove this dependance
+from inoft_vocal_framework.general_utils import pick_msg  # todo: and remove this dependance too
+from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 
 # todo: make all functions cross platform ;)
 # todo: likely it will be smarter to make a SpeechAlexa object, a SpeechGoogle object, and a SpeechBixby object.
@@ -21,6 +21,7 @@ class SpeechsList:
     @property
     def use_database_dynamic_messages(self):
         if self._use_database_dynamic_messages is None:
+            raise Exception("Re-implement this setting")
             self._use_database_dynamic_messages = Settings().settings.get("use_database_dynamic_messages").to_bool()
         return self._use_database_dynamic_messages
 
@@ -39,7 +40,7 @@ class SpeechsList:
 
     def pick(self, ids_messages_to_exclude=None) -> str:
         if self.use_database_dynamic_messages is True:
-            from inoft_vocal_engine.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
+            from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbMessagesAdapter
             self.speechs_list = DynamoDbMessagesAdapter(table_name="test_messages", region_name="eu-west-3").get_speechs_list(messages_list_id=self.id)
         return pick_msg(self.speechs_list)
 

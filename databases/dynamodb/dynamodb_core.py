@@ -6,9 +6,9 @@ from typing import List, Optional, Type
 
 from pydantic import BaseModel, StrictStr, validate_arguments
 
-from inoft_vocal_engine.databases.dynamodb.dynamodb_utils import Utils
-from inoft_vocal_engine.safe_dict import SafeDict
-from inoft_vocal_engine.utils.static_logger import logger
+from inoft_vocal_framework.databases.dynamodb.dynamodb_utils import Utils
+from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_framework.utils.static_logger import logger
 
 HASH_KEY_TYPE = "HASH"
 SORT_KEY_TYPE = "RANGE"
@@ -29,6 +29,7 @@ class Index(BaseModel):
     sort_key_name: Optional[str]
     sort_key_variable_python_type: Optional[Type]
     index_custom_name: Optional[str]
+
 
 class PrimaryIndex(Index):
     pass

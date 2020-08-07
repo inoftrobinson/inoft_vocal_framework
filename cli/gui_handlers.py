@@ -3,14 +3,14 @@ from pathlib import Path
 from tkinter import Tk
 from tkinter import PhotoImage
 
-import inoft_vocal_engine
+import inoft_vocal_framework
 
 
 def _make_tk_root() -> Tk:
     root = Tk()
     root.withdraw()
 
-    logo_filepath = os.path.join(str(Path(os.path.dirname(os.path.abspath(inoft_vocal_engine.__file__))).parent), "img", "inoft_small_logo.png")
+    logo_filepath = os.path.join(str(Path(os.path.dirname(os.path.abspath(inoft_vocal_framework.__file__))).parent), "img", "inoft_small_logo.png")
     icon = PhotoImage(master=root, file=logo_filepath)
     root.wm_iconphoto(True, icon)
 

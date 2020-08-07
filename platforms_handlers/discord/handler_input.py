@@ -3,8 +3,6 @@ from collections import Callable
 import click
 from discord import Message
 
-from inoft_vocal_engine.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
-
 
 def start_discord_listening(token: str, lambda_handler_function: Callable, command_prefix: str = "."):
     if click.confirm("Are you sure you want to trigger a Discord listening event ?"
@@ -13,13 +11,13 @@ def start_discord_listening(token: str, lambda_handler_function: Callable, comma
         DiscordHandlerInput.TOKEN = token
         DiscordHandlerInput.HANDLER_FUNCTION_TO_USE = lambda_handler_function
 
-        from inoft_vocal_engine.platforms_handlers.discord.client_wrapper import ClientWrapper
+        from inoft_vocal_framework.platforms_handlers.discord import ClientWrapper
         DiscordHandlerInput.CLIENT_WRAPPER = ClientWrapper(prefix=command_prefix)
         DiscordHandlerInput.CLIENT_WRAPPER.run(token=token)
 
 
 class DiscordHandlerInput:
-    from inoft_vocal_engine.platforms_handlers.handler_input import HandlerInput
+    from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
 
     SHOULD_BE_USED = False
     TOKEN = None

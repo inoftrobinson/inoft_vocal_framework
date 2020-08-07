@@ -1,10 +1,9 @@
-from inoft_vocal_engine.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from inoft_vocal_engine.platforms_handlers.samsungbixby.request import Request
-from inoft_vocal_engine.platforms_handlers.samsungbixby.response import Response
+from inoft_vocal_framework.platforms_handlers.samsungbixby.request import Request
+from inoft_vocal_framework.platforms_handlers.samsungbixby.response import Response
 
 
 class BixbyHandlerInput:
-    from inoft_vocal_engine.platforms_handlers.handler_input import HandlerInput
+    from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
 
     def __init__(self, parent_handler_input: HandlerInput):
         self.parent_handler_input = parent_handler_input

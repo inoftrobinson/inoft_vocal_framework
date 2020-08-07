@@ -1,7 +1,4 @@
-import os
-
 from jinja2 import Template, FileSystemLoader, Environment
-from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type
 
 
 class TemplatesAccess:
@@ -25,7 +22,7 @@ class TemplatesAccess:
 
     @staticmethod
     def _load_template(template_filepath: str) -> Template:
-        from inoft_vocal_engine.botpress_integration.templates.jinja_filepath_loader import JinjaFilepathLoader
+        from inoft_vocal_framework.botpress_integration import JinjaFilepathLoader
         env = Environment(loader=JinjaFilepathLoader(filepath=template_filepath))
         # The JinjaFilepathLoader do not care about the template name, only the full template_filepath.
         return env.get_template(name=None)

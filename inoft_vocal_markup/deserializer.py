@@ -2,8 +2,6 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 
-from inoft_vocal_engine.exceptions import raise_if_variable_not_expected_type
-
 
 class DialogueLine(BaseModel):
     character_name: str = None

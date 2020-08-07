@@ -1,4 +1,4 @@
-# from inoft_vocal_engine.platforms_handlers.handler_input import HandlerInput
+# from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
 
 KEY_INTERACTIONS_HISTORY = "interactions_history"
 KEY_PLAYED_CATEGORIES_TYPES_HISTORY = "played_categories_types_history"

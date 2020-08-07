@@ -11,7 +11,6 @@ def pick_one_randomly_from_list(list_to_pick_from: list):
     return list_to_pick_from[random.randint(0, len(list_to_pick_from) - 1)]
 
 def pick_msg(speechs_list: list) -> str:
-    from inoft_vocal_engine.speechs.ssml_builder_core import SpeechsList
     if isinstance(speechs_list, list):
         if len(speechs_list) > 0:
             # I'm treating the probabilities so that in the data files,
@@ -48,7 +47,7 @@ def pick_msg(speechs_list: list) -> str:
 
 def pick_msg_old(msgs) -> str:
     """ The key of a dict element is the message, and the value its probabilities """
-    from inoft_vocal_engine.speechs.ssml_builder_core import SpeechsList
+    from inoft_vocal_framework.speechs.ssml_builder_core import SpeechsList
 
     if isinstance(msgs, SpeechsList):
         msgs_dict = msgs.speechs_list

@@ -15,7 +15,7 @@ __pycache__/
 *.HM2
 
 # Exclusion of static discord bot token
-platforms_handlers/discord/static_token.py
+../inoft_vocal_framework/platforms_handlers/discord/static_token.py
 web_interface/node_modules/*
 web_interface/static/node_modules/*
 

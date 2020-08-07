@@ -29,9 +29,9 @@ import logging
 import threading
 import traceback
 
-from inoft_vocal_engine.platforms_handlers.discord.lib_customs import rtp
-from inoft_vocal_engine.platforms_handlers.discord.lib_customs.opus import Decoder, BufferedDecoder
-from inoft_vocal_engine.platforms_handlers.discord.voice_client import VoiceClient
+from inoft_vocal_framework.platforms_handlers.discord.lib_customs import rtp
+from inoft_vocal_framework.platforms_handlers.discord.lib_customs.opus import Decoder, BufferedDecoder
+from inoft_vocal_framework.platforms_handlers.discord import VoiceClient
 from discord.errors import DiscordException
 
 try:

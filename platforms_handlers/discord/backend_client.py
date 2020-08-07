@@ -1,18 +1,11 @@
 # invite : https://discordapp.com/oauth2/authorize?client_id=713363868226945054&scope=bot&permissions=8
 # token :
 
-import json
-
-import aiohttp
-import discord
-import time
 from discord.ext import commands
 from discord.ext.commands.context import Context
 from discord.message import Message
-from discord.utils import get
-from inoft_vocal_engine.platforms_handlers.discord import writing_func as wf
-from inoft_vocal_engine.platforms_handlers.discord.static_token import token
-from inoft_vocal_engine.platforms_handlers.discord.discord_static_infos import DiscordStaticInfos
+from inoft_vocal_framework.platforms_handlers.discord import writing_func as wf
+from inoft_vocal_framework.platforms_handlers.discord import DiscordStaticInfos
 
 
 bot_client = commands.Bot(command_prefix=DiscordStaticInfos.COMMAND_PREFIX)
@@ -69,7 +62,7 @@ async def on_message(message: Message):
 
         # user grabbing by id
         user = bot_client.get_user(message.author.id)
-        from inoft_vocal_engine.platforms_handlers.discord.handler_input import DiscordHandlerInput
+        from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
         DiscordHandlerInput.HANDLER_FUNCTION_TO_USE(event=message, context=None)
 
         """
