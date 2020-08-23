@@ -1,5 +1,5 @@
 from .skill_builder.inoft_skill_builder import InoftSkill, InoftCondition, InoftHandler, \
-    InoftRequestHandler, InoftStateHandler, InoftDefaultFallback, InoftHandlersGroup
+    InoftRequestHandler, InoftStateHandler, InoftDefaultFallback, InoftHandlersGroup, canProcessIntentNames
 
 from .platforms_handlers.simulator.simulator_core import Simulator
 from .speechs.ssml_builder_core import Speech, SpeechsList

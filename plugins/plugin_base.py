@@ -7,10 +7,8 @@ class PluginBase:
 
 
 class PluginCodeGenerationBase(PluginBase):
-    from inoft_vocal_framework.botpress_integration.generator import GeneratorCore
-
     @abstractmethod
-    def execute(self, generator_core: GeneratorCore):
+    def execute(self, **kwargs):
         raise Exception("Execute method of the plugin must be implemented. "
                         "It will be the method that will be run when your plugin will be execute. "
                         "Also, all the classical class methods (like __init__) will be run like usual.")
