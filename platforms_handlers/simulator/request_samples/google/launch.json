@@ -41,7 +41,7 @@
             "displayName": "Default Welcome Intent"
         },
         "intentDetectionConfidence": 1,
-        "languageCode": "fr"
+        "LanguageModel": "fr"
     },
     "originalDetectIntentRequest":
     {

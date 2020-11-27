@@ -1,0 +1,17 @@
+default_session_data_timeout: 0
+messages:
+  database_client: dynamodb
+  dynamodb:
+    region_name: eu-west-3
+    table_name: app_notifications_messages
+  use_database_dynamic_messages: true
+sessions_users_data:
+  database_client: dynamodb
+  dynamodb:
+    region_name: eu-west-3
+    table_name: app_notifications_users-data
+user_notifications_subscriptions:
+  database_client: dynamodb
+  dynamodb:
+    region_name: eu-west-3
+    table_name: app_notifications_subscriptions

@@ -22,7 +22,7 @@ def generate_uuid4() -> str:
     print(f"Generated id : {id_str}")
     return id_str
 
-def load_yaml(filepath: str, encoding: Optional[str] = "utf-8") -> dict:
+def load_yaml(filepath: str, encoding: Optional[str] = "utf-8") -> dict or list:
     from yaml import safe_load, YAMLError
     with open(filepath, "r", encoding=encoding) as file_stream:
         try:
@@ -31,7 +31,7 @@ def load_yaml(filepath: str, encoding: Optional[str] = "utf-8") -> dict:
             raise Exception(f"The yaml file was not valid, and caused an error when loading."
                             f"Please check the file or recreate it with the cli : {error}")
 
-def load_json(filepath: str, encoding: Optional[str] = "utf-8") -> dict:
+def load_json(filepath: str, encoding: Optional[str] = "utf-8") -> dict or list:
     from json import load as json_load
     with open(filepath, "r", encoding=encoding) as file_stream:
         try:

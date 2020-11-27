@@ -4,7 +4,7 @@
 The soundfile module (https://PySoundFile.readthedocs.io/) has to be installed!
 
 """
-import argparse
+"""import argparse
 import os
 import tempfile
 import queue
@@ -18,7 +18,7 @@ assert numpy  # avoid "imported but unused" message (W0611)
 
 
 def int_or_str(text):
-    """Helper function for argument parsing."""
+    ""Helper function for argument parsing.""
     try:
         return int(text)
     except ValueError:
@@ -55,7 +55,7 @@ q = queue.Queue()
 
 
 def callback(indata, frames, time, status):
-    """This is called (from a separate thread) for each audio block."""
+    ""This is called (from a separate thread) for each audio block.""
     if status:
         print(status, file=sys.stderr)
     q.put(indata.copy())
@@ -105,3 +105,4 @@ if __name__ == "__main__":
 
 # except Exception as e:
 #    parser.exit(type(e).__name__ + ': ' + str(e))
+"""

@@ -29,8 +29,8 @@ class Core(CoreClients):
 
         self.default_description = "Created with the Inoft Vocal Framework"
 
-    def get_lambda_function_arn(self, function_name: str):
-        return SafeDict(self.lambda_client.get_function(FunctionName=function_name)).get("Configuration").get("FunctionArn").to_str()
+    def get_lambda_function_arn(self, function_name_or_arn: str):
+        return SafeDict(self.lambda_client.get_function(FunctionName=function_name_or_arn)).get("Configuration").get("FunctionArn").to_str()
 
     def api_gateway_v2_url(self, api_id: str):
         try:
@@ -234,7 +234,7 @@ class Core(CoreClients):
             self.s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={"LocationConstraint": region_name})
             click.echo(f"Completed creation of the new bucket.")
 
-    def upload_to_s3(self, filepath: str, object_key_name: str, bucket_name: str, region_name: str) -> bool:
+    def upload_file_to_s3(self, filepath: str, object_key_name: str, bucket_name: str, region_name: str) -> bool:
         # If an error happen while uploading to S3, then the upload will not be
         # successful. We use that as our way to send a success response.
         try:
@@ -282,5 +282,5 @@ class Core(CoreClients):
             return False
 
 if __name__ == "__main__":
-    Core().upload_to_s3("F:\Inoft\hackaton cite des sciences 1\lambda_project\inoft_vocal_framework\cli\core\core_clients.py",
+    Core().upload_file_to_s3("F:\Inoft\hackaton cite des sciences 1\lambda_project\inoft_vocal_framework\cli\core\core_clients.py",
                         "letestduframeworkinoft", "eu-west-3")

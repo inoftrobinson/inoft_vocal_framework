@@ -1,3 +1,0 @@
-{% if action_dict is not none %}
-self.persistent_memorize("{{action_dict.name}}", {{action_dict.value}})
-{%- endif %}

@@ -1,3 +1,0 @@
-{% if say_action.code is not none %}
-self.say({% if say_action.message_item_to_say.is_callable is true %}{{say_action.message_item_to_say.element}}{% else %}"{{say_action.message_item_to_say.element}}"{% endif %})
-{%- endif %}

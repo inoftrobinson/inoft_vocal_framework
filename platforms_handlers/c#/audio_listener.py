@@ -1,4 +1,4 @@
-import pyaudio
+"""import pyaudio
 import wave
 
 chunk = 1024  # Record in chunks of 1024 samples
@@ -40,3 +40,4 @@ wf.setsampwidth(p.get_sample_size(sample_format))
 wf.setframerate(fs)
 wf.writeframes(b''.join(frames))
 wf.close()
+"""

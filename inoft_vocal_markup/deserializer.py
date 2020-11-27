@@ -8,6 +8,15 @@ class DialogueLine(BaseModel):
     line_content: str = None
     additional_character_metadata: Optional[str] = None
 
+class ContentElement(BaseModel):
+    id: str = None
+    created_by: str = None
+    created_on: str = None
+    modified_on: str = None
+    crude_text: str = None
+    character_names: list = None
+    dialogues_lines: Optional[List[DialogueLine]] = None
+
 class Deserializer:
     def __init__(self, characters_names: Optional[list] = None):
         self.characters_names = characters_names

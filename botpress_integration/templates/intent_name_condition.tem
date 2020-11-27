@@ -1,4 +1,0 @@
-class {{intent_name}}Condition(InoftCondition):
-    def can_handle(self) -> bool:
-        return self.is_in_intent_names(["{{intent_name}}"])
-

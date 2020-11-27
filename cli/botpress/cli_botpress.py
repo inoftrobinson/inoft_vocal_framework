@@ -173,7 +173,7 @@ class BotpressCore(AwsCore):
             for name in files:
                 current_filepath = os.path.join(root, name)
                 s3_object_key_name = current_filepath.replace(f"{root_dirpath_to_save_audio_project}\\", "")
-                self.upload_to_s3(filepath=current_filepath, object_key_name=s3_object_key_name,
+                self.upload_file_to_s3(filepath=current_filepath, object_key_name=s3_object_key_name,
                                   bucket_name=bucket_name, region_name=region_name)
                 print(f"Uploaded {current_filepath} to S3 : {bucket_name}/{s3_object_key_name}")
 

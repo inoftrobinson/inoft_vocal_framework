@@ -52,7 +52,7 @@
             "displayName": "Start"
         },
         "intentDetectionConfidence": 1,
-        "languageCode": "fr"
+        "LanguageModel": "fr"
     },
     "originalDetectIntentRequest":
     {

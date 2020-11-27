@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from json import dumps as json_dumps
 
-from typing import List
+from typing import List, Callable, Any
 
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
@@ -17,15 +17,26 @@ from inoft_vocal_framework.plugins.loader import plugins_load
 # todo: Add a class with only a CanHandle function (for cases like the Yes and No classical handlers=
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
 
-class canProcessIntentNames:
-    def __init__(self, intent_names: List[str]):
-        self.intent_names = intent_names
 
-    def __call__(self, cls, *args, **kwargs):
-        cls.can_process_intent_names = self.intent_names
-        # todo: check what happens when multiple methods are applied
-        #  on the same class, will it initialize the same class multiple times ?
-        return cls(*args, **kwargs)
+def canProcessIntentNames(intents_names: List[str]):
+    print(intents_names)
+    # todo: finish the canProcessIntentNames
+    def decorator(class_instance: Any):
+        """def wrapper(*args, **kwargs):
+            return None
+        wrapper()"""
+        try:
+            class_instance_bases = class_instance.__bases__
+            if InoftStateHandler in class_instance_bases:
+                print("should add state handler to skill switch")
+            elif InoftRequestHandler in class_instance_bases:
+                print("should add request handler to skill switch")
+            # return wrapper
+        except Exception as e:
+            print(e)
+        finally:
+            return class_instance
+    return decorator
 
 class InoftCondition(HandlerInputWrapper):
     @abstractmethod
@@ -118,7 +129,7 @@ class InoftHandlersGroup:
 
 
 class InoftSkill:
-    def __init__(self, settings_instance: Settings):
+    def __init__(self, settings_instance: Settings = None):
         self.settings = settings_instance
         self.plugins = plugins_load(settings=self.settings)
         # todo: reactivate plugins

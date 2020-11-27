@@ -324,7 +324,7 @@ class QueryResult:
         self._intent = Intent()
         self._intentDetectionConfidence = int()
         self._diagnosticInfo = dict()
-        self._languageCode = str()
+        self._LanguageModel = str()
 
     @property
     def queryText(self) -> str:
@@ -438,15 +438,15 @@ class QueryResult:
             raise Exception(f"diagnosticInfo was type {type(diagnosticInfo)} which is not valid value for his parameter.")
 
     @property
-    def languageCode(self) -> str:
-        return self._languageCode
+    def LanguageModel(self) -> str:
+        return self._LanguageModel
 
-    @languageCode.setter
-    def languageCode(self, languageCode: str) -> None:
-        if isinstance(languageCode, str):
-            self._languageCode = languageCode
+    @LanguageModel.setter
+    def LanguageModel(self, LanguageModel: str) -> None:
+        if isinstance(LanguageModel, str):
+            self._LanguageModel = LanguageModel
         else:
-            raise Exception(f"languageCode was type {type(languageCode)} which is not valid value for his parameter.")
+            raise Exception(f"LanguageModel was type {type(LanguageModel)} which is not valid value for his parameter.")
 
 class Request:
     json_key = "request"

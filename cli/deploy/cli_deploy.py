@@ -123,7 +123,7 @@ class DeployHandler(Core):
 
             # Upload it to S3
             click.echo("Uploading the app zip file to S3")
-            upload_success = self.upload_to_s3(filepath=zip_filepath, object_key_name=Path(zip_filepath).name,
+            upload_success = self.upload_file_to_s3(filepath=zip_filepath, object_key_name=Path(zip_filepath).name,
                                                bucket_name=bucket_name, region_name="eu-west-3")
             if not upload_success:
                 raise ClickException("Unable to upload to S3. Look in the logs what caused the errors,"
@@ -135,7 +135,7 @@ class DeployHandler(Core):
             click.echo("Uploading completed.")
 
         try:
-            lambda_arn = self.get_lambda_function_arn(function_name=lambda_name)
+            lambda_arn = self.get_lambda_function_arn(function_name_or_arn=lambda_name)
             click.echo(f"Using the existing lambda function {lambda_name}")
             if upload_success is True:
                 self.update_lambda_function_code(lambda_arn=lambda_arn, object_key_name=Path(zip_filepath).name, bucket_name=bucket_name)
@@ -233,7 +233,7 @@ class DeployHandler(Core):
         # Warn if this is too large for Lambda.
         file_stats = os.stat(archive_destination_filepath)
         if file_stats.st_size > 52428800:
-            click.echo("Warning: Application zip package is likely to be too large for AWS Lambda. Try to make it smaller")
+            click.echo("Warning: DiagramsApplication zip package is likely to be too large for AWS Lambda. Try to make it smaller")
 
         return archive_destination_filepath
 
