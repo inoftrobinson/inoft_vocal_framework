@@ -1,5 +1,5 @@
-@@ -1,84 +0,0 @@
 mod append;
+mod resampler;
 
 use std::f32::consts::PI;
 use std::i16;
