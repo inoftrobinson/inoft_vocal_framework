@@ -86,12 +86,14 @@ pub fn main() {
             let resamples = resample(samples, sample_rate, TARGET_SPEC.sample_rate as i32);
 
             let outing_start = Instant::now();
-            let start_sample = (audio_clip.player_start_time as i32 * TARGET_SPEC.sample_rate as i32) as i32;
+            let start_sample = (audio_clip.player_start_time as i32 * TARGET_SPEC.sample_rate as i32) as usize;
             println!("start_sample = {}", start_sample);
             for i_sample in 0..resamples.len() {
+
+                //Removed unnecessary variable conversion
                 // todo: fix issue where if the first sound has a player_start_time more than
                 //  zero, it will be pushed in the out_samples like if it had no player_start_time.
-                let current_sample_index = (i_sample as i32 + start_sample) as usize;
+                let current_sample_index = i_sample + start_sample;
                 if out_samples.len() > current_sample_index + 1 {
                     out_samples[current_sample_index] = (Wrapping(out_samples[current_sample_index]) + Wrapping(resamples[i_sample])).0;
                 } else {
