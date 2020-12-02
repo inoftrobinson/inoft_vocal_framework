@@ -24,7 +24,7 @@ const TARGET_SPEC: WavSpec = hound::WavSpec {
 };
 
 
-struct AudioClip {
+pub struct AudioClip {
     filepath: String,
     player_start_time: i16,
     player_end_time: i16,
@@ -89,8 +89,6 @@ pub fn main() {
             let start_sample = (audio_clip.player_start_time as i32 * TARGET_SPEC.sample_rate as i32) as usize;
             println!("start_sample = {}", start_sample);
             for i_sample in 0..resamples.len() {
-
-                //Removed unnecessary variable conversion
                 // todo: fix issue where if the first sound has a player_start_time more than
                 //  zero, it will be pushed in the out_samples like if it had no player_start_time.
                 let current_sample_index = i_sample + start_sample;

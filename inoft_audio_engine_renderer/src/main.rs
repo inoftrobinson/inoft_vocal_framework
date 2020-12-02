@@ -1,7 +1,7 @@
 mod append;
 mod resampler;
 mod renderer;
-mod s3;
+// mod s3;
 
 use std::f32::consts::PI;
 use std::i16;
@@ -68,9 +68,9 @@ fn change_volume(mut reader: WavReader<BufReader<File>>) {
 }
  */
 
-async fn upload() {
+/*async fn upload() {
     let e = s3::upload().await;
-}
+}*/
 
 fn main() {
     append::main();
