@@ -1,5 +1,7 @@
 mod append;
 mod resampler;
+mod renderer;
+mod s3;
 
 use std::f32::consts::PI;
 use std::i16;
@@ -11,6 +13,7 @@ use std::fs::File;
 use std::ptr::null;
 
 
+/*
 fn write_sinewave(filepath: &str) {
     let spec = hound::WavSpec {
         channels: 1,
@@ -25,6 +28,7 @@ fn write_sinewave(filepath: &str) {
         writer.write_sample((sample * amplitude) as i16).unwrap();
     }
 }
+ */
 
 
 /*
@@ -39,7 +43,7 @@ fn open_wav_file(filepath: &str) -> WavReader<BufReader<File>> {
 }
  */
 
-
+/*
 fn square(mut reader: WavReader<BufReader<File>>) {
     println!("Opened");
     let sqr_sum = reader.samples::<i16>().fold(0.0, |sqr_sum, s| {
@@ -50,6 +54,7 @@ fn square(mut reader: WavReader<BufReader<File>>) {
     });
     println!("RMS is {}", (sqr_sum / reader.len() as f64).sqrt());
 }
+ */
 
 /*
 fn change_volume(mut reader: WavReader<BufReader<File>>) {
@@ -62,6 +67,10 @@ fn change_volume(mut reader: WavReader<BufReader<File>>) {
     println!("RMS is {}", (sqr_sum / reader.len() as f64).sqrt());
 }
  */
+
+async fn upload() {
+    let e = s3::upload().await;
+}
 
 fn main() {
     append::main();

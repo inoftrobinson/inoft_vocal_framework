@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Optional
 from pydub import AudioSegment
 
-from inoft_vocal_engine.audio_editing.models import TrackStartTime, AudioStartTime, AudioEndTime
-from inoft_vocal_engine.audio_editing.relation import Relation
+from inoft_vocal_framework.audio_editing.models import TrackStartTime, AudioStartTime, AudioEndTime
+from inoft_vocal_framework.audio_editing.relation import Relation
 
 
 class SoundProps:

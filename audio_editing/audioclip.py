@@ -2,10 +2,10 @@ import time
 
 from pydub import AudioSegment
 
-from inoft_vocal_engine.audio_editing.sound import Sound
-from inoft_vocal_engine.audio_editing.track import Track
-from inoft_vocal_engine.audio_editing.relation import Relation
-from inoft_vocal_engine.dummy_object import DummyObject
+from inoft_vocal_framework.audio_editing.sound import Sound
+from inoft_vocal_framework.audio_editing.track import Track
+from inoft_vocal_framework.audio_editing.relation import Relation
+from inoft_vocal_framework.dummy_object import DummyObject
 from typing import List, Optional
 
 
