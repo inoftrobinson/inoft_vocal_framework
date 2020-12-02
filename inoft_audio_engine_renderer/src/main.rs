@@ -1,6 +1,7 @@
 mod append;
 mod resampler;
 mod renderer;
+mod exporter;
 // mod s3;
 
 use std::f32::consts::PI;
@@ -73,6 +74,7 @@ fn change_volume(mut reader: WavReader<BufReader<File>>) {
 }*/
 
 fn main() {
+    exporter::from_flac_to_mp3();
     append::main();
     /*
 

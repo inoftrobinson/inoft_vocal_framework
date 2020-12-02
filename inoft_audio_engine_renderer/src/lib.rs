@@ -3,6 +3,8 @@ mod append;
 use append::AudioClip;
 mod resampler;
 mod renderer;
+mod exporter;
+
 
 use cpython::{PyResult, Python, py_module_initializer, py_fn, PyObject, ObjectProtocol};
 
@@ -15,6 +17,8 @@ py_module_initializer!(inoft_audio_engine_renderer, |py, m| {
 fn get_result(_py: Python, val: &str, audio_clip: PyObject) -> PyResult<String> {
     println!("{:?}", audio_clip);
     println!("{:?}", audio_clip.get_item(_py, "start"));
+    // todo: retrieve the AudioClips objects from Python
+    exporter::from_flac_to_mp3();
     append::main();
     Ok("Rust says: ".to_owned() + val)
 }
