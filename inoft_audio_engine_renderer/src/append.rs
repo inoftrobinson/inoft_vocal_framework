@@ -81,9 +81,10 @@ pub fn main() {
             let mut file_reader = WavReader::open(filepath).unwrap();
             println!("spec : {:?}", file_reader.spec());
 
+            let file_reader_spec = file_reader.spec();
             let sample_rate = file_reader.spec().sample_rate as i32;
             let samples: WavSamples<BufReader<File>, i16> = file_reader.samples();
-            let resamples = resample(samples, sample_rate, TARGET_SPEC.sample_rate as i32);
+            let resamples = resample(samples, file_reader_spec, TARGET_SPEC);
 
             let outing_start = Instant::now();
             let start_sample = (audio_clip.player_start_time as i32 * TARGET_SPEC.sample_rate as i32) as usize;
