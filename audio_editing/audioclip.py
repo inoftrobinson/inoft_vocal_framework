@@ -13,6 +13,16 @@ class AudioBlock:
     def __init__(self):
         self.tracks: List[Track] = list()
 
+    def serialize(self) -> dict:
+        serialized_tracks: List[dict] = list()
+        for track in self.tracks:
+            serialized_tracks.append(track.serialize())
+        return {'tracks': serialized_tracks}
+
+    def render_2(self) -> str:
+        from inoft_vocal_framework.inoft_audio_engine_renderer.audio_engine_renderer_wrapping import render
+        return render([self])
+
     def _render(self) -> Optional[AudioSegment]:
         if len(self.tracks) > 0:
             id_longer_primary_track = None

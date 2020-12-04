@@ -1,17 +1,31 @@
 mod append;
+use append::{AudioBlock, AudioClip, Track};
 mod resampler;
 mod renderer;
 mod exporter;
 // mod s3;
+mod models;
+use models::{ReceivedParsedData, ReceivedTargetSpec};
 
 use std::f32::consts::PI;
-use std::i16;
+use std::{i16, thread};
 use hound;
 use hound::WavReader;
 use hound::WavSamples;
 use std::io::BufReader;
 use std::fs::File;
 use std::ptr::null;
+use tokio;
+use tokio::prelude::*;
+use tokio::time::error::Error;
+use hyper::{Client, Uri, Method, Request, Body};
+use hyper::client::HttpConnector;
+use reqwest;
+use tokio::net::{TcpStream, TcpListener};
+use tokio::time::Duration;
+use std::sync::mpsc;
+use std::future::Future;
+use std::net::IpAddr;
 
 
 /*
@@ -73,9 +87,168 @@ fn change_volume(mut reader: WavReader<BufReader<File>>) {
     let e = s3::upload().await;
 }*/
 
+/*
 fn main() {
-    exporter::from_flac_to_mp3();
-    append::main();
+    let ip_addr = "172.217.3.238".parse::<IpAddr>().unwrap();
+
+    // Improved Simplified Solution
+    println!("[Simple] Reverse Ip Look Results For: {}", ip_addr);
+    let handle = create_simple_lookup_handle();
+    let result_future = handle.lookup_hostnames(ip_addr);
+    for hostname in result_future.wait().unwrap() {
+        println!(" - {}", hostname);
+    }
+}
+
+async fn write_data() {
+    // let mut stream = TcpStream::connect("127.0.0.1:8000").await.unwrap();
+    // stream.write_all(b"test").await.unwrap();
+    let prom = tokio::time::sleep(Duration::from_millis(3000)).await;
+    println!("yolo");
+}
+
+async fn log() {
+    println!("goodday");
+}
+ */
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let listener = TcpListener::bind("127.0.0.1:8080").await?;
+
+    loop {
+        let (mut socket, _) = listener.accept().await?;
+
+        tokio::spawn(async move {
+            let mut buf = [0; 1024];
+
+            // In a loop, read data from the socket and write the data back.
+            loop {
+                println!("Reading...");
+                let n = match socket.read(&mut buf).await {
+                    // socket closed
+                    Ok(n) if n == 0 => return,
+                    Ok(n) => n,
+                    Err(e) => {
+                        eprintln!("failed to read from socket; err = {:?}", e);
+                        return;
+                    }
+                };
+
+                // Write the data back
+                if let Err(e) = socket.write_all(&buf[0..n]).await {
+                    eprintln!("failed to write to socket; err = {:?}", e);
+                    return;
+                }
+            }
+        });
+    }
+}
+
+
+/*
+#[tokio::main]
+async fn main() {
+    write_data().await;
+    log().await;
+    /*let res = reqwest::get("http://httpbin.org/get").await;
+    println!("Status: {}", res.status());
+    println!("Headers:\n{:#?}", res.headers());
+
+    let body = res.unwrap().text().await;
+    println!("Body:\n{}", body.unwrap());
+    Ok(())
+
+     */
+}
+ */
+
+/*
+
+use mini_redis::{client, Result};
+
+#[tokio::main]
+pub async fn main() -> Result<()> {
+    let handle = tokio::spawn(async {
+        let prom = tokio::time::sleep(Duration::from_millis(3000)).await;
+        println!("yolo");
+    });
+
+    let out1 = tokio::spawn(async {
+        println!("my dude !");
+    }).await;
+
+    // Do some other work
+
+    let out2 = handle.await.unwrap();
+    println!("GOT {:?}", out2);
+
+    let out3 = tokio::spawn(async {
+        println!("whuuuttt !");
+    }).await;
+
+
+    // Open a connection to the mini-redis address.
+    let mut client = client::connect("127.0.0.1:6379").await?;
+
+    // Set the key "hello" with value "world"
+    client.set("hello", "world".into()).await?;
+
+    // Get key "hello"
+    let result = client.get("hello").await?;
+
+    println!("got value from the server; result={:?}", result);
+
+    Ok(())
+}
+
+fn create_simple_lookup_handle() -> SimpleDnsLookupHandle {
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        let mut core = Core::new().unwrap();
+        let resolv = Resolver::new(&core.handle());
+        tx.send(resolv);
+        loop { core.turn(None); }
+    });
+
+    return SimpleDnsLookupHandle { resolv: rx.recv().unwrap() }
+}
+
+
+#[derive(Clone)]
+pub struct SimpleDnsLookupHandle {
+    resolv: Resolver,
+}
+
+impl SimpleDnsLookupHandle {
+    pub fn lookup_hostnames(&self, ip: IpAddr) -> impl Future<Item=Vec<String>, Error=()> {
+        lookup_addr(self.resolv.clone(), ip).map_err(|e| println!("error = {:?}", e))
+                                    .map(|addrs| addrs.iter().map(|n| n.to_string()).collect())
+    }
+}
+ */
+
+/*
+fn main() {
+    let mut rt = tokio::runtime::Runtime::new().unwrap();
+    rt.block_on(async {
+        println!("hello");
+    });
+    rt.block_on(async {
+        let req = Request::builder()
+            .method(Method::POST)
+            .uri("http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url")
+            .header("content-type", "application/json")
+            .body(Body::from(""));
+
+        let client = Client::new();
+        let resp = client.request(req.unwrap()).await;
+        println!("Response: {:?}", resp);
+        resp
+    });
+
+    // append::main();
+    // let res = exporter::from_flac_to_mp3().await;
     /*
 
     let arr: [u32; 5] = [1, 2, 3, 4, 5];
@@ -94,3 +267,4 @@ fn main() {
     change_volume(WavReader::open("F:/Sons utiles/test1.wav").unwrap());
      */
 }
+ */

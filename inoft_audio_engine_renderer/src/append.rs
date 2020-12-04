@@ -13,6 +13,8 @@ use crate::resampler::resample;
 use std::time::Instant;
 use self::hound::WavSpec;
 use std::num::Wrapping;
+use crate::{ReceivedParsedData, ReceivedTargetSpec};
+
 
 extern crate hound;
 
@@ -25,11 +27,20 @@ const TARGET_SPEC: WavSpec = hound::WavSpec {
 
 
 pub struct AudioClip {
-    filepath: String,
-    player_start_time: i16,
-    player_end_time: i16,
-    file_start_time: i16,
-    file_end_time: i16,
+    pub filepath: String,
+    pub player_start_time: i16,
+    pub player_end_time: i16,
+    pub file_start_time: i16,
+    pub file_end_time: i16,
+}
+
+pub struct Track {
+    pub clips: Vec<AudioClip>,
+    pub gain: i16,
+}
+
+pub struct AudioBlock {
+    pub tracks: Vec<Track>,
 }
 
 impl AudioClip {
@@ -50,7 +61,7 @@ impl AudioClip {
 }
 
 
-pub fn main() {
+pub fn main(data: ReceivedParsedData) {
     let start = Instant::now();
     let path: &Path = "F:/Sons utiles/output_dummy_2.wav".as_ref();
     /*let mut writer = match path.is_file() {
@@ -59,7 +70,7 @@ pub fn main() {
     };*/
 
     let mut files_readers: Vec<WavReader<BufReader<File>>> = vec![];
-    let files_paths: Vec<AudioClip> = vec![
+    /*let files_paths: Vec<AudioClip> = vec![
         // AudioClip::without_args("F:/Inoft/anvers_1944_project/inoft_vocal_engine/speech_synthesis/export/builtin_text-wqhtNB/final_render.wav"),
         // AudioClip::without_args("F:/Inoft/anvers_1944_project/inoft_vocal_engine/speech_synthesis/export/builtin_text-wqhtNB/final_render.wav"),
         // AudioClip::without_args("F:/Inoft/anvers_1944_project/inoft_vocal_engine/speech_synthesis/export/builtin_text-VOcldO/final_render.wav"),
@@ -69,25 +80,36 @@ pub fn main() {
             "F:/Inoft/anvers_1944_project/inoft_vocal_engine/speech_synthesis/export/builtin_text-nVXWAn/final_render.wav",
             Some(20), None, None, None
         ),
-    ];
+    ];*/
     let mut duration_longest_file_buffer: u32 = 0;
     let mut file_reader_longest_file: Option<&WavReader<BufReader<File>>> = None;
 
-    if files_paths.len() > 0 {
+    let target_spec = hound::WavSpec {
+        channels: 1,
+        sample_rate: data.target_spec.sample_rate as u32,
+        bits_per_sample: 16,
+        sample_format: hound::SampleFormat::Int,
+    };
+    if data.blocks.len() > 0 {
+        let first_audio_block = data.blocks.get(0).unwrap();
+        let first_track = first_audio_block.tracks.get(0).unwrap();
+        let audio_clips = &first_track.clips;
+        // todo: fix that and support multiple audio blocks instead of just using the first one
+
         let mut out_samples: Vec<i16> = Vec::new();
-        for (i_file, filepath) in files_paths.iter().enumerate() {
-            let audio_clip = &files_paths[i_file];
+        for (i_file, filepath) in audio_clips.iter().enumerate() {
+            let audio_clip = &audio_clips[i_file];
             let filepath = &audio_clip.filepath;
+            println!("file : {}", filepath);
             let mut file_reader = WavReader::open(filepath).unwrap();
             println!("spec : {:?}", file_reader.spec());
 
             let file_reader_spec = file_reader.spec();
-            let sample_rate = file_reader.spec().sample_rate as i32;
             let samples: WavSamples<BufReader<File>, i16> = file_reader.samples();
-            let resamples = resample(samples, file_reader_spec, TARGET_SPEC);
+            let resamples = resample(samples, file_reader_spec, target_spec);
 
             let outing_start = Instant::now();
-            let start_sample = (audio_clip.player_start_time as i32 * TARGET_SPEC.sample_rate as i32) as usize;
+            let start_sample = (audio_clip.player_start_time as i32 * data.target_spec.sample_rate as i32) as usize;
             println!("start_sample = {}", start_sample);
             for i_sample in 0..resamples.len() {
                 // todo: fix issue where if the first sound has a player_start_time more than
@@ -117,7 +139,7 @@ pub fn main() {
         }
 
         println!("out samples : {}", out_samples.len());
-        let mut writer =  hound::WavWriter::create(path, TARGET_SPEC).unwrap();
+        let mut writer =  hound::WavWriter::create(path, target_spec).unwrap();
         let writing_start = Instant::now();
         for i_sample in 0..out_samples.len() {
             writer.write_sample(out_samples[i_sample]).unwrap();

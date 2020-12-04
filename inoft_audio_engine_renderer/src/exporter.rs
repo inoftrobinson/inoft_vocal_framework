@@ -2,10 +2,37 @@ use lame::Lame;
 use claxon::FlacReader;
 use std::fs::File;
 use std::time::Instant;
+use hyper::{Client, Uri, Method, Request, Body};
+use hyper::client::HttpConnector;
 
+
+async fn get_upload_url() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let client: Client<HttpConnector> = Client::new();
+    let url: Uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url"
+        .parse()
+        .unwrap();
+    // assert_eq!(url.query(), Some("foo=bar"));
+    let req = Request::builder()
+        .method(Method::POST)
+        .uri("http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url")
+        .header("content-type", "application/json")
+        .body(Body::from(r#"{"library":"hyper"}"#))?;
+    // client.request(req).and_then()
+    let resp = client.request(req).await?;
+    println!("Response: {}", resp.status());
+
+    // let res = client.post(url).send().await;
+
+    /*match client.get(url).await {
+        Ok(res) => println!("Response: {}", res.status()),
+        Err(err) => println!("Error: {}", err),
+    };
+     */
+    Ok(())
+}
 
 // flac_song: &std::fs::File
-pub fn from_flac_to_mp3() -> Vec<u8> {
+pub async fn from_flac_to_mp3() -> Vec<u8> {
     let file = File::open("F:/Sons utiles/compressed-music.flac").expect("Error opening file");
     let mut flac_reader = FlacReader::new(file).expect("FlacReader error");
     let mut lame = Lame::new().expect("Coudn't create Lame");
@@ -36,10 +63,8 @@ pub fn from_flac_to_mp3() -> Vec<u8> {
             None => {
                 break;
             }
-
             Some(block) => {
                 let iter = block.stereo_samples();
-
                 for (left, right) in iter {
                     left_samples.push(left as _);
                     right_samples.push(right as _);
@@ -64,6 +89,9 @@ pub fn from_flac_to_mp3() -> Vec<u8> {
         mp3_buffer.as_mut_slice(),
     );
     println!("\nFinished lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
+
+    let res = get_upload_url().await;
+
     mp3_buffer
 }
 

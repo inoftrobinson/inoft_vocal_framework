@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, List
 
 from pydub import AudioSegment
 
@@ -14,6 +14,15 @@ class Track:
         self.name = name
         self.is_primary = is_primary
         self.loop_until_primary_tracks_finish = loop_until_primary_tracks_finish
+
+    def serialize(self) -> dict:
+        serialized_clips: Dict[str, dict] = dict()
+        for clip_id, clip_item in self._sounds.items():
+            serialized_clips[clip_id] = clip_item.serialize()
+
+        return {
+            'clips': serialized_clips
+        }
 
     def _render(self) -> (Optional[AudioSegment], PlayedSoundInfos):
         num_sounds = len(self._sounds)

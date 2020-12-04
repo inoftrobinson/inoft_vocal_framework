@@ -60,6 +60,15 @@ class Sound(SoundProps):
         self._in_use = False
         self._append_sound_after_last_one = True
 
+    def serialize(self) -> dict:
+        return {
+            'localFilepath': self.local_filepath,
+            'playerStartTime': self._player_start_time,
+            'playerEndTime': self._player_end_time,
+            'fileStartTime': self._file_start_time,
+            'fileEndTime': self._file_end_time,
+        }
+
     @property
     def audio_segment(self) -> AudioSegment:
         return self._audio_segment
