@@ -101,13 +101,13 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
     lame.set_channels(1).expect("Couldn't set num channels");
     lame.set_sample_rate(target_spec.sample_rate as u32).expect("Couldn't set up sample rate");
     lame.set_kilobitrate(48).expect("Coudn't set up kilobitrate");
-    lame.set_quality(4).expect("Set quality error");
+    // todo: make kilobitrate parametrable
+    lame.set_quality(9).expect("Set quality error");
+    // We set the quality to the 'worst' and fastest quality possible. With the formats used
+    // by the inoft_vocal_framework, we do not hear the difference between the qualities.
     lame.init_params().expect("init parameters error");
 
-    let num_samples = samples.len() as f64;
-    let mp3_buffer_size = ((num_samples / 4.0) + 7200.0) as usize;
-    let mut mp3_buffer = vec![0; mp3_buffer_size];
-
+    let mut mp3_buffer = vec![];
     let samples_slice = samples.as_slice();
     let _ = lame.encode(
         samples_slice,
