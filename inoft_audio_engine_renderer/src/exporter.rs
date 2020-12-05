@@ -4,6 +4,9 @@ use std::fs::File;
 use std::time::Instant;
 use hyper::{Client, Uri, Method, Request, Body};
 use hyper::client::HttpConnector;
+use std::path::Path;
+use std::io::Write;
+use crate::models::ReceivedTargetSpec;
 
 
 async fn get_upload_url() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -37,17 +40,13 @@ pub async fn from_flac_to_mp3() -> Vec<u8> {
     let mut flac_reader = FlacReader::new(file).expect("FlacReader error");
     let mut lame = Lame::new().expect("Coudn't create Lame");
 
-    lame.set_channels(1)
-        .expect("Couldn't set num channels");
+    lame.set_channels(1).expect("Couldn't set num channels");
     /*lame.set_sample_rate(flac_reader.streaminfo().sample_rate as _)
         .expect("Couldn't set up sample rate");
      */
-    lame.set_sample_rate(16000 as u32)
-        .expect("Couldn't set up sample rate");
-    lame.set_channels(1)
-        .expect("Coudn't set up channels");
-    lame.set_kilobitrate(48)
-        .expect("Coudn't set up kilobitrate");
+    lame.set_sample_rate(16000 as u32).expect("Couldn't set up sample rate");
+    lame.set_channels(1).expect("Coudn't set up channels");
+    lame.set_kilobitrate(48).expect("Coudn't set up kilobitrate");
 
     let mut left_samples: Vec<i16> = Vec::new();
     let mut right_samples: Vec<i16> = Vec::new();
@@ -91,6 +90,45 @@ pub async fn from_flac_to_mp3() -> Vec<u8> {
     println!("\nFinished lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
 
     let res = get_upload_url().await;
+
+    mp3_buffer
+}
+
+pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetSpec) -> Vec<u8> {
+    let mut lame = Lame::new().expect("Coudn't create Lame");
+    lame.set_channels(1).expect("Couldn't set num channels");
+    lame.set_sample_rate(target_spec.sample_rate as u32).expect("Couldn't set up sample rate");
+    lame.set_kilobitrate(48).expect("Coudn't set up kilobitrate");
+    lame.set_quality(4).expect("Set quality error");
+    lame.init_params().expect("init parametrs error");
+
+    let num_samples = samples.len() as f64;
+    let mp3_buffer_size = ((num_samples / 4.0) + 7200.0) as usize;
+    let mut mp3_buffer = vec![0; mp3_buffer_size];
+
+    println!("lame start");
+    let start = Instant::now();
+    let samples_slice = samples.as_slice();
+    println!("len slice : {} & real len : {} & mp3 len {}", samples_slice.len(), samples.len(), mp3_buffer.len());
+    let _ = lame.encode(
+        samples_slice,
+        samples_slice,
+        mp3_buffer.as_mut_slice(),
+    );
+    println!("\nFinished lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
+
+    let path = Path::new("F:/Sons utiles/output_mp3.mp3");
+
+    // Open a file in write-only mode, returns `io::Result<File>`
+    let mut file = match File::create(&path) {
+        Err(why) => panic!("couldn't create {:?}: {}", path, why),
+        Ok(file) => file,
+    };
+
+    match file.write_all(mp3_buffer.as_slice()) {
+        Err(why) => panic!("couldn't write to {:?}: {}", path, why),
+        Ok(_) => println!("successfully wrote to {:?}", path),
+    }
 
     mp3_buffer
 }

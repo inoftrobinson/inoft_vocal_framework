@@ -9,7 +9,7 @@ use std::fs::File;
 use std::ptr::null;
 use std::borrow::Borrow;
 use std::process::{Command, Stdio};
-use crate::resampler::resample;
+use crate::resampler::{resample_i16, resample_i32};
 use std::time::Instant;
 use self::hound::WavSpec;
 use std::num::Wrapping;
@@ -26,42 +26,7 @@ const TARGET_SPEC: WavSpec = hound::WavSpec {
 };
 
 
-pub struct AudioClip {
-    pub filepath: String,
-    pub player_start_time: i16,
-    pub player_end_time: i16,
-    pub file_start_time: i16,
-    pub file_end_time: i16,
-}
-
-pub struct Track {
-    pub clips: Vec<AudioClip>,
-    pub gain: i16,
-}
-
-pub struct AudioBlock {
-    pub tracks: Vec<Track>,
-}
-
-impl AudioClip {
-    fn new(filepath: &str, player_start_time: Option<i16>, player_end_time: Option<i16>,
-           file_start_time: Option<i16>, file_end_time: Option<i16>) -> AudioClip {
-        AudioClip {
-            filepath: String::from(filepath),
-            player_start_time: player_start_time.unwrap_or(0),
-            player_end_time: player_end_time.unwrap_or(0),
-            file_start_time: file_start_time.unwrap_or(0),
-            file_end_time: file_end_time.unwrap_or(0)
-        }
-    }
-
-    fn without_args(filepath: &str) -> AudioClip {
-        AudioClip::new(filepath, None, None, None, None)
-    }
-}
-
-
-pub fn main(data: ReceivedParsedData) {
+pub fn main(data: ReceivedParsedData) -> Vec<i16> {
     let start = Instant::now();
     let path: &Path = "F:/Sons utiles/output_dummy_2.wav".as_ref();
     /*let mut writer = match path.is_file() {
@@ -69,34 +34,26 @@ pub fn main(data: ReceivedParsedData) {
         false => hound::WavWriter::create(path, TARGET_SPEC).unwrap(),
     };*/
 
+    let mut out_samples: Vec<i16> = Vec::new();
     let mut files_readers: Vec<WavReader<BufReader<File>>> = vec![];
-    /*let files_paths: Vec<AudioClip> = vec![
-        // AudioClip::without_args("F:/Inoft/anvers_1944_project/inoft_vocal_engine/speech_synthesis/export/builtin_text-wqhtNB/final_render.wav"),
-        // AudioClip::without_args("F:/Inoft/anvers_1944_project/inoft_vocal_engine/speech_synthesis/export/builtin_text-wqhtNB/final_render.wav"),
-        // AudioClip::without_args("F:/Inoft/anvers_1944_project/inoft_vocal_engine/speech_synthesis/export/builtin_text-VOcldO/final_render.wav"),
-        AudioClip::without_args("F:/Sons utiles/ambiance_out.wav"),
-        AudioClip::without_args("F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav"),
-        AudioClip::new(
-            "F:/Inoft/anvers_1944_project/inoft_vocal_engine/speech_synthesis/export/builtin_text-nVXWAn/final_render.wav",
-            Some(20), None, None, None
-        ),
-    ];*/
     let mut duration_longest_file_buffer: u32 = 0;
     let mut file_reader_longest_file: Option<&WavReader<BufReader<File>>> = None;
 
+    // The inoft_audio_engine_renderer has been optimized and tested to render audio with 16 bits per sample.
+    // Changing this value to 24 (the only other possible setting), could cause unexpected behaviors.
     let target_spec = hound::WavSpec {
         channels: 1,
         sample_rate: data.target_spec.sample_rate as u32,
         bits_per_sample: 16,
         sample_format: hound::SampleFormat::Int,
     };
+
     if data.blocks.len() > 0 {
         let first_audio_block = data.blocks.get(0).unwrap();
         let first_track = first_audio_block.tracks.get(0).unwrap();
         let audio_clips = &first_track.clips;
         // todo: fix that and support multiple audio blocks instead of just using the first one
 
-        let mut out_samples: Vec<i16> = Vec::new();
         for (i_file, filepath) in audio_clips.iter().enumerate() {
             let audio_clip = &audio_clips[i_file];
             let filepath = &audio_clip.filepath;
@@ -105,8 +62,17 @@ pub fn main(data: ReceivedParsedData) {
             println!("spec : {:?}", file_reader.spec());
 
             let file_reader_spec = file_reader.spec();
-            let samples: WavSamples<BufReader<File>, i16> = file_reader.samples();
-            let resamples = resample(samples, file_reader_spec, target_spec);
+            let mut resamples: Option<Vec<i16>> = None;
+            if file_reader_spec.bits_per_sample <= 16 {
+                let samples: WavSamples<BufReader<File>, i16> = file_reader.samples();
+                resamples = Some(resample_i16(samples, file_reader_spec, target_spec));
+            } else if file_reader_spec.bits_per_sample <= 32 {
+                let samples: WavSamples<BufReader<File>, i32> = file_reader.samples();
+                resamples = Some(resample_i32(samples, file_reader_spec, target_spec));
+            } else {
+                panic!("Bits per sample superior to 32 is not supported");
+            }
+            let resamples = resamples.unwrap();
 
             let outing_start = Instant::now();
             let start_sample = (audio_clip.player_start_time as i32 * data.target_spec.sample_rate as i32) as usize;
@@ -236,4 +202,5 @@ pub fn main(data: ReceivedParsedData) {
      */
 
     println!("Total execution time : {}ms", start.elapsed().as_millis());
+    out_samples
 }

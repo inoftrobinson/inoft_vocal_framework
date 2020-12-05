@@ -1,12 +1,12 @@
 extern crate cpython;
 mod append;
-use append::{AudioBlock, AudioClip, Track};
 mod resampler;
 mod renderer;
 mod exporter;
 pub mod parser;
 mod models;
-use models::{ReceivedParsedData, ReceivedTargetSpec};
+use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, AudioClip, Track};
+mod tests;
 
 
 use cpython::{PyResult, Python, py_module_initializer, py_fn, PyObject, ObjectProtocol};
@@ -18,10 +18,8 @@ py_module_initializer!(inoft_audio_engine_renderer, |py, m| {
 });
 
 fn render(_py: Python, data: PyObject) -> PyResult<String> {
-    let audio_clips = parser::parse_python(_py, data);
-    // println!("{:?}", audio_blocks_data.get_item(_py, "start"));
-    // todo: retrieve the AudioClips objects from Python
+    let parsed_data = parser::parse_python(_py, data);
     // exporter::from_flac_to_mp3();
-    append::main(audio_clips);
+    append::main(parsed_data);
     Ok((String::from("https://inoft.com")))
 }
