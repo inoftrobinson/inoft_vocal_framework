@@ -38,13 +38,13 @@ class MyTestCase(unittest.TestCase):
             local_filepath="F:/Sons utiles/Musics/Vintage (1940s) French Music/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav",
             player_start=background_music_track.start_time
         )
-        background_music.change_volume(-1.0)
+        background_music.volume = -1.0
         background_music_track.create_sound(
             local_filepath="F:/Sons utiles/ambiance_out.wav",
             player_start=background_music_track.start_time
         )
 
-        audio_block_1.render_2()
+        audio_block_1.render_2(out_filepath="F:/Sons utiles/dynamic_filepath.mp3", format_type="mp3")
 
 
 if __name__ == '__main__':

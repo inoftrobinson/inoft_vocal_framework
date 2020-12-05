@@ -1,11 +1,10 @@
 mod append;
-use append::{AudioBlock, AudioClip, Track};
 mod resampler;
 mod renderer;
 mod exporter;
 // mod s3;
 mod models;
-use models::{ReceivedParsedData, ReceivedTargetSpec};
+use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip};
 
 use std::f32::consts::PI;
 use std::{i16, thread};

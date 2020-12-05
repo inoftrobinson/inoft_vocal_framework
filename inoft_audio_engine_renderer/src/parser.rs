@@ -41,7 +41,9 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
     ReceivedParsedData {
         blocks: audio_blocks_items,
         target_spec: ReceivedTargetSpec {
+            filepath: target_spec_data.get_item(_py, "filepath").unwrap().to_string(),
             sample_rate: target_spec_data.get_item(_py, "sampleRate").unwrap().extract::<i32>(_py).unwrap(),
+            format_type: target_spec_data.get_item(_py, "formatType").unwrap().to_string(),
         },
     }
 }

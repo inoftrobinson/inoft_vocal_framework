@@ -1,5 +1,11 @@
+// pub const FORMAT_TYPE_WAV: &String = &String::from("wav");
+// pub const FORMAT_TYPE_MP3: &String = &String::from("mp3");
+
+
 pub struct ReceivedTargetSpec {
+    pub filepath: String,
     pub sample_rate: i32,
+    pub format_type: String,
 }
 
 pub struct ReceivedParsedData {

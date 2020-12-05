@@ -95,83 +95,38 @@ pub async fn from_flac_to_mp3() -> Vec<u8> {
 }
 
 pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetSpec) -> Vec<u8> {
+    let start = Instant::now();
+
     let mut lame = Lame::new().expect("Coudn't create Lame");
     lame.set_channels(1).expect("Couldn't set num channels");
     lame.set_sample_rate(target_spec.sample_rate as u32).expect("Couldn't set up sample rate");
     lame.set_kilobitrate(48).expect("Coudn't set up kilobitrate");
     lame.set_quality(4).expect("Set quality error");
-    lame.init_params().expect("init parametrs error");
+    lame.init_params().expect("init parameters error");
 
     let num_samples = samples.len() as f64;
     let mp3_buffer_size = ((num_samples / 4.0) + 7200.0) as usize;
     let mut mp3_buffer = vec![0; mp3_buffer_size];
 
-    println!("lame start");
-    let start = Instant::now();
     let samples_slice = samples.as_slice();
-    println!("len slice : {} & real len : {} & mp3 len {}", samples_slice.len(), samples.len(), mp3_buffer.len());
     let _ = lame.encode(
         samples_slice,
         samples_slice,
         mp3_buffer.as_mut_slice(),
     );
-    println!("\nFinished lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
+    println!("\nFinished MP3 conversion using Lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
+    mp3_buffer
+}
 
-    let path = Path::new("F:/Sons utiles/output_mp3.mp3");
-
+pub fn write_mp3_buffer_to_file(mp3_buffer: Vec<u8>, filepath: &str) {
+    let path = Path::new(filepath);
     // Open a file in write-only mode, returns `io::Result<File>`
     let mut file = match File::create(&path) {
         Err(why) => panic!("couldn't create {:?}: {}", path, why),
         Ok(file) => file,
     };
-
     match file.write_all(mp3_buffer.as_slice()) {
         Err(why) => panic!("couldn't write to {:?}: {}", path, why),
         Ok(_) => println!("successfully wrote to {:?}", path),
     }
-
-    mp3_buffer
 }
-
-
-/*pub fn export_to_mp3() {
-    /*let lame_ = Lame::new();
-    let mut lame = lame_.unwrap();
-    lame.set_sample_rate(16000);
-    lame.encode(&[10 as i16, 20 as i16], &[10 as i16, 20 as i16], &mut [2 as u8]);
-     */
-
-    /*int read, write;
-
-    FILE *pcm = fopen("file.pcm", "rb");
-    FILE *mp3 = fopen("file.mp3", "wb");
-
-    const int PCM_SIZE = 8192;
-    const int MP3_SIZE = 8192;
-
-    short int pcm_buffer[PCM_SIZE*2];
-    unsigned char mp3_buffer[MP3_SIZE];
-
-    lame_t lame = lame_init();
-    lame_set_in_samplerate(lame, 44100);
-    lame_set_VBR(lame, vbr_default);
-    lame_init_params(lame);
-
-    do {
-        read = fread(pcm_buffer, 2*sizeof(short int), PCM_SIZE, pcm);
-        if (read == 0)
-            write = lame_encode_flush(lame, mp3_buffer, MP3_SIZE);
-        else
-            write = lame_encode_buffer_interleaved(lame, pcm_buffer, read, mp3_buffer, MP3_SIZE);
-        fwrite(mp3_buffer, write, 1, mp3);
-    } while (read != 0);
-
-    lame_close(lame);
-    fclose(mp3);
-    fclose(pcm);
-
-    return 0;
-     */
-}
-
- */

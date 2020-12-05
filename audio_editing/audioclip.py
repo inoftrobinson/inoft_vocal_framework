@@ -6,10 +6,13 @@ from inoft_vocal_framework.audio_editing.sound import Sound
 from inoft_vocal_framework.audio_editing.track import Track
 from inoft_vocal_framework.audio_editing.relation import Relation
 from inoft_vocal_framework.dummy_object import DummyObject
-from typing import List, Optional
+from typing import List, Optional, Union
 
 
 class AudioBlock:
+    FORMAT_TYPE_WAV = 'wav'
+    FORMAT_TYPE_MP3 = 'mp3'
+
     def __init__(self):
         self.tracks: List[Track] = list()
 
@@ -19,9 +22,9 @@ class AudioBlock:
             serialized_tracks.append(track.serialize())
         return {'tracks': serialized_tracks}
 
-    def render_2(self) -> str:
+    def render_2(self, out_filepath: str, format_type: FORMAT_TYPE_MP3 or FORMAT_TYPE_WAV = FORMAT_TYPE_MP3) -> str:
         from inoft_vocal_framework.inoft_audio_engine_renderer.audio_engine_renderer_wrapping import render
-        return render([self])
+        return render(audio_blocks=[self], out_filepath=out_filepath, out_format_type=format_type)
 
     def _render(self) -> Optional[AudioSegment]:
         if len(self.tracks) > 0:
@@ -132,7 +135,7 @@ if __name__ == "__main__":
         local_filepath="F:/Sons utiles/Musics/Vintage (1940s) French Music/CHANSON FRANCAISE 1930-1940 (192  kbps).mp3",
         player_start=background_music_track.start_time
     )
-    background_music.change_volume(-1.0)
+    background_music.volume = -1.0
 
     # played_files: dict = audio_block_1.play()
     # played_example_file_infos: PlayedSoundInfos = played_files['example_file']
@@ -141,7 +144,7 @@ if __name__ == "__main__":
     walking_on_dirt_1 = Sound(local_filepath="F:/Sons utiles/Sound Effects/Walks/407659__nagwense__soft-shoes-walking-on-dirt-road.wav")
     sound_effects_tracks.append_sound(walking_on_dirt_1)"""
 
-    audio_block_1._export("F:/Sons utiles/test1.wav", format_type="wav")
+    audio_block_1.render_2("F:/Sons utiles/test1.wav", format_type="wav")
     print(time.time() - start)
 
 

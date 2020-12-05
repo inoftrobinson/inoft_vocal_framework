@@ -14,25 +14,13 @@ use std::time::Instant;
 use self::hound::WavSpec;
 use std::num::Wrapping;
 use crate::{ReceivedParsedData, ReceivedTargetSpec};
-
+use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file};
 
 extern crate hound;
 
-const TARGET_SPEC: WavSpec = hound::WavSpec {
-    channels: 1,
-    sample_rate: 16000,
-    bits_per_sample: 16,
-    sample_format: hound::SampleFormat::Int,
-};
 
-
-pub fn main(data: ReceivedParsedData) -> Vec<i16> {
+pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
     let start = Instant::now();
-    let path: &Path = "F:/Sons utiles/output_dummy_2.wav".as_ref();
-    /*let mut writer = match path.is_file() {
-        true => hound::WavWriter::append(path).unwrap(),
-        false => hound::WavWriter::create(path, TARGET_SPEC).unwrap(),
-    };*/
 
     let mut out_samples: Vec<i16> = Vec::new();
     let mut files_readers: Vec<WavReader<BufReader<File>>> = vec![];
@@ -103,60 +91,61 @@ pub fn main(data: ReceivedParsedData) -> Vec<i16> {
             }
              */
         }
-
-        println!("out samples : {}", out_samples.len());
-        let mut writer =  hound::WavWriter::create(path, target_spec).unwrap();
-        let writing_start = Instant::now();
-        for i_sample in 0..out_samples.len() {
-            writer.write_sample(out_samples[i_sample]).unwrap();
-        }
-        println!("\nFinished writing.\n  --execution_time:{}ms", writing_start.elapsed().as_millis());
-        // writer.finalize().unwrap();
-
-
-
-        /*for (i_reader, mut file_reader) in files_readers.iter().enumerate() {
-            let sample_rate = file_reader.spec().sample_rate as i32;
-            let samples: WavSamples<BufReader<File>, i16> = file_reader.samples();
-            let resamples = resample(samples, sample_rate, TARGET_SPEC.sample_rate as i32);
-            for i_sample in 0..resamples.len() {
-                writer.write_sample(resamples[i_sample]).unwrap();
-            }
-        }
-         */
-        // println!("{}", duration_longest_file_buffer / file_reader_longest_file.unwrap().spec().sample_rate);
-        // let samples: Vec<i16> = files_readers[1].samples().map(|s| s.unwrap()).collect();
-        // let samples1: Vec<i16> = files_readers[0].samples().map(|s| s.unwrap()).collect();
-        /*let samples2: Vec<i16> = files_readers[1].samples().map(|s| s.unwrap()).collect();
-        println!("spec : {:?}", files_readers[0].spec());
-        // println!("{:?}", samples2);
-
-        for samp in samples2.iter() {
-            let amplitude = i16::MAX as i16;
-            let value = if samp > &amplitude { &amplitude } else { samp };
-            // writer.write_sample((samp * amplitude) as i32).unwrap();
-            writer.write_sample((value * 1) as i16);  // .unwrap();
-        }
-         */
-
-        /*for s in samples.iter() {
-            let amplitude = i16::MAX as i16;
-            writer.write_sample((s * amplitude) as i16).unwrap();
-        }*/
-
-        /*for filereader in files_readers.iter() {
-            let samples: WavSamples<BufReader<File>, <Unknown>> = filereader.samples();  //.map(|s| s.unwrap()).collect();
-            /*for sample in samples.iter() {
-                println!("{}", sample);
-            }*/
-        }*/
-
-        /*for t in (0 .. 44100).map(|x| x as f32 / 44100.0) {
-            let sample = (t * 440.0 * 2.0 * PI).sin();
-            let amplitude = i16::MAX as f32;
-            writer.write_sample((sample * amplitude as f32) as i16).unwrap();
-        }*/
     }
+
+    println!("Total rendering time : {}ms", start.elapsed().as_millis());
+    out_samples
+}
+
+pub fn main(data: ReceivedParsedData) {
+    let start = Instant::now();
+    let path: &Path = data.target_spec.filepath.as_ref();
+    let target_spec = &data.target_spec;
+    let rendered_samples = render_to_vec(&data);
+
+    let writing_start = Instant::now();
+    match &*target_spec.format_type {
+        "mp3" => {
+            write_mp3_buffer_to_file(from_samples_to_mono_mp3(rendered_samples, target_spec), &*target_spec.filepath);
+        },
+        "wav" => {
+            let wav_target_spec = hound::WavSpec {
+                channels: 1,
+                sample_rate: target_spec.sample_rate as u32,
+                bits_per_sample: 16,
+                sample_format: hound::SampleFormat::Int,
+            };
+            let mut writer =  hound::WavWriter::create(path, wav_target_spec).unwrap();
+            for i_sample in 0..rendered_samples.len() {
+                writer.write_sample(rendered_samples[i_sample]).unwrap();
+            }
+        },
+        _ => {
+            panic!(
+                "Format type not supported. Only 'mp3' and 'wav' formats are supported to export audio.\
+                \n  --request_format_type:{}", target_spec.format_type
+            );
+        }
+    }
+    println!("\nFinished conversion and writing.\n  --execution_time:{}ms", writing_start.elapsed().as_millis());
+    println!("\nFinished rendering, conversion and writing.\n  --execution_time:{}ms", start.elapsed().as_millis());
+    // writer.finalize().unwrap();
+
+    /*for (i_reader, mut file_reader) in files_readers.iter().enumerate() {
+        let sample_rate = file_reader.spec().sample_rate as i32;
+        let samples: WavSamples<BufReader<File>, i16> = file_reader.samples();
+        let resamples = resample(samples, sample_rate, TARGET_SPEC.sample_rate as i32);
+        for i_sample in 0..resamples.len() {
+            writer.write_sample(resamples[i_sample]).unwrap();
+        }
+    }
+    // println!("{}", duration_longest_file_buffer / file_reader_longest_file.unwrap().spec().sample_rate);
+    // let samples: Vec<i16> = files_readers[1].samples().map(|s| s.unwrap()).collect();
+    // let samples1: Vec<i16> = files_readers[0].samples().map(|s| s.unwrap()).collect();
+    let samples2: Vec<i16> = files_readers[1].samples().map(|s| s.unwrap()).collect();
+    println!("spec : {:?}", files_readers[0].spec());
+    // println!("{:?}", samples2);
+     */
 
     /*
     if files_paths.len() > 0 {
@@ -172,35 +161,5 @@ pub fn main(data: ReceivedParsedData) -> Vec<i16> {
         }
         // println!("{}", duration_longest_file_buffer / file_reader_longest_file.unwrap().spec().sample_rate);
     }
-     */
-
-
-    /*let mut reader = WavReader::open("F:/Sons utiles/sine.wav").unwrap();
-    let mut reader2 = WavReader::open("F:/Sons utiles/ambiance.wav").unwrap();
-    reader2.duration()
-    let samples: Vec<i16> = reader.samples().map(|s| s.unwrap()).collect();
-    for sample in samples.iter() {
-        println!("{:?}", sample);
-        let m =  sample * 1;
-        println!("{:?}", m);
-    }
-     */
-        /*(0.0, |sqr_sum, s| {
-        let sample = s.unwrap() as f64;
-        // println!("{}", sample);
-        sqr_sum + sample * sample;
-        sqr_sum
-    });
-         */
-
-    /*
-    for t in (0 .. 44100).map(|x| x as f32 / 44100.0) {
-        let sample = (t * 440.0 * 2.0 * PI).sin();
-        let amplitude = i16::MAX as f32;
-        writer.write_sample((sample * amplitude as f32) as i16).unwrap();
-    }
-     */
-
-    println!("Total execution time : {}ms", start.elapsed().as_millis());
-    out_samples
+    */
 }
