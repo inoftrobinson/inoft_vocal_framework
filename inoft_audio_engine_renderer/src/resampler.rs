@@ -1,11 +1,8 @@
-use hound::{WavReader, WavSpec};
+use hound::{WavSpec};
 use hound::WavSamples;
 use std::io::BufReader;
 use std::fs::File;
 use std::time::{Instant};
-use std::borrow::{Borrow, BorrowMut};
-use std::num::Wrapping;
-use std::convert::TryInto;
 
 
 fn i16_resample_sample_rate_without_channels_conversion(samples: WavSamples<BufReader<File>, i16>, resample_interval: f32) -> Vec<i16> {

@@ -4,13 +4,14 @@ mod renderer;
 mod exporter;
 // mod s3;
 mod models;
-use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip};
+use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
+mod audio_clip;
+use audio_clip::AudioClip;
 
 use std::f32::consts::PI;
 use std::{i16, thread};
 use hound;
-use hound::WavReader;
-use hound::WavSamples;
+use hound::{WavReader, WavSamples};
 use std::io::BufReader;
 use std::fs::File;
 use std::ptr::null;

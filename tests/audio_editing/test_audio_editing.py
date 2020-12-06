@@ -41,10 +41,11 @@ class MyTestCase(unittest.TestCase):
         background_music.volume = -1.0
         background_music_track.create_sound(
             local_filepath="F:/Sons utiles/ambiance_out.wav",
-            player_start=background_music_track.start_time
+            player_start=background_music_track.start_time + 20,
+            player_end_time=background_music_track.start_time + 40
         )
 
-        audio_block_1.render_2(out_filepath="F:/Sons utiles/dynamic_filepath.mp3", format_type="mp3")
+        audio_block_1.render_2(out_filepath="F:/Sons utiles/tests/test_python_1.mp3", format_type="mp3")
 
 
 if __name__ == '__main__':

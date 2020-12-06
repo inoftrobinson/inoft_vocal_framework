@@ -1,8 +1,15 @@
-use cpython::{PyResult, Python, py_module_initializer, py_fn, PyObject, ObjectProtocol, PyList, PyDict};
-use crate::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip};
+use cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict};
+use crate::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time};
 use std::collections::HashMap;
-use std::cell::{Cell, RefCell};
-use std::borrow::Borrow;
+
+
+pub fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
+    Time {
+        type_key: object_item.get_item(_py, "type").unwrap().to_string(),
+        relationship_parent_id: Some(object_item.get_item(_py, "relationship_parent_id").unwrap().to_string()),
+        offset: Some(object_item.get_item(_py, "offset").unwrap().extract::<i16>(_py).unwrap()),
+    }
+}
 
 
 pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData {
@@ -30,14 +37,14 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
                 let current_clip_data = clips_data.get_item(_py, clip_id).unwrap();
                 let real_clip_id = current_clip_data.get_item(_py, "id").unwrap().to_string();
                 println!("{}", clip_item);
-                current_track_clips.push(AudioClip {
-                    clip_id: real_clip_id,
-                    filepath: current_clip_data.get_item(_py, "localFilepath").unwrap().to_string(),
-                    player_start_time: 0,
-                    player_end_time: 0,
-                    file_start_time: 0,
-                    file_end_time: 0
-                });
+                current_track_clips.push(AudioClip::new(
+                    real_clip_id,
+                    current_clip_data.get_item(_py, "localFilepath").unwrap().to_string(),
+                     parse_time_object(_py, current_clip_data.get_item(_py, "playerStartTime").unwrap()),
+                    parse_time_object(_py, current_clip_data.get_item(_py, "playerEndTime").unwrap()),
+                    0,
+                    0,
+                ));
             }
             println!("{:?}", current_track_data);
             
@@ -64,7 +71,7 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
     };
 
     for audio_block in output_parsed_data.blocks.iter() {
-        let mut tracks = &audio_block.tracks;
+        let tracks = &audio_block.tracks;
         for track in tracks.iter() {
             flattened_tracks_refs.insert(String::from(&track.track_id), track);
             for clip in track.clips.iter() {

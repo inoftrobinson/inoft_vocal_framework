@@ -7,7 +7,6 @@ use hyper::client::HttpConnector;
 use std::path::Path;
 use std::io::Write;
 use crate::models::ReceivedTargetSpec;
-use std::borrow::{Borrow, BorrowMut};
 
 
 async fn get_upload_url() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

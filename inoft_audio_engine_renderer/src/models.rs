@@ -2,7 +2,7 @@
 // pub const FORMAT_TYPE_MP3: &String = &String::from("mp3");
 
 
-use std::cell::{Cell, RefCell};
+use crate::audio_clip::AudioClip;
 
 pub struct ReceivedTargetSpec {
     pub filepath: String,
@@ -15,13 +15,10 @@ pub struct ReceivedParsedData {
     pub target_spec: ReceivedTargetSpec,
 }
 
-pub struct AudioClip {
-    pub clip_id: String,
-    pub filepath: String,
-    pub player_start_time: i16,
-    pub player_end_time: i16,
-    pub file_start_time: i16,
-    pub file_end_time: i16,
+pub struct Time {
+    pub type_key: String,
+    pub relationship_parent_id: Option<String>,
+    pub offset: Option<i16>,
 }
 
 pub struct Track {
@@ -56,22 +53,4 @@ impl AudioBlock {
         let mut mutable_tracks = self.tracks.borrow_mut();
         mutable_tracks.push(RefCell::new(track));
     }*/
-}
-
-impl AudioClip {
-    fn new(filepath: &str, player_start_time: Option<i16>, player_end_time: Option<i16>,
-           file_start_time: Option<i16>, file_end_time: Option<i16>) -> AudioClip {
-        AudioClip {
-            clip_id: String::from("static-id"),
-            filepath: String::from(filepath),
-            player_start_time: player_start_time.unwrap_or(0),
-            player_end_time: player_end_time.unwrap_or(0),
-            file_start_time: file_start_time.unwrap_or(0),
-            file_end_time: file_end_time.unwrap_or(0)
-        }
-    }
-
-    fn without_args(filepath: &str) -> AudioClip {
-        AudioClip::new(filepath, None, None, None, None)
-    }
 }

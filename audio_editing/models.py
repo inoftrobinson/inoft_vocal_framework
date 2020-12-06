@@ -19,13 +19,9 @@ class Time:
         self.offset = offset or 0
 
     def __add__(self, offset: int or float):
-        new_instance = self.__class__(**self.__dict__)
+        new_instance = Time(**self.__dict__)
         new_instance.offset += offset
         return new_instance
-
-    @abstractmethod
-    def absolute(self) -> int or float:
-        raise Exception("Not implemented")
 
     def serialize(self) -> dict:
         from inoft_vocal_framework.audio_editing.track import Track
@@ -46,7 +42,6 @@ class TrackStartTime(Time):
         return self.offset
 
 
-@dataclass
 class AudioStartTime(Time):
     def __init__(self, sound: Any, offset: Optional[int or float] = None):
         super().__init__(type_key='audio-clip_start-time', relationship_parent=sound, offset=offset)
@@ -54,12 +49,16 @@ class AudioStartTime(Time):
     def absolute(self) -> int or float:
         return self.relationship_parent.player_start_time.absolute() + self.offset
 
-@dataclass
 class AudioEndTime(Time):
     def __init__(self, sound: Any, offset: Optional[int or float] = None):
         super().__init__(type_key='audio-clip_end-time', relationship_parent=sound, offset=offset)
 
     def absolute(self) -> int or float:
         return (self.relationship_parent.player_start_time.absolute() + self.relationship_parent.duration_seconds) + self.offset
+
+
+class UntilSelfEnd(Time):
+    def __init__(self):
+        super().__init__(type_key='until-self-end', relationship_parent=None)
 
 
