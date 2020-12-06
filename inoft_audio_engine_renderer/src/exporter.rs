@@ -111,6 +111,12 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
     let num_samples = samples.len() as f64;
     let mp3_buffer_size = (num_samples + 7200.0) as usize;
     let mut mp3_buffer = vec![0; mp3_buffer_size];
+    // todo: find a way to have the size of the mp3_buffer exactly to the num of samples that lame
+    //  will encode. Because, currently, the num_samples of the source samples is way too big,
+    //  and if we initialize the vector as an empty vector, sometime lame will correctly fill it
+    //  to the appropriate size, and other times, Windows will cause raise a STATUS_ACCESS_VIOLATION
+    //  error. So, currently, the mp3_buffer will always be way too big, and have a ton of trailing
+    //  zeros, which we remove right after encoding with lame, by using a simple loop with a step size.
 
     let samples_slice = samples.as_slice();
     let _ = lame.encode(
@@ -119,12 +125,13 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
         mp3_buffer.as_mut_slice(),
     );
 
-    let precision_divider = 100;
-    let precision_samples_step = (target_spec.sample_rate / 100) as usize;
+    let precision_10ms_samples_step = (target_spec.sample_rate / 100) as usize;
+    // We need a custom sample_step to iterate over the mp3_buffer, because if we iterate over every single sample
+    // in the mp3_buffer we would waste a lot of calculation, for a granularity level that's not worth the cost.
+    // A divider of 100 on the sample_rate give us a precision of 10ms, a divider of 1000 would be 1ms, and 10 would be 100ms.
     println!(
         "\nRemoving trailing empty data from the mp3_buffer.\
-        \n  --precision_divider:{}\n  --precision_samples_step:{}",
-        precision_divider, precision_samples_step
+        \n  --precision_samples_step:{}", precision_10ms_samples_step
     );
     let start_removing_trailing_empty_data = Instant::now();
     let mut mp3_buffer_inverted_index = mp3_buffer.len() - 1;
@@ -133,7 +140,7 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
             mp3_buffer = mp3_buffer[0..mp3_buffer_inverted_index].to_owned();
             break;
         }
-        mp3_buffer_inverted_index -= precision_samples_step;
+        mp3_buffer_inverted_index -= precision_10ms_samples_step;
     }
     println!("Finished removing of trailing empty data from the mp3_buffer.\n  --execution_time:{}ms", start_removing_trailing_empty_data.elapsed().as_millis());
 
