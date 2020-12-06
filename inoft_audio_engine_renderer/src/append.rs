@@ -102,17 +102,13 @@ pub fn main(data: ReceivedParsedData) {
     let path: &Path = data.target_spec.filepath.as_ref();
     let target_spec = &data.target_spec;
     let rendered_samples = render_to_vec(&data);
-    let rendered_samples = rendered_samples[0..((rendered_samples.len() / 100) as usize)].to_vec();
-    println!("rendered_samples : {:?}", rendered_samples);
 
     let writing_start = Instant::now();
     match &*target_spec.format_type {
         "mp3" => {
-            println!("mp3 lel");
             write_mp3_buffer_to_file(from_samples_to_mono_mp3(rendered_samples, target_spec), &*target_spec.filepath);
         },
         "wav" => {
-            println!("wav lel");
             let wav_target_spec = hound::WavSpec {
                 channels: 1,
                 sample_rate: target_spec.sample_rate as u32,

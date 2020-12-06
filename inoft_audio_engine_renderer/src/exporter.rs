@@ -98,7 +98,6 @@ pub async fn from_flac_to_mp3() -> Vec<u8> {
 pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetSpec) -> Vec<u8> {
     let start = Instant::now();
 
-    println!("sarting lame");
     let mut lame = Lame::new().expect("Coudn't create Lame");
     lame.set_channels(1).expect("Couldn't set num channels");
     lame.set_sample_rate(target_spec.sample_rate as u32).expect("Couldn't set up sample rate");
@@ -109,17 +108,35 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
     // by the inoft_vocal_framework, we do not hear the difference between the qualities.
     lame.init_params().expect("init parameters error");
 
-    println!("parametered lame");
-    let mut mp3_buffer = vec![];
+    let num_samples = samples.len() as f64;
+    let mp3_buffer_size = (num_samples + 7200.0) as usize;
+    let mut mp3_buffer = vec![0; mp3_buffer_size];
+
     let samples_slice = samples.as_slice();
-    println!("{:?}", samples_slice);
-    println!("before cecode");
     let _ = lame.encode(
         samples_slice,
         samples_slice,
         mp3_buffer.as_mut_slice(),
     );
-    println!("after cecode");
+
+    let precision_divider = 100;
+    let precision_samples_step = (target_spec.sample_rate / 100) as usize;
+    println!(
+        "\nRemoving trailing empty data from the mp3_buffer.\
+        \n  --precision_divider:{}\n  --precision_samples_step:{}",
+        precision_divider, precision_samples_step
+    );
+    let start_removing_trailing_empty_data = Instant::now();
+    let mut mp3_buffer_inverted_index = mp3_buffer.len() - 1;
+    while mp3_buffer_inverted_index > 0 {
+        if mp3_buffer.get(mp3_buffer_inverted_index).unwrap() > &u8::MIN {
+            mp3_buffer = mp3_buffer[0..mp3_buffer_inverted_index].to_owned();
+            break;
+        }
+        mp3_buffer_inverted_index -= precision_samples_step;
+    }
+    println!("Finished removing of trailing empty data from the mp3_buffer.\n  --execution_time:{}ms", start_removing_trailing_empty_data.elapsed().as_millis());
+
     println!("\nFinished MP3 conversion using Lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
     mp3_buffer
 }
