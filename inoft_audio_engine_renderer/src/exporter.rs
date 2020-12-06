@@ -7,6 +7,7 @@ use hyper::client::HttpConnector;
 use std::path::Path;
 use std::io::Write;
 use crate::models::ReceivedTargetSpec;
+use std::borrow::{Borrow, BorrowMut};
 
 
 async fn get_upload_url() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -97,6 +98,7 @@ pub async fn from_flac_to_mp3() -> Vec<u8> {
 pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetSpec) -> Vec<u8> {
     let start = Instant::now();
 
+    println!("sarting lame");
     let mut lame = Lame::new().expect("Coudn't create Lame");
     lame.set_channels(1).expect("Couldn't set num channels");
     lame.set_sample_rate(target_spec.sample_rate as u32).expect("Couldn't set up sample rate");
@@ -107,13 +109,17 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
     // by the inoft_vocal_framework, we do not hear the difference between the qualities.
     lame.init_params().expect("init parameters error");
 
+    println!("parametered lame");
     let mut mp3_buffer = vec![];
     let samples_slice = samples.as_slice();
+    println!("{:?}", samples_slice);
+    println!("before cecode");
     let _ = lame.encode(
         samples_slice,
         samples_slice,
         mp3_buffer.as_mut_slice(),
     );
+    println!("after cecode");
     println!("\nFinished MP3 conversion using Lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
     mp3_buffer
 }

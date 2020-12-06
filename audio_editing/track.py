@@ -1,4 +1,5 @@
 from typing import Optional, Dict, List
+from uuid import uuid4
 
 from pydub import AudioSegment
 
@@ -9,6 +10,7 @@ from inoft_vocal_engine.practical_logger import message_with_vars
 
 class Track:
     def __init__(self, name: str = None, is_primary: bool = True, loop_until_primary_tracks_finish: bool = False):
+        self._id = str(uuid4())
         self._audio_segment = None
         self._sounds: Dict[str, Sound] = dict()
         self.name = name
@@ -21,8 +23,13 @@ class Track:
             serialized_clips[clip_id] = clip_item.serialize()
 
         return {
+            'id': self.id,
             'clips': serialized_clips
         }
+
+    @property
+    def id(self) -> str:
+        return self._id
 
     def _render(self) -> (Optional[AudioSegment], PlayedSoundInfos):
         num_sounds = len(self._sounds)

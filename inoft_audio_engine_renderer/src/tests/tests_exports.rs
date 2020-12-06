@@ -11,8 +11,10 @@ mod tests {
                 AudioBlock {
                     tracks: vec![
                         Track {
+                            track_id: String::from("track-1"),
                             clips: vec![
                                 AudioClip {
+                                    clip_id: String::from("clip-1"),
                                     filepath: "F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string(),
                                     player_start_time: 0,
                                     player_end_time: 0,
@@ -20,6 +22,7 @@ mod tests {
                                     file_end_time: 0
                                 },
                                 AudioClip {
+                                    clip_id: String::from("clip-2"),
                                     filepath: "F:/Sons utiles/70_Cm_ArpLoop_01_SP.wav".to_string(),
                                     player_start_time: 0,
                                     player_end_time: 0,
@@ -33,14 +36,12 @@ mod tests {
                 }
             ],
             target_spec: ReceivedTargetSpec {
-                sample_rate: 24000
+                filepath: String::from("F:/Sons utiles/tests/output_1.mp3"),
+                sample_rate: 24000,
+                format_type: String::from("mp3")
             }
         };
-        // let target_spec = &data.target_spec;
-        exporter::from_samples_to_mono_mp3(append::main(data), &ReceivedTargetSpec {
-            sample_rate: 24000
-        });
-
+        append::main(data);
         assert_eq!(2 + 2, 4);
     }
 }

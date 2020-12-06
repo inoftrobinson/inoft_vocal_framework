@@ -1,24 +1,37 @@
 use cpython::{PyResult, Python, py_module_initializer, py_fn, PyObject, ObjectProtocol, PyList, PyDict};
 use crate::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip};
+use std::collections::HashMap;
+use std::cell::{Cell, RefCell};
+use std::borrow::Borrow;
 
 
 pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData {
-    let audio_blocks_data: PyList = received_data.get_item(_py, "blocks").unwrap().extract::<PyList>(_py).unwrap();
+    let mut flattened_tracks_refs: HashMap<String, &Track> = HashMap::new();
+    let mut flattened_audio_clips_refs: HashMap<String, &AudioClip> = HashMap::new();
     let mut audio_blocks_items: Vec<AudioBlock> = Vec::new();
+    let audio_blocks_data: PyList = received_data.get_item(_py, "blocks").unwrap().extract::<PyList>(_py).unwrap();
+
     println!("blocks : {:?}", audio_blocks_data.len(_py));
     for i_block in 0..audio_blocks_data.len(_py) {
+        let mut current_audio_block_tracks: Vec<Track> = Vec::new();
+
         let audio_block_data: PyObject = audio_blocks_data.get_item(_py, i_block);
         let tracks_data: PyList = audio_block_data.get_item(_py, "tracks").unwrap().extract::<PyList>(_py).unwrap();
-        let mut tracks_items: Vec<Track> = Vec::new();
         println!("tracks_data : {:?}", tracks_data.len(_py));
+
         for i_track in 0..tracks_data.len(_py) {
+            let mut current_track_clips: Vec<AudioClip> = Vec::new();
+
             let current_track_data = tracks_data.get_item(_py, i_track);
+            let track_id = current_track_data.get_item(_py, "id").unwrap().to_string();
             let clips_data = current_track_data.get_item(_py, "clips").unwrap().extract::<PyDict>(_py).unwrap();
-            let mut clips_items: Vec<AudioClip> = Vec::new();
+
             for (clip_id, clip_item) in clips_data.items(_py).iter() {
                 let current_clip_data = clips_data.get_item(_py, clip_id).unwrap();
+                let real_clip_id = current_clip_data.get_item(_py, "id").unwrap().to_string();
                 println!("{}", clip_item);
-                clips_items.push(AudioClip {
+                current_track_clips.push(AudioClip {
+                    clip_id: real_clip_id,
                     filepath: current_clip_data.get_item(_py, "localFilepath").unwrap().to_string(),
                     player_start_time: 0,
                     player_end_time: 0,
@@ -26,24 +39,45 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
                     file_end_time: 0
                 });
             }
-            tracks_items.push(Track {
-                clips: clips_items,
+            println!("{:?}", current_track_data);
+            
+            current_audio_block_tracks.push(Track {
+                track_id,
+                clips: current_track_clips,
                 gain: 0
             });
-            println!("{:?}", current_track_data);
         }
+
         audio_blocks_items.push(AudioBlock {
-            tracks: tracks_items
+            tracks: current_audio_block_tracks
         });
     }
 
     let target_spec_data = received_data.get_item(_py, "targetSpec").unwrap();
-    ReceivedParsedData {
+    let output_parsed_data = ReceivedParsedData {
         blocks: audio_blocks_items,
         target_spec: ReceivedTargetSpec {
             filepath: target_spec_data.get_item(_py, "filepath").unwrap().to_string(),
             sample_rate: target_spec_data.get_item(_py, "sampleRate").unwrap().extract::<i32>(_py).unwrap(),
             format_type: target_spec_data.get_item(_py, "formatType").unwrap().to_string(),
         },
+    };
+
+    for audio_block in output_parsed_data.blocks.iter() {
+        let mut tracks = &audio_block.tracks;
+        for track in tracks.iter() {
+            flattened_tracks_refs.insert(String::from(&track.track_id), track);
+            for clip in track.clips.iter() {
+                flattened_audio_clips_refs.insert(String::from(&clip.clip_id), clip);
+            }
+        }
     }
+    for track_ref in flattened_tracks_refs.iter() {
+        println!("id:{} & gain:{:?}", track_ref.0, track_ref.1.gain);
+    }
+    for clip_ref in flattened_audio_clips_refs.iter() {
+        println!("id:{} & filepath:{:?}", clip_ref.0, clip_ref.1.filepath);
+    }
+
+    output_parsed_data
 }

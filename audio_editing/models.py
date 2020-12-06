@@ -1,6 +1,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
+
 
 @dataclass
 class PlayedSoundInfos:
@@ -11,9 +12,11 @@ class PlayedSoundInfos:
     total_play_time: int or float
 
 
-@dataclass
 class Time:
-    offset: int or float
+    def __init__(self, type_key: str, relationship_parent: Any, offset: Optional[int or float] = None):
+        self.type_key = type_key
+        self.relationship_parent = relationship_parent
+        self.offset = offset or 0
 
     def __add__(self, offset: int or float):
         new_instance = self.__class__(**self.__dict__)
@@ -22,28 +25,41 @@ class Time:
 
     @abstractmethod
     def absolute(self) -> int or float:
-        raise Exception(f"Not implemented")
+        raise Exception("Not implemented")
+
+    def serialize(self) -> dict:
+        from inoft_vocal_framework.audio_editing.track import Track
+        from inoft_vocal_framework.audio_editing.sound import Sound
+        self.relationship_parent: Track or Sound
+        return {
+            'type': self.type_key,
+            'relationship_parent_id': self.relationship_parent.id if self.relationship_parent is not None else None,
+            'offset': self.offset
+        }
 
 
-@dataclass
 class TrackStartTime(Time):
-    track: Any
+    def __init__(self, track: Any, offset: Optional[int or float] = None):
+        super().__init__(type_key='track_start-time', relationship_parent=track, offset=offset)
 
     def absolute(self) -> int or float:
         return self.offset
 
+
 @dataclass
 class AudioStartTime(Time):
-    sound: Any
+    def __init__(self, sound: Any, offset: Optional[int or float] = None):
+        super().__init__(type_key='audio-clip_start-time', relationship_parent=sound, offset=offset)
 
     def absolute(self) -> int or float:
-        return self.sound.player_start_time.absolute() + self.offset
+        return self.relationship_parent.player_start_time.absolute() + self.offset
 
 @dataclass
 class AudioEndTime(Time):
-    sound: Any
+    def __init__(self, sound: Any, offset: Optional[int or float] = None):
+        super().__init__(type_key='audio-clip_end-time', relationship_parent=sound, offset=offset)
 
     def absolute(self) -> int or float:
-        return (self.sound.player_start_time.absolute() + self.sound.duration_seconds) + self.offset
+        return (self.relationship_parent.player_start_time.absolute() + self.relationship_parent.duration_seconds) + self.offset
 
 
