@@ -11,7 +11,7 @@ pub struct AudioClip {
     pub player_end_time: Time,
     pub file_start_time: i16,
     pub file_end_time: i16,
-    resamples: Option<Vec<i16>>,
+    pub resamples: Option<Vec<i16>>,
     player_start_time_sample_index: Option<usize>,
     player_end_time_sample_index: Option<usize>,
 }
@@ -28,7 +28,7 @@ impl AudioClip {
         }
     }
 
-    pub fn resample(&mut self, target_spec: WavSpec) -> &Vec<i16> {
+    pub fn resample(&mut self, target_spec: WavSpec) { // -> &Vec<i16> {
         let mut file_reader = WavReader::open(&self.filepath).unwrap();
         println!("spec : {:?}", file_reader.spec());
 
@@ -44,7 +44,7 @@ impl AudioClip {
             panic!("Bits per sample superior to 32 is not supported");
         }
         self.resamples = Some(resamples.unwrap());
-        &self.resamples.unwrap()
+        // &self.resamples.unwrap()
     }
 
     pub fn render_player_start_time_to_sample_index(&mut self, target_sample_rate: u32) -> usize {
@@ -58,7 +58,7 @@ impl AudioClip {
         }
         let index_end_sample: usize = match &*self.player_end_time.type_key {
             "until-self-end" => {
-                self.resamples.expect("The 'resample' function has not been called.").len()
+                self.resamples.as_ref().expect("The 'resample' function has not been called.").len()
             },
             _ => {
                 panic!("Unsupported type_key");

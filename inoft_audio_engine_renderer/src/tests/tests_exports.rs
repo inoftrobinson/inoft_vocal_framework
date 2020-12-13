@@ -1,10 +1,15 @@
 #[cfg(test)]
 mod tests {
-    use crate::{append, AudioBlock, Track, AudioClip, Time};
+    use crate::{append, AudioBlock, Track, AudioClip, Time, exporter};
     use crate::models::{ReceivedParsedData, ReceivedTargetSpec};
+    use std::cell::RefCell;
+    use tokio;
+    use tokio::prelude::*;
+    use hyper::{Client, Uri, Method, Request, Body};
+    use hyper::client::HttpConnector;
+    use std::collections::HashMap;
 
-    #[test]
-    fn resample() {
+    async fn resample() {
         let data = ReceivedParsedData {
             blocks: vec![
                 AudioBlock {
@@ -12,7 +17,7 @@ mod tests {
                         Track {
                             track_id: String::from("track-1"),
                             clips: vec![
-                                AudioClip::new(
+                                RefCell::new(AudioClip::new(
                                     String::from("clip-1"),
                                     "F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string(),
                                     Time {
@@ -27,8 +32,8 @@ mod tests {
                                     },
                                     0,
                                     0
-                                ),
-                                AudioClip::new(
+                                )),
+                                RefCell::new(AudioClip::new(
                                     String::from("clip-2"),
                                     "F:/Sons utiles/70_Cm_ArpLoop_01_SP.wav".to_string(),
                                     Time {
@@ -42,7 +47,7 @@ mod tests {
                                         offset: None
                                     },
                                     0, 0
-                                )
+                                ))
                             ],
                             gain: 0
                         }
@@ -55,7 +60,54 @@ mod tests {
                 format_type: String::from("mp3")
             }
         };
-        append::main(data);
-        assert_eq!(2 + 2, 4);
+        tokio::runtime::Handle::current().spawn(exporter::get_upload_url());
+        // tokio::runtime::Handle::current().spawn(append::main(data));
+        println!("Finished tokio...");
+        // assert_eq!(2 + 2, 4);
+    }
+
+    #[test]
+    fn resample_test() {
+        let mut rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(resample());
+    }
+
+    async fn do_request() {
+        let client = Client::new();
+        // let url: Uri = "http://httpbin.org/response-headers?foo=bar"
+        let url: Uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url"
+            .parse()
+            .unwrap();
+
+        match client.get(url).await {
+            Ok(res) => println!("Response: {}", res.status()),
+            Err(err) => println!("Error: {}", err),
+        }
+    }
+
+    async fn test_http_request_app() -> Result<(), Box<dyn std::error::Error>> {
+        let resp = reqwest::get("https://httpbin.org/ip").await?.json::<HashMap<String, String>>().await?;
+        println!("{:#?}", resp);
+        Ok(())
+
+            /*
+        let client = Client::new();
+        // let url: Uri = "http://httpbin.org/response-headers?foo=bar"
+        let url: Uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url"
+            .parse()
+            .unwrap();
+
+        match client.get(url).await {
+            Ok(res) => println!("Response: {}", res.status()),
+            Err(err) => println!("Error: {}", err),
+        }
+
+             */
+    }
+
+    #[test]
+    fn test_http_request() {
+        let mut rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(test_http_request_app());
     }
 }

@@ -1,9 +1,10 @@
-use crate::models::ReceivedParsedData;
+use crate::models::{ReceivedParsedData, Track};
 use std::time::Instant;
 use hound::{WavReader};
 use std::io::BufReader;
 use std::fs::File;
 use std::num::Wrapping;
+use std::borrow::{Borrow, BorrowMut};
 
 
 pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
@@ -24,22 +25,33 @@ pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
     };
 
     if data.blocks.len() > 0 {
-        let first_audio_block = data.blocks.get(0).unwrap();
-        let first_track = first_audio_block.tracks.get(0).unwrap();
-        let audio_clips = &first_track.clips;
+        let mut first_audio_block = data.blocks.get(0).unwrap();
+        let mut borrowed_first_audio_block = first_audio_block.borrow_mut();
+        let mut first_track = borrowed_first_audio_block.tracks.get(0).unwrap();
+        let borrowed_first_track = first_track.borrow_mut();
+        let audio_clips = &borrowed_first_track.clips;
+
+        /*let track = Track {
+            track_id: "".to_string(),
+            clips: vec![],
+            gain: 0
+        };
+        let mut trackRef = &mut &track;
+        borrowed_first_track = trackRef;
+        borrowed_first_track.clips[0].filepath = "".to_string();
+         */
         // todo: fix that and support multiple audio blocks instead of just using the first one
 
         for (i_file, audio_clip) in audio_clips.iter().enumerate() {
-            let mut audio_clip = audio_clip;
-            let audio_clip_resamples = audio_clip.resample(target_spec);
+            let mut audio_clip = audio_clips.get(i_file).unwrap().borrow_mut();
+            audio_clip.resample(target_spec);
 
             let outing_start = Instant::now();
             println!("start_time: {:?}", audio_clip.player_start_time.offset);
             let start_sample = audio_clip.render_player_start_time_to_sample_index(target_spec.sample_rate);
             let end_sample = audio_clip.render_player_end_time_to_sample_index(target_spec.sample_rate);
-            println!("start_sample : {} & end_sample : {}", start_sample, end_sample);
+            let audio_clip_resamples = audio_clip.resamples.as_ref().unwrap();
 
-            println!("start_sample = {}", start_sample);
             for i_sample in 0..audio_clip_resamples.len() {
                 // todo: fix issue where if the first sound has a player_start_time more than
                 //  zero, it will be pushed in the out_samples like if it had no player_start_time.

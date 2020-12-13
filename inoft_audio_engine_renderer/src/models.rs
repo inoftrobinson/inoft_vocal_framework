@@ -3,6 +3,7 @@
 
 
 use crate::audio_clip::AudioClip;
+use std::cell::RefCell;
 
 pub struct ReceivedTargetSpec {
     pub filepath: String,
@@ -23,7 +24,7 @@ pub struct Time {
 
 pub struct Track {
     pub track_id: String,
-    pub clips: Vec<AudioClip>,
+    pub clips: Vec<RefCell<AudioClip>>,
     pub gain: i16,
 }
 

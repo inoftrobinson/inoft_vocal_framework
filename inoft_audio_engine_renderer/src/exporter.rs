@@ -8,30 +8,43 @@ use std::path::Path;
 use std::io::Write;
 use crate::models::ReceivedTargetSpec;
 
+use tokio;
+use tokio::prelude::*;
+use tokio::time::{Duration};
+use std::collections::HashMap;
 
-async fn get_upload_url() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+
+pub async fn get_upload_url() {  // -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    println!("Ohoh ");
     let client: Client<HttpConnector> = Client::new();
-    let url: Uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url"
+    /*let url: Uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url"
         .parse()
         .unwrap();
+        */
     // assert_eq!(url.query(), Some("foo=bar"));
-    let req = Request::builder()
+    /*let req = Request::builder()
         .method(Method::POST)
         .uri("http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url")
         .header("content-type", "application/json")
-        .body(Body::from(r#"{"library":"hyper"}"#))?;
-    // client.request(req).and_then()
-    let resp = client.request(req).await?;
-    println!("Response: {}", resp.status());
+        .body(Body::from(r#"{"library":"hyper"}"#)).expect("request error");
+     */
 
-    // let res = client.post(url).send().await;
+    println!("higi");
+    // let uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url".parse().expect("error with url");
+    // let resp = client.get(uri).await;
+    // .expect("error with response")
+    // println!("Response: {}", resp.status());
 
-    /*match client.get(url).await {
+
+    let url: Uri = "http://httpbin.org/response-headers?foo=bar".parse().unwrap();
+    assert_eq!(url.query(), Some("foo=bar"));
+    match client.get(url).await {
         Ok(res) => println!("Response: {}", res.status()),
         Err(err) => println!("Error: {}", err),
-    };
-     */
-    Ok(())
+    }
+
+    println!("Oh yeaaaah");
+    // Ok(())
 }
 
 // flac_song: &std::fs::File
@@ -89,7 +102,11 @@ pub async fn from_flac_to_mp3() -> Vec<u8> {
     );
     println!("\nFinished lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
 
-    let res = get_upload_url().await;
+    // tokio::spawn(get_upload_url());
+    /*let mut rt = tokio::runtime::Runtime::new().unwrap();
+    let future = get_upload_url();
+    rt.block_on(future);
+     */
 
     mp3_buffer
 }
@@ -142,6 +159,17 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
         mp3_buffer_inverted_index -= precision_10ms_samples_step;
     }
     println!("Finished removing of trailing empty data from the mp3_buffer.\n  --execution_time:{}ms", start_removing_trailing_empty_data.elapsed().as_millis());
+
+    /*tokio::runtime::Handle::try_current()
+        // tokio::spawn(get_upload_url());
+    }*/
+
+    /*
+    let mut rt2 = tokio::runtime::Runtime::new().unwrap();
+    let future = get_upload_url();
+    rt2.block_on(future);
+     */
+    // tokio::spawn(get_upload_url());
 
     println!("\nFinished MP3 conversion using Lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
     mp3_buffer

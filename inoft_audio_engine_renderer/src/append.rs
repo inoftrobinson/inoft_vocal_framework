@@ -1,14 +1,17 @@
 use std::path::Path;
 use std::time::Instant;
 use crate::{ReceivedParsedData};
-use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file};
+use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url};
 use crate::renderer::render_to_vec;
 
 extern crate hound;
 
 
-pub fn main(data: ReceivedParsedData) {
+pub async fn main(data: ReceivedParsedData) {
     let start = Instant::now();
+    // tokio::runtime::Handle::current().spawn(get_upload_url());
+    // get_upload_url().await;
+
     let path: &Path = data.target_spec.filepath.as_ref();
     let target_spec = &data.target_spec;
     let rendered_samples = render_to_vec(&data);

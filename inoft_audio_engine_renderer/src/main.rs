@@ -1,12 +1,19 @@
-mod append;
+// #![allow(dead_code)]
+// #![allow(unused_imports)]
+// #![allow(unused_variables)]
+
+/*mod append;
 mod resampler;
-mod renderer;
+// mod renderer;
 mod exporter;
 // mod s3;
 mod models;
 use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 mod audio_clip;
 use audio_clip::AudioClip;
+ */
+
+mod lib;
 
 use std::f32::consts::PI;
 use std::{i16, thread};
@@ -22,7 +29,7 @@ use hyper::{Client, Uri, Method, Request, Body};
 use hyper::client::HttpConnector;
 use reqwest;
 use tokio::net::{TcpStream, TcpListener};
-use tokio::time::Duration;
+use tokio::time::{Duration, sleep};
 use std::sync::mpsc;
 use std::future::Future;
 use std::net::IpAddr;
@@ -112,8 +119,8 @@ async fn log() {
 }
  */
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/*#[tokio::main]
+async fn main() {
     let listener = TcpListener::bind("127.0.0.1:8080").await?;
 
     loop {
@@ -144,7 +151,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     }
 }
-
+ */
 
 /*
 #[tokio::main]
@@ -256,15 +263,12 @@ fn main() {
         println!("{}", item);
     }
 
-    let money = 100000;
-    println!("Is rich : {}", money > 1000);
-
-    let value = 2000;
-    println!("{v}", v=value);
-    println!("Hello, world!");
-
     write_sinewave("F:/Sons utiles/sine.wav");
     change_volume(WavReader::open("F:/Sons utiles/test1.wav").unwrap());
      */
 }
  */
+
+fn main() {
+    println!("No");
+}

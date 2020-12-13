@@ -1,6 +1,7 @@
 use cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict};
 use crate::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time};
 use std::collections::HashMap;
+use std::cell::RefCell;
 
 
 pub fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
@@ -14,7 +15,7 @@ pub fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
 
 pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData {
     let mut flattened_tracks_refs: HashMap<String, &Track> = HashMap::new();
-    let mut flattened_audio_clips_refs: HashMap<String, &AudioClip> = HashMap::new();
+    let mut flattened_audio_clips_refs: HashMap<String, &RefCell<AudioClip>> = HashMap::new();
     let mut audio_blocks_items: Vec<AudioBlock> = Vec::new();
     let audio_blocks_data: PyList = received_data.get_item(_py, "blocks").unwrap().extract::<PyList>(_py).unwrap();
 
@@ -27,7 +28,7 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
         println!("tracks_data : {:?}", tracks_data.len(_py));
 
         for i_track in 0..tracks_data.len(_py) {
-            let mut current_track_clips: Vec<AudioClip> = Vec::new();
+            let mut current_track_clips: Vec<RefCell<AudioClip>> = Vec::new();
 
             let current_track_data = tracks_data.get_item(_py, i_track);
             let track_id = current_track_data.get_item(_py, "id").unwrap().to_string();
@@ -37,14 +38,14 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
                 let current_clip_data = clips_data.get_item(_py, clip_id).unwrap();
                 let real_clip_id = current_clip_data.get_item(_py, "id").unwrap().to_string();
                 println!("{}", clip_item);
-                current_track_clips.push(AudioClip::new(
+                current_track_clips.push(RefCell::new(AudioClip::new(
                     real_clip_id,
                     current_clip_data.get_item(_py, "localFilepath").unwrap().to_string(),
                      parse_time_object(_py, current_clip_data.get_item(_py, "playerStartTime").unwrap()),
                     parse_time_object(_py, current_clip_data.get_item(_py, "playerEndTime").unwrap()),
                     0,
                     0,
-                ));
+                )));
             }
             println!("{:?}", current_track_data);
             
@@ -75,7 +76,7 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
         for track in tracks.iter() {
             flattened_tracks_refs.insert(String::from(&track.track_id), track);
             for clip in track.clips.iter() {
-                flattened_audio_clips_refs.insert(String::from(&clip.clip_id), clip);
+                flattened_audio_clips_refs.insert(String::from(&clip.borrow().clip_id), clip);
             }
         }
     }
@@ -83,7 +84,7 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
         println!("id:{} & gain:{:?}", track_ref.0, track_ref.1.gain);
     }
     for clip_ref in flattened_audio_clips_refs.iter() {
-        println!("id:{} & filepath:{:?}", clip_ref.0, clip_ref.1.filepath);
+        println!("id:{} & filepath:{:?}", clip_ref.0, clip_ref.1.borrow().filepath);
     }
 
     output_parsed_data
