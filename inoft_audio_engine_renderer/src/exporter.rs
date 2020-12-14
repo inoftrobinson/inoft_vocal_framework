@@ -5,46 +5,96 @@ use std::time::Instant;
 use hyper::{Client, Uri, Method, Request, Body};
 use hyper::client::HttpConnector;
 use std::path::Path;
-use std::io::Write;
+use std::io::{Write, Read};
 use crate::models::ReceivedTargetSpec;
 
+use hyper::body;
+use hyper_tls::HttpsConnector;
 use tokio;
 use tokio::prelude::*;
 use tokio::time::{Duration};
 use std::collections::HashMap;
+use std::error::Error;
+
+use serde::Deserialize;
+use serde::Serialize;
+use std::mem::{size_of, size_of_val};
+
+#[derive(Debug, Deserialize, Serialize)]
+struct GeneratePresignedUploadUrlRequestData {
+    filename: String,
+    filesize: usize,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct Fields {
+    acl: String,
+    key: String,
+    policy: String,
+    // x-amz-algorithm: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct ResponseData {
+    fields: Option<Fields>,
+    url: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GeneratePresignedUploadUrlResponse {
+    success: bool,
+    errorKey: Option<String>,
+    expectedS3FileUrl: Option<String>,
+    data: Option<ResponseData>
+}
 
 
-pub async fn get_upload_url() {  // -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    println!("Ohoh ");
-    let client: Client<HttpConnector> = Client::new();
-    /*let url: Uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url"
-        .parse()
-        .unwrap();
-        */
-    // assert_eq!(url.query(), Some("foo=bar"));
-    /*let req = Request::builder()
+pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: &[u8], presigned_url_response_data: GeneratePresignedUploadUrlResponse) {
+    let https = HttpsConnector::new();
+    let https_client = Client::builder().build::<_, hyper::Body>(https);
+
+    let jsonified_data = presigned_url_response_data.data.expect("Error in retrieving the data item from the response data");
+    let s3_target_url = jsonified_data.url;
+    let s3_jsonified_request_body = serde_json::to_string(&jsonified_data.fields.unwrap()).unwrap();
+
+    println!("request url : {}", s3_target_url);
+    let request_s3 = Request::builder()
+        .method(Method::POST)
+        .uri(s3_target_url)
+        .header("enclosure-type", "multipart/form-data")
+        .body(Body::from(s3_jsonified_request_body))
+        .expect("S3 request error");
+    let s3_res = https_client.request(request_s3).await.expect("Error in S3 response");
+    println!("s3 response : {:?}", s3_res.status());
+    let body_bytes = body::to_bytes(s3_res.into_body()).await.unwrap();
+    let body = String::from_utf8(body_bytes.to_vec()).expect("response was not valid utf-8");
+    println!("s3 body : {}", body);
+}
+
+
+pub async fn get_upload_url(filename: String, filesize: usize) -> Result<(Option<GeneratePresignedUploadUrlResponse>), Box<dyn Error + Send + Sync>> {
+    let http_client: Client<HttpConnector> = Client::new();
+
+    let request_data = GeneratePresignedUploadUrlRequestData { filename, filesize };
+    let request_jsonified_data = serde_json::to_string(&request_data).unwrap();
+    let request = Request::builder()
         .method(Method::POST)
         .uri("http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url")
         .header("content-type", "application/json")
-        .body(Body::from(r#"{"library":"hyper"}"#)).expect("request error");
-     */
+        .body(Body::from(request_jsonified_data))
+        .expect("request error");
 
-    println!("higi");
-    // let uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url".parse().expect("error with url");
-    // let resp = client.get(uri).await;
-    // .expect("error with response")
-    // println!("Response: {}", resp.status());
-
-
-    let url: Uri = "http://httpbin.org/response-headers?foo=bar".parse().unwrap();
-    assert_eq!(url.query(), Some("foo=bar"));
-    match client.get(url).await {
-        Ok(res) => println!("Response: {}", res.status()),
+    let mut jsonified: Option<GeneratePresignedUploadUrlResponse> = None;
+    match http_client.request(request).await {
+        Ok(res) => {
+            println!("Response: {} & body : {:?}", res.status(), res.body());
+            let body_bytes = body::to_bytes(res.into_body()).await?;
+            let body = String::from_utf8(body_bytes.to_vec()).expect("response was not valid utf-8");
+            jsonified = Some(serde_json::from_str(&*body).expect("Error in json"));
+        },
         Err(err) => println!("Error: {}", err),
     }
-
-    println!("Oh yeaaaah");
-    // Ok(())
+    Ok((jsonified))
 }
 
 // flac_song: &std::fs::File

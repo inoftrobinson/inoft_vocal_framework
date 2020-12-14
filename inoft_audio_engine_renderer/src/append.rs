@@ -1,25 +1,37 @@
 use std::path::Path;
 use std::time::Instant;
 use crate::{ReceivedParsedData};
-use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url};
+use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url, post_mp3_buffer_to_s3_with_presigned_url};
 use crate::renderer::render_to_vec;
+use std::mem::size_of_val;
 
 extern crate hound;
 
 
 pub async fn main(data: ReceivedParsedData) {
     let start = Instant::now();
-    // tokio::runtime::Handle::current().spawn(get_upload_url());
-    // get_upload_url().await;
 
     let path: &Path = data.target_spec.filepath.as_ref();
     let target_spec = &data.target_spec;
     let rendered_samples = render_to_vec(&data);
 
     let writing_start = Instant::now();
+    println!("format type : {}", target_spec.format_type);
     match &*target_spec.format_type {
         "mp3" => {
-            write_mp3_buffer_to_file(from_samples_to_mono_mp3(rendered_samples, target_spec), &*target_spec.filepath);
+            println!("Uploading to MP3....");
+            // write_mp3_buffer_to_file(from_samples_to_mono_mp3(rendered_samples, target_spec), &*target_spec.filepath);
+            let mp3_buffer = from_samples_to_mono_mp3(rendered_samples, target_spec);
+            let mp3_buffer_slice = mp3_buffer.as_slice();
+            let mp3_buffer_bytes_size = size_of_val(mp3_buffer_slice);
+
+            println!("get upload url");
+            let upload_url_data = get_upload_url(
+                String::from("test_2.mp3"), mp3_buffer_bytes_size
+            ).await.expect("Nop 1").expect("Nop 2");
+
+            println!("posting to s3");
+            post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer_slice, upload_url_data).await;
         },
         "wav" => {
             let wav_target_spec = hound::WavSpec {

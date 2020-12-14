@@ -706,6 +706,7 @@ dependencies = [
  "gcc",
  "hound",
  "hyper",
+ "hyper-tls",
  "lame",
  "lame-sys",
  "libc",
@@ -714,6 +715,8 @@ dependencies = [
  "reqwest",
  "rusoto_core",
  "rusoto_s3",
+ "serde",
+ "serde_json",
  "tokio 0.2.23",
  "tokio-test",
 ]

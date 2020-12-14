@@ -60,10 +60,10 @@ mod tests {
                 format_type: String::from("mp3")
             }
         };
-        tokio::runtime::Handle::current().spawn(exporter::get_upload_url());
-        // tokio::runtime::Handle::current().spawn(append::main(data));
+        let task_1 = tokio::spawn(exporter::get_upload_url(String::from("test.mp3"), 1000));
+        let task_2 = tokio::spawn(append::main(data));
+        let tasks = tokio::join!(task_1, task_2);
         println!("Finished tokio...");
-        // assert_eq!(2 + 2, 4);
     }
 
     #[test]
