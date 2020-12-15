@@ -701,6 +701,7 @@ dependencies = [
 name = "inoft_vocal_framework"
 version = "0.1.0"
 dependencies = [
+ "bytes 0.5.6",
  "claxon",
  "cpython",
  "gcc",

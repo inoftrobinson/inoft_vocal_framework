@@ -3,10 +3,12 @@ use std::io::BufReader;
 use std::fs::File;
 use crate::resampler::{resample_i16, resample_i32};
 use crate::models::Time;
+use std::cell::RefCell;
 
 pub struct AudioClip {
     pub clip_id: String,
-    pub filepath: String,
+    pub filepath: Option<String>,
+    pub file_url: Option<String>,
     pub player_start_time: Time,
     pub player_end_time: Time,
     pub file_start_time: i16,
@@ -17,19 +19,23 @@ pub struct AudioClip {
 }
 
 impl AudioClip {
-    pub fn new(clip_id: String, filepath: String, player_start_time: Time, player_end_time: Time, file_start_time: i16, file_end_time: i16) -> AudioClip {
-        AudioClip {
-            clip_id, filepath,
+    pub fn new(clip_id: String, filepath: Option<String>, file_url: Option<String>,
+               player_start_time: Time, player_end_time: Time, file_start_time: i16, file_end_time: i16) -> RefCell<AudioClip> {
+        RefCell::new(AudioClip {
+            clip_id, filepath, file_url,
             player_start_time, player_end_time,
             file_start_time, file_end_time,
             resamples: None,
             player_start_time_sample_index: None,
             player_end_time_sample_index: None
-        }
+        })
     }
 
     pub fn resample(&mut self, target_spec: WavSpec) { // -> &Vec<i16> {
-        let mut file_reader = WavReader::open(&self.filepath).unwrap();
+        // todo: check if the filepath is specified or the fileurl
+        let filepath = self.filepath.as_ref().unwrap();
+        let mut file_reader = WavReader::open(filepath).unwrap();
+
         println!("spec : {:?}", file_reader.spec());
 
         let file_reader_spec = file_reader.spec();

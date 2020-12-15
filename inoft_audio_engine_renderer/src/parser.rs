@@ -38,14 +38,15 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
                 let current_clip_data = clips_data.get_item(_py, clip_id).unwrap();
                 let real_clip_id = current_clip_data.get_item(_py, "id").unwrap().to_string();
                 println!("{}", clip_item);
-                current_track_clips.push(RefCell::new(AudioClip::new(
+                current_track_clips.push(AudioClip::new(
                     real_clip_id,
-                    current_clip_data.get_item(_py, "localFilepath").unwrap().to_string(),
+                    Some(current_clip_data.get_item(_py, "localFilepath").unwrap().to_string()),
+                     Some(current_clip_data.get_item(_py, "fileUrl").unwrap().to_string()),
                      parse_time_object(_py, current_clip_data.get_item(_py, "playerStartTime").unwrap()),
                     parse_time_object(_py, current_clip_data.get_item(_py, "playerEndTime").unwrap()),
                     0,
                     0,
-                )));
+                ));
             }
             println!("{:?}", current_track_data);
             

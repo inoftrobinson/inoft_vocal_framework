@@ -6,6 +6,14 @@ mod tests {
     use tokio;
     use tokio::prelude::*;
     use std::collections::HashMap;
+    use reqwest::Url;
+    // use crate::hound2;
+    use hound::WavReader;
+    use std::io::{BufReader, Read};
+    use tokio::fs;
+    use std;
+    use std::time::Instant;
+    use crate::loader::{get_file_bytes_from_url, get_wave_reader_from_bytes};
 
     async fn resample() {
         let data = ReceivedParsedData {
@@ -15,9 +23,9 @@ mod tests {
                         Track {
                             track_id: String::from("track-1"),
                             clips: vec![
-                                RefCell::new(AudioClip::new(
+                                AudioClip::new(
                                     String::from("clip-1"),
-                                    "F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string(),
+                                    Some("F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string()), None,
                                     Time {
                                         type_key: String::from("track_start-time"),
                                         relationship_parent_id: Some(String::from("track-1")),
@@ -30,10 +38,10 @@ mod tests {
                                     },
                                     0,
                                     0
-                                )),
-                                RefCell::new(AudioClip::new(
+                                ),
+                                AudioClip::new(
                                     String::from("clip-2"),
-                                    "F:/Sons utiles/70_Cm_ArpLoop_01_SP.wav".to_string(),
+                                    Some("F:/Sons utiles/70_Cm_ArpLoop_01_SP.wav".to_string()), None,
                                     Time {
                                         type_key: String::from("track_start-time"),
                                         relationship_parent_id: Some(String::from("track-1")),
@@ -45,7 +53,7 @@ mod tests {
                                         offset: None
                                     },
                                     0, 0
-                                ))
+                                )
                             ],
                             gain: 0
                         }
@@ -69,5 +77,41 @@ mod tests {
     fn resample_test() {
         let mut runtime = tokio::runtime::Runtime::new().unwrap();
         runtime.block_on(resample());
+    }
+
+    async fn get_file_from_url_old() {
+        let start = Instant::now();
+
+        let url = "https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/b1fe5939-032b-462d-92e0-a942cd445096/22ac1d08-292d-4f2e-a9e3-20d181f1f58f/files/testgreat.mp3";
+        let url = "https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/b1fe5939-032b-462d-92e0-a942cd445096/22ac1d08-292d-4f2e-a9e3-20d181f1f58f/files/ambiance.wav";
+        let url = "https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/b1fe5939-032b-462d-92e0-a942cd445096/22ac1d08-292d-4f2e-a9e3-20d181f1f58f/files/output_final.wav";
+        let client = reqwest::ClientBuilder::new().build().unwrap();
+        let file_response = client
+            .get(Url::parse(url).unwrap())
+            .send().await.unwrap();
+
+        let bytes = file_response.bytes().await.unwrap();
+        let mut bytes_slice = &*bytes;
+        println!("Took {}ms to retrieve the file", start.elapsed().as_millis());
+
+        match std::str::from_utf8(bytes_slice) {
+            Ok(v) => println!("Received text data, not good :/ : {}", v),
+            Err(e) => println!("Received data was not text, its good ! {}", e),
+        };
+
+        let mut reader = BufReader::new(bytes_slice);
+        let mut wav_reader = WavReader::new(reader).unwrap();
+    }
+
+    async fn get_file_from_url() {
+        let url = "https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/b1fe5939-032b-462d-92e0-a942cd445096/22ac1d08-292d-4f2e-a9e3-20d181f1f58f/files/output_final.wav";
+        let bytes = get_file_bytes_from_url(url).await;
+        let wave_reader = WavReader::new(BufReader::new(&*bytes)).unwrap();
+    }
+
+    #[test]
+    fn get_file_from_url_test() {
+        let mut runtime = tokio::runtime::Runtime::new().unwrap();
+        runtime.block_on(get_file_from_url());
     }
 }

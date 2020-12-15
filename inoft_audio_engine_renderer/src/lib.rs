@@ -1,4 +1,7 @@
 extern crate cpython;
+/*mod libs;
+use libs::hound2;
+ */
 mod append;
 mod resampler;
 mod renderer;
@@ -8,6 +11,8 @@ mod models;
 use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 mod tests;
 mod audio_clip;
+mod loader;
+
 use audio_clip::AudioClip;
 
 
