@@ -2,14 +2,10 @@ use lame::Lame;
 use claxon::FlacReader;
 use std::fs::File;
 use std::time::Instant;
-use hyper::{Client, Uri, Method, Request, Body};
-use hyper::client::HttpConnector;
 use std::path::Path;
 use std::io::{Write, Read};
 use crate::models::ReceivedTargetSpec;
 
-use hyper::body;
-use hyper_tls::HttpsConnector;
 use tokio;
 use tokio::prelude::*;
 use tokio::time::{Duration};
@@ -32,10 +28,10 @@ struct Fields {
     acl: String,
     key: String,
     policy: String,
-    x_amz_algorithm: String,
-    x_amz_credential: String,
-    x_amz_date: String,
-    x_amz_signature: String,
+    #[serde(default, rename="x-amz-algorithm")] x_amz_algorithm: String,
+    #[serde(default, rename="x-amz-credential")] x_amz_credential: String,
+    #[serde(default, rename="x-amz-date")] x_amz_date: String,
+    #[serde(default, rename="x-amz-signature")] x_amz_signature: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -54,26 +50,12 @@ pub struct GeneratePresignedUploadUrlResponse {
 
 
 pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presigned_url_response_data: GeneratePresignedUploadUrlResponse) {
-    let https = HttpsConnector::new();
-    let https_client = Client::builder().build::<_, hyper::Body>(https);
-
     let jsonified_data = presigned_url_response_data.data.expect("Error in retrieving the data item from the response data");
     let s3_target_url = jsonified_data.url;
     let s3_fields = jsonified_data.fields.unwrap();
-    let s3_jsonified_request_body = serde_json::to_string(&s3_fields).unwrap();
 
-
-    // add a single file, and set the part filename to the base name of the file path
-    // let path = Path::new(submission_filename);
-    // let sub_file_contents = std::fs::read(path)?;
-    // let bytes = mp3_buffer.as_slice();
-    // let mp3_buffer_bytes_size = size_of_val(bytes);
-    // println!("mp3 real bytes size : {}", mp3_buffer_bytes_size);
-
-    let sub_file_part = reqwest::multipart::Part::bytes(mp3_buffer)
-        .file_name(String::from("test_reqwest.mp3"))
+    let mp3_file_part = reqwest::multipart::Part::bytes(mp3_buffer)
         .mime_str("application/octet-stream").unwrap();
-    println!("mp3 real bytes size : {}", size_of_val(&sub_file_part));
 
     let form = reqwest::multipart::Form::new()
         .text("key", s3_fields.key)
@@ -83,59 +65,39 @@ pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presi
         .text("x-amz-credential", s3_fields.x_amz_credential)
         .text("x-amz-date", s3_fields.x_amz_date)
         .text("x-amz-signature", s3_fields.x_amz_signature)
-        .part("file", sub_file_part);
-    // form = form.part("sub_file[]", sub_file_part);
+        .part("file", mp3_file_part);
 
     let client = reqwest::ClientBuilder::new().build().unwrap();
     let submission_response = client
         .post(Url::parse(&*s3_target_url).unwrap())
         .multipart(form)
-        .send()
-        .await.unwrap()
-        .text()
-        .await.unwrap();
+        .send().await.unwrap()
+        .text().await.unwrap();
 
-    println!("Submission response:\n{}", submission_response);
-
-    /*println!("request url : {}", s3_target_url);
-    let request_s3 = Request::builder()
-        .method(Method::POST)
-        .uri(s3_target_url)
-        .header("enclosure-type", "multipart/form-data")
-        .body(Body::from(s3_jsonified_request_body))
-        .expect("S3 request error");
-    let s3_res = https_client.request(request_s3).await.expect("Error in S3 response");
-    println!("s3 response : {:?}", s3_res.status());
-    let body_bytes = body::to_bytes(s3_res.into_body()).await.unwrap();
-    let body = String::from_utf8(body_bytes.to_vec()).expect("response was not valid utf-8");
-    println!("s3 body : {}", body);
-     */
+    println!("S3 response:\n {}", submission_response);
 }
 
 
 pub async fn get_upload_url(filename: String, filesize: usize) -> Result<(Option<GeneratePresignedUploadUrlResponse>), Box<dyn Error + Send + Sync>> {
-    let http_client: Client<HttpConnector> = Client::new();
+    let mut jsonified_output_data: Option<GeneratePresignedUploadUrlResponse> = None;
+    let client = reqwest::ClientBuilder::new().build().unwrap();
 
     let request_data = GeneratePresignedUploadUrlRequestData { filename, filesize };
     let request_jsonified_data = serde_json::to_string(&request_data).unwrap();
-    let request = Request::builder()
-        .method(Method::POST)
-        .uri("http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url")
+    // todo: make account name/id and project name/id dynamic
+    let request = client
+        .post(Url::parse("http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url").unwrap())
         .header("content-type", "application/json")
-        .body(Body::from(request_jsonified_data))
-        .expect("request error");
+        .body(reqwest::Body::from(request_jsonified_data));
 
-    let mut jsonified: Option<GeneratePresignedUploadUrlResponse> = None;
-    match http_client.request(request).await {
+    match request.send().await {
         Ok(res) => {
-            println!("Response: {} & body : {:?}", res.status(), res.body());
-            let body_bytes = body::to_bytes(res.into_body()).await?;
-            let body = String::from_utf8(body_bytes.to_vec()).expect("response was not valid utf-8");
-            jsonified = Some(serde_json::from_str(&*body).expect("Error in json"));
+            let response_text_content = res.text().await.unwrap();
+            jsonified_output_data = Some(serde_json::from_str(&*response_text_content).expect("Error in json"));
         },
         Err(err) => println!("Error: {}", err),
     }
-    Ok((jsonified))
+    Ok((jsonified_output_data))
 }
 
 // flac_song: &std::fs::File

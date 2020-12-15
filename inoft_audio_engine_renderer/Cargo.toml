@@ -15,8 +15,6 @@ hound = "3.4.0"
 minimp3 = "0.5"
 rusoto_core = "0.45.0"
 rusoto_s3 = "0.45.0"
-hyper = "0.13.5"
-hyper-tls = "0.4.3"
 tokio = { version = "0.2.23", features = ["full"] }
 mini-redis = "0.3"
 cpython = { version = "0.5", features = ["extension-module"]}

@@ -705,8 +705,6 @@ dependencies = [
  "cpython",
  "gcc",
  "hound",
- "hyper",
- "hyper-tls",
  "lame",
  "lame-sys",
  "libc",

@@ -9,6 +9,7 @@ pub struct ReceivedTargetSpec {
     pub filepath: String,
     pub sample_rate: i32,
     pub format_type: String,
+    pub export_target: String,
 }
 
 pub struct ReceivedParsedData {

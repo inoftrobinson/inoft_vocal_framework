@@ -3,7 +3,7 @@ use std::time::Instant;
 use crate::{ReceivedParsedData};
 use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url, post_mp3_buffer_to_s3_with_presigned_url};
 use crate::renderer::render_to_vec;
-use std::mem::size_of_val;
+use std::mem::{size_of};
 
 extern crate hound;
 
@@ -19,20 +19,27 @@ pub async fn main(data: ReceivedParsedData) {
     println!("format type : {}", target_spec.format_type);
     match &*target_spec.format_type {
         "mp3" => {
-            println!("Uploading to MP3....");
-            // write_mp3_buffer_to_file(from_samples_to_mono_mp3(rendered_samples, target_spec), &*target_spec.filepath);
             let mp3_buffer = from_samples_to_mono_mp3(rendered_samples, target_spec);
-            // let mp3_buffer_slice = mp3_buffer.as_slice();
-            // let mp3_buffer_bytes_size = size_of_val(mp3_buffer_slice);
-            let mp3_buffer_bytes_size = size_of_val(&mp3_buffer);
-            println!("mp3 buffer size {}", mp3_buffer_bytes_size);
-            let mp3_buffer_bytes_size = 100000000;
+            match &*target_spec.export_target {
+                "local" => {
+                    println!("Writing mp3_buffer to file...");
+                    write_mp3_buffer_to_file(mp3_buffer, &*target_spec.filepath);
+                },
+                "managed-inoft-vocal-engine" => {
+                    println!("Uploading mp3_buffer to managed inoft-vocal-engine....");
+                    let mp3_buffer_expected_bytes_size = (mp3_buffer.capacity() * size_of::<u8>());
+                    println!("expected bytes size : {}", mp3_buffer_expected_bytes_size);
 
-            let upload_url_data = get_upload_url(
-                String::from("test_great.mp3"), mp3_buffer_bytes_size
-            ).await.expect("Nop 1").expect("Nop 2");
-
-            post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await;
+                    let upload_url_data = get_upload_url(
+                        String::from("test_great.mp3"),
+                        mp3_buffer_expected_bytes_size
+                    ).await.unwrap().unwrap();
+                    post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await;
+                }
+                _ => {
+                    panic!("Export target not supported");
+                }
+            }
         },
         "wav" => {
             let wav_target_spec = hound::WavSpec {

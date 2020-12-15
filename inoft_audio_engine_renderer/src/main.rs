@@ -25,8 +25,6 @@ use std::ptr::null;
 use tokio;
 use tokio::prelude::*;
 use tokio::time::error::Error;
-use hyper::{Client, Uri, Method, Request, Body};
-use hyper::client::HttpConnector;
 use reqwest;
 use tokio::net::{TcpStream, TcpListener};
 use tokio::time::{Duration, sleep};

@@ -5,8 +5,6 @@ mod tests {
     use std::cell::RefCell;
     use tokio;
     use tokio::prelude::*;
-    use hyper::{Client, Uri, Method, Request, Body};
-    use hyper::client::HttpConnector;
     use std::collections::HashMap;
 
     async fn resample() {
@@ -57,7 +55,8 @@ mod tests {
             target_spec: ReceivedTargetSpec {
                 filepath: String::from("F:/Sons utiles/tests/output_1.mp3"),
                 sample_rate: 24000,
-                format_type: String::from("mp3")
+                format_type: String::from("mp3"),
+                export_target: String::from("managed-inoft-vocal-engine")
             }
         };
         let task_1 = tokio::spawn(exporter::get_upload_url(String::from("test.mp3"), 1000));
@@ -68,46 +67,7 @@ mod tests {
 
     #[test]
     fn resample_test() {
-        let mut rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(resample());
-    }
-
-    async fn do_request() {
-        let client = Client::new();
-        // let url: Uri = "http://httpbin.org/response-headers?foo=bar"
-        let url: Uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url"
-            .parse()
-            .unwrap();
-
-        match client.get(url).await {
-            Ok(res) => println!("Response: {}", res.status()),
-            Err(err) => println!("Error: {}", err),
-        }
-    }
-
-    async fn test_http_request_app() -> Result<(), Box<dyn std::error::Error>> {
-        let resp = reqwest::get("https://httpbin.org/ip").await?.json::<HashMap<String, String>>().await?;
-        println!("{:#?}", resp);
-        Ok(())
-
-            /*
-        let client = Client::new();
-        // let url: Uri = "http://httpbin.org/response-headers?foo=bar"
-        let url: Uri = "http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url"
-            .parse()
-            .unwrap();
-
-        match client.get(url).await {
-            Ok(res) => println!("Response: {}", res.status()),
-            Err(err) => println!("Error: {}", err),
-        }
-
-             */
-    }
-
-    #[test]
-    fn test_http_request() {
-        let mut rt = tokio::runtime::Runtime::new().unwrap();
-        rt.block_on(test_http_request_app());
+        let mut runtime = tokio::runtime::Runtime::new().unwrap();
+        runtime.block_on(resample());
     }
 }
