@@ -22,16 +22,17 @@ pub async fn main(data: ReceivedParsedData) {
             println!("Uploading to MP3....");
             // write_mp3_buffer_to_file(from_samples_to_mono_mp3(rendered_samples, target_spec), &*target_spec.filepath);
             let mp3_buffer = from_samples_to_mono_mp3(rendered_samples, target_spec);
-            let mp3_buffer_slice = mp3_buffer.as_slice();
-            let mp3_buffer_bytes_size = size_of_val(mp3_buffer_slice);
+            // let mp3_buffer_slice = mp3_buffer.as_slice();
+            // let mp3_buffer_bytes_size = size_of_val(mp3_buffer_slice);
+            let mp3_buffer_bytes_size = size_of_val(&mp3_buffer);
+            println!("mp3 buffer size {}", mp3_buffer_bytes_size);
+            let mp3_buffer_bytes_size = 100000000;
 
-            println!("get upload url");
             let upload_url_data = get_upload_url(
-                String::from("test_2.mp3"), mp3_buffer_bytes_size
+                String::from("test_great.mp3"), mp3_buffer_bytes_size
             ).await.expect("Nop 1").expect("Nop 2");
 
-            println!("posting to s3");
-            post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer_slice, upload_url_data).await;
+            post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await;
         },
         "wav" => {
             let wav_target_spec = hound::WavSpec {

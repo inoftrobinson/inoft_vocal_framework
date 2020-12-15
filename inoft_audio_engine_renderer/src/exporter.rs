@@ -19,6 +19,7 @@ use std::error::Error;
 use serde::Deserialize;
 use serde::Serialize;
 use std::mem::{size_of, size_of_val};
+use reqwest::Url;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct GeneratePresignedUploadUrlRequestData {
@@ -31,7 +32,10 @@ struct Fields {
     acl: String,
     key: String,
     policy: String,
-    // x-amz-algorithm: String,
+    x_amz_algorithm: String,
+    x_amz_credential: String,
+    x_amz_date: String,
+    x_amz_signature: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -49,15 +53,51 @@ pub struct GeneratePresignedUploadUrlResponse {
 }
 
 
-pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: &[u8], presigned_url_response_data: GeneratePresignedUploadUrlResponse) {
+pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presigned_url_response_data: GeneratePresignedUploadUrlResponse) {
     let https = HttpsConnector::new();
     let https_client = Client::builder().build::<_, hyper::Body>(https);
 
     let jsonified_data = presigned_url_response_data.data.expect("Error in retrieving the data item from the response data");
     let s3_target_url = jsonified_data.url;
-    let s3_jsonified_request_body = serde_json::to_string(&jsonified_data.fields.unwrap()).unwrap();
+    let s3_fields = jsonified_data.fields.unwrap();
+    let s3_jsonified_request_body = serde_json::to_string(&s3_fields).unwrap();
 
-    println!("request url : {}", s3_target_url);
+
+    // add a single file, and set the part filename to the base name of the file path
+    // let path = Path::new(submission_filename);
+    // let sub_file_contents = std::fs::read(path)?;
+    // let bytes = mp3_buffer.as_slice();
+    // let mp3_buffer_bytes_size = size_of_val(bytes);
+    // println!("mp3 real bytes size : {}", mp3_buffer_bytes_size);
+
+    let sub_file_part = reqwest::multipart::Part::bytes(mp3_buffer)
+        .file_name(String::from("test_reqwest.mp3"))
+        .mime_str("application/octet-stream").unwrap();
+    println!("mp3 real bytes size : {}", size_of_val(&sub_file_part));
+
+    let form = reqwest::multipart::Form::new()
+        .text("key", s3_fields.key)
+        .text("acl", s3_fields.acl)
+        .text("policy", s3_fields.policy)
+        .text("x-amz-algorithm", s3_fields.x_amz_algorithm)
+        .text("x-amz-credential", s3_fields.x_amz_credential)
+        .text("x-amz-date", s3_fields.x_amz_date)
+        .text("x-amz-signature", s3_fields.x_amz_signature)
+        .part("file", sub_file_part);
+    // form = form.part("sub_file[]", sub_file_part);
+
+    let client = reqwest::ClientBuilder::new().build().unwrap();
+    let submission_response = client
+        .post(Url::parse(&*s3_target_url).unwrap())
+        .multipart(form)
+        .send()
+        .await.unwrap()
+        .text()
+        .await.unwrap();
+
+    println!("Submission response:\n{}", submission_response);
+
+    /*println!("request url : {}", s3_target_url);
     let request_s3 = Request::builder()
         .method(Method::POST)
         .uri(s3_target_url)
@@ -69,6 +109,7 @@ pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: &[u8], presign
     let body_bytes = body::to_bytes(s3_res.into_body()).await.unwrap();
     let body = String::from_utf8(body_bytes.to_vec()).expect("response was not valid utf-8");
     println!("s3 body : {}", body);
+     */
 }
 
 
