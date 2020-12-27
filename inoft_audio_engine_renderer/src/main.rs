@@ -2,7 +2,7 @@
 // #![allow(unused_imports)]
 // #![allow(unused_variables)]
 
-/*mod append;
+mod append;
 mod resampler;
 // mod renderer;
 mod exporter;
@@ -11,7 +11,7 @@ mod models;
 use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 mod audio_clip;
 use audio_clip::AudioClip;
- */
+
 
 mod lib;
 
@@ -24,7 +24,7 @@ use std::fs::File;
 use std::ptr::null;
 use tokio;
 use tokio::prelude::*;
-use tokio::time::error::Error;
+// use tokio::time::error::Error;
 use reqwest;
 use tokio::net::{TcpStream, TcpListener};
 use tokio::time::{Duration, sleep};

@@ -36,7 +36,7 @@ class Time:
 
 class TrackStartTime(Time):
     def __init__(self, track: Any, offset: Optional[int or float] = None):
-        super().__init__(type_key='track_start-time', relationship_parent=track, offset=offset)
+        super().__init__(type_key='parent_start-time', relationship_parent=track, offset=offset)
 
     def absolute(self) -> int or float:
         return self.offset

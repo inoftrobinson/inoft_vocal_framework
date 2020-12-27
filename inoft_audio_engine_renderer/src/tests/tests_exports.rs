@@ -22,12 +22,12 @@ mod tests {
                     tracks: vec![
                         Track {
                             track_id: String::from("track-1"),
-                            clips: vec![
+                            child: vec![
                                 AudioClip::new(
                                     String::from("clip-1"),
                                     Some("F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string()), None,
                                     Time {
-                                        type_key: String::from("track_start-time"),
+                                        type_key: String::from("parent_start-time"),
                                         relationship_parent_id: Some(String::from("track-1")),
                                         offset: None
                                     },
@@ -43,7 +43,7 @@ mod tests {
                                     String::from("clip-2"),
                                     Some("F:/Sons utiles/70_Cm_ArpLoop_01_SP.wav".to_string()), None,
                                     Time {
-                                        type_key: String::from("track_start-time"),
+                                        type_key: String::from("parent_start-time"),
                                         relationship_parent_id: Some(String::from("track-1")),
                                         offset: Some(20)
                                     },

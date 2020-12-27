@@ -32,18 +32,17 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
 
             let current_track_data = tracks_data.get_item(_py, i_track);
             let track_id = current_track_data.get_item(_py, "id").unwrap().to_string();
-            let clips_data = current_track_data.get_item(_py, "clips").unwrap().extract::<PyDict>(_py).unwrap();
+            let child_clips_data = current_track_data.get_item(_py, "child").unwrap().extract::<PyList>(_py).unwrap();
 
-            for (clip_id, clip_item) in clips_data.items(_py).iter() {
-                let current_clip_data = clips_data.get_item(_py, clip_id).unwrap();
-                let real_clip_id = current_clip_data.get_item(_py, "id").unwrap().to_string();
+            for clip_item in child_clips_data.iter(_py) {
+                let clip_id = clip_item.get_item(_py, "id").unwrap().to_string();
                 println!("{}", clip_item);
                 current_track_clips.push(AudioClip::new(
-                    real_clip_id,
-                    Some(current_clip_data.get_item(_py, "localFilepath").unwrap().to_string()),
-                     Some(current_clip_data.get_item(_py, "fileUrl").unwrap().to_string()),
-                     parse_time_object(_py, current_clip_data.get_item(_py, "playerStartTime").unwrap()),
-                    parse_time_object(_py, current_clip_data.get_item(_py, "playerEndTime").unwrap()),
+                    clip_id,
+                    Some(clip_item.get_item(_py, "local_filepath").unwrap().to_string()),
+                     Some(clip_item.get_item(_py, "file_url").unwrap().to_string()),
+                     parse_time_object(_py, clip_item.get_item(_py, "player_start_time").unwrap()),
+                    parse_time_object(_py, clip_item.get_item(_py, "player_end_time").unwrap()),
                     0,
                     0,
                 ));

@@ -22,7 +22,7 @@ class AudioBlock:
             serialized_tracks.append(track.serialize())
         return {'tracks': serialized_tracks}
 
-    def §render_2(self, out_filepath: str, format_type: FORMAT_TYPE_MP3 or FORMAT_TYPE_WAV = FORMAT_TYPE_MP3) -> str:
+    def render_2(self, out_filepath: str, format_type: FORMAT_TYPE_MP3 or FORMAT_TYPE_WAV = FORMAT_TYPE_MP3) -> str:
         from inoft_vocal_framework.inoft_audio_engine_renderer.audio_engine_renderer_wrapping import render
         return render(audio_blocks=[self], out_filepath=out_filepath, out_format_type=format_type)
 
