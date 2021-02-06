@@ -1,4 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 
-inoft_audio_engine_renderer/src/libs/* linguist-vendored
+audio_engine/src/libs/* linguist-vendored

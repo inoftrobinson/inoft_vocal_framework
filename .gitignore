@@ -17,8 +17,7 @@ __pycache__/
 
 # Exclusion of static discord bot token
 ../inoft_vocal_framework/platforms_handlers/discord/static_token.py
-web_interface/node_modules/*
-web_interface/static/node_modules/*
+../inoft_vocal_framework/audio_engine/examples.rs
 
 # Distribution / packaging
 .Python
@@ -153,3 +152,5 @@ dmypy.json
 # already existing elements were commented out
 
 #/target
+audio_engine/examples.rs
+audio_engine/examples.rs

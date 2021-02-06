@@ -24,6 +24,9 @@ class Time:
         return new_instance
 
     def serialize(self) -> dict:
+        return {'type': 'until-self-end', 'relationship_parent_id': "", 'offset': 0}
+        # todo: add support for different time relation in the rust client
+
         from inoft_vocal_framework.audio_editing.track import Track
         from inoft_vocal_framework.audio_editing.sound import Sound
         self.relationship_parent: Track or Sound

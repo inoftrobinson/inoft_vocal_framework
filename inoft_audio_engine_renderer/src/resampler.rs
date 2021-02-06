@@ -3,9 +3,10 @@ use hound::WavSamples;
 use std::io::BufReader;
 use std::fs::File;
 use std::time::{Instant};
+use std::io;
 
 
-fn i16_resample_sample_rate_without_channels_conversion(samples: WavSamples<BufReader<File>, i16>, resample_interval: f32) -> Vec<i16> {
+fn i16_resample_sample_rate_without_channels_conversion<R: io::Read>(samples: WavSamples<R, i16>, resample_interval: f32) -> Vec<i16> {
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
     for (i, sample) in samples.enumerate() {
@@ -19,7 +20,7 @@ fn i16_resample_sample_rate_without_channels_conversion(samples: WavSamples<BufR
     out_samples
 }
 
-fn i32_resample_sample_rate_without_channels_conversion(samples: WavSamples<BufReader<File>, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
+fn i32_resample_sample_rate_without_channels_conversion<R: io::Read>(samples: WavSamples<R, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
     // For comments, see i16_resample_sample_rate_without_channels_conversion
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
@@ -34,7 +35,7 @@ fn i32_resample_sample_rate_without_channels_conversion(samples: WavSamples<BufR
     out_samples
 }
 
-fn i16_resample_sample_rate_and_channels_from_one_to_two(samples: WavSamples<BufReader<File>, i16>, resample_interval: f32) -> Vec<i16> {
+fn i16_resample_sample_rate_and_channels_from_one_to_two<R: io::Read>(samples: WavSamples<R, i16>, resample_interval: f32) -> Vec<i16> {
     // This function is almost exactly like the i16_resample_sample_rate_without_channels_conversion function.
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
@@ -53,7 +54,7 @@ fn i16_resample_sample_rate_and_channels_from_one_to_two(samples: WavSamples<Buf
     out_samples
 }
 
-fn i32_resample_sample_rate_and_channels_from_one_to_two(samples: WavSamples<BufReader<File>, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
+fn i32_resample_sample_rate_and_channels_from_one_to_two<R: io::Read>(samples: WavSamples<R, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
     // For comments, see i16_resample_sample_rate_and_channels_from_one_to_two
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
@@ -70,7 +71,7 @@ fn i32_resample_sample_rate_and_channels_from_one_to_two(samples: WavSamples<Buf
 }
 
 
-fn i16_resample_sample_rate_and_channels_from_two_to_one(samples: WavSamples<BufReader<File>, i16>, resample_interval: f32) -> Vec<i16> {
+fn i16_resample_sample_rate_and_channels_from_two_to_one<R: io::Read>(samples: WavSamples<R, i16>, resample_interval: f32) -> Vec<i16> {
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
 
@@ -95,11 +96,11 @@ fn i16_resample_sample_rate_and_channels_from_two_to_one(samples: WavSamples<Buf
     out_samples
 }
 
-fn i32_resample_sample_rate_channels_and_from_two_to_one(samples: WavSamples<BufReader<File>, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
+fn i32_resample_sample_rate_channels_and_from_two_to_one<R: io::Read>(samples: WavSamples<R, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
     // For comments, see i16_resample_sample_rate_and_channels_from_two_to_one
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
-    
+
     let num_samples_unique_across_channels = samples.len() / 2;
     let mut samples_enumerator = samples.enumerate();
     for i in 0..num_samples_unique_across_channels {
@@ -163,7 +164,7 @@ fn panic_target_num_channels_not_supported(target_num_channels: u16) {
 // source 2 -> target 1 (handled by i16_resample_sample_rate_and_channels_from_one_to_two)
 // Any other scenario will cause the resampler to panic.
 
-pub fn resample_i16(samples: WavSamples<BufReader<File>, i16>, source_spec: WavSpec, target_spec: WavSpec) -> Vec<i16> {
+pub fn resample_i16<R: io::Read>(samples: WavSamples<R, i16>, source_spec: WavSpec, target_spec: WavSpec) -> Vec<i16> {
     let source_sample_rate = source_spec.sample_rate;
     let target_sample_rate = target_spec.sample_rate;
 
@@ -174,7 +175,7 @@ pub fn resample_i16(samples: WavSamples<BufReader<File>, i16>, source_spec: WavS
         let resample_start = Instant::now();
         print_resampling_starting(samples.len(), source_sample_rate, target_sample_rate, resample_interval, None);
 
-        let mut handler: Option<fn(WavSamples<BufReader<File>, i16>, f32) -> Vec<i16>> = None;
+        let mut handler: Option<fn(WavSamples<R, i16>, f32) -> Vec<i16>> = None;
         if target_spec.channels == 1 {
             if source_spec.channels == 1 {
                 handler = Some(i16_resample_sample_rate_without_channels_conversion);
@@ -200,7 +201,7 @@ pub fn resample_i16(samples: WavSamples<BufReader<File>, i16>, source_spec: WavS
     }
 }
 
-pub fn resample_i32(samples: WavSamples<BufReader<File>, i32>, source_spec: WavSpec, target_spec: WavSpec) -> Vec<i16> {
+pub fn resample_i32<R: io::Read>(samples: WavSamples<R, i32>, source_spec: WavSpec, target_spec: WavSpec) -> Vec<i16> {
     let source_sample_rate = source_spec.sample_rate;
     let target_sample_rate = target_spec.sample_rate;
 
@@ -210,9 +211,9 @@ pub fn resample_i32(samples: WavSamples<BufReader<File>, i32>, source_spec: WavS
     let resample_start = Instant::now();
     print_resampling_starting(samples.len(), source_sample_rate, target_sample_rate, resample_interval, Some(bits_divider));
 
-    // The audio engine is made to handle 16 bits data, so if the resample_i32 function is called, we now for sure that we need 
+    // The audio engine is made to handle 16 bits data, so if the resample_i32 function is called, we now for sure that we need
     // to resample. We do not even need to do a comparison of the source spec and target spec like in the resample_i16 function.
-    let mut handler: Option<fn(WavSamples<BufReader<File>, i32>, f32, f32) -> Vec<i16>> = None;
+    let mut handler: Option<fn(WavSamples<R, i32>, f32, f32) -> Vec<i16>> = None;
     if target_spec.channels == 1 {
         if source_spec.channels == 1 {
             handler = Some(i32_resample_sample_rate_without_channels_conversion);

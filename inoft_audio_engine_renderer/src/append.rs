@@ -8,22 +8,23 @@ use std::mem::{size_of};
 extern crate hound;
 
 
-pub async fn main(data: ReceivedParsedData) {
+pub async fn main(data: ReceivedParsedData) -> Option<String> {
     let start = Instant::now();
 
     let path: &Path = data.target_spec.filepath.as_ref();
     let target_spec = &data.target_spec;
-    let rendered_samples = render_to_vec(&data);
+    let rendered_samples = render_to_vec(&data).await;
 
     let writing_start = Instant::now();
     println!("format type : {}", target_spec.format_type);
-    match &*target_spec.format_type {
+    let file_url = match &*target_spec.format_type {
         "mp3" => {
             let mp3_buffer = from_samples_to_mono_mp3(rendered_samples, target_spec);
             match &*target_spec.export_target {
                 "local" => {
                     println!("Writing mp3_buffer to file...");
                     write_mp3_buffer_to_file(mp3_buffer, &*target_spec.filepath);
+                    None
                 },
                 "managed-inoft-vocal-engine" => {
                     println!("Uploading mp3_buffer to managed inoft-vocal-engine....");
@@ -34,7 +35,7 @@ pub async fn main(data: ReceivedParsedData) {
                         String::from("test_great.mp3"),
                         mp3_buffer_expected_bytes_size
                     ).await.unwrap().unwrap();
-                    post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await;
+                    Some(post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await)
                 }
                 _ => {
                     panic!("Export target not supported");
@@ -52,6 +53,7 @@ pub async fn main(data: ReceivedParsedData) {
             for i_sample in 0..rendered_samples.len() {
                 writer.write_sample(rendered_samples[i_sample]).unwrap();
             }
+            None
         },
         _ => {
             panic!(
@@ -59,9 +61,10 @@ pub async fn main(data: ReceivedParsedData) {
                 \n  --request_format_type:{}", target_spec.format_type
             );
         }
-    }
+    };
     println!("\nFinished conversion and writing.\n  --execution_time:{}ms", writing_start.elapsed().as_millis());
     println!("\nFinished rendering, conversion and writing.\n  --execution_time:{}ms", start.elapsed().as_millis());
+    file_url
     // writer.finalize().unwrap();
 
     /*for (i_reader, mut file_reader) in files_readers.iter().enumerate() {

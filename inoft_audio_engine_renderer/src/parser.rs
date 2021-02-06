@@ -1,4 +1,4 @@
-use cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict};
+use cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject};
 use crate::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time};
 use std::collections::HashMap;
 use std::cell::RefCell;
@@ -24,30 +24,37 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
         let mut current_audio_block_tracks: Vec<Track> = Vec::new();
 
         let audio_block_data: PyObject = audio_blocks_data.get_item(_py, i_block);
-        let tracks_data: PyList = audio_block_data.get_item(_py, "tracks").unwrap().extract::<PyList>(_py).unwrap();
+        let tracks_data: PyDict = audio_block_data.get_item(_py, "tracks").unwrap().extract::<PyDict>(_py).unwrap();
         println!("tracks_data : {:?}", tracks_data.len(_py));
 
-        for i_track in 0..tracks_data.len(_py) {
+        //         for i_track in 0..tracks_data.len(_py) {
+        for (track_id, track_data) in tracks_data.items(_py).iter() {
+            let track_id = track_id.to_string();
             let mut current_track_clips: Vec<RefCell<AudioClip>> = Vec::new();
+            let child_clips_data = track_data.get_item(_py, "clips").unwrap().extract::<PyDict>(_py).unwrap();
 
-            let current_track_data = tracks_data.get_item(_py, i_track);
-            let track_id = current_track_data.get_item(_py, "id").unwrap().to_string();
-            let child_clips_data = current_track_data.get_item(_py, "child").unwrap().extract::<PyList>(_py).unwrap();
+            for (clip_id, clip_data) in child_clips_data.items(_py).iter() {
+                let clip_id = clip_data.get_item(_py, "id").unwrap().to_string();
+                println!("{}", clip_data);
 
-            for clip_item in child_clips_data.iter(_py) {
-                let clip_id = clip_item.get_item(_py, "id").unwrap().to_string();
-                println!("{}", clip_item);
+                let local_filepath = match clip_data.get_item(_py, "localFilepath") {
+                    Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+                    Err(err) => None
+                };
+                let file_url = match clip_data.get_item(_py, "fileUrl") {
+                    Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+                    Err(err) => { None }
+                };
+
                 current_track_clips.push(AudioClip::new(
-                    clip_id,
-                    Some(clip_item.get_item(_py, "local_filepath").unwrap().to_string()),
-                     Some(clip_item.get_item(_py, "file_url").unwrap().to_string()),
-                     parse_time_object(_py, clip_item.get_item(_py, "player_start_time").unwrap()),
-                    parse_time_object(_py, clip_item.get_item(_py, "player_end_time").unwrap()),
+                    clip_id, local_filepath, file_url,
+                    parse_time_object(_py, clip_data.get_item(_py, "playerStartTime").unwrap()),
+                    parse_time_object(_py, clip_data.get_item(_py, "playerEndTime").unwrap()),
                     0,
                     0,
                 ));
             }
-            println!("{:?}", current_track_data);
+            println!("{:?}", track_data);
             
             current_audio_block_tracks.push(Track {
                 track_id,

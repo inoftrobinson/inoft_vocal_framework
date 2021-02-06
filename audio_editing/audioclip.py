@@ -6,7 +6,7 @@ from inoft_vocal_framework.audio_editing.sound import Sound
 from inoft_vocal_framework.audio_editing.track import Track
 from inoft_vocal_framework.audio_editing.relation import Relation
 from inoft_vocal_framework.dummy_object import DummyObject
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 
 class AudioBlock:
@@ -17,13 +17,13 @@ class AudioBlock:
         self.tracks: List[Track] = list()
 
     def serialize(self) -> dict:
-        serialized_tracks: List[dict] = list()
+        serialized_tracks: Dict[str, dict] = dict()
         for track in self.tracks:
-            serialized_tracks.append(track.serialize())
+            serialized_tracks[track.id] = track.serialize()
         return {'tracks': serialized_tracks}
 
     def render_2(self, out_filepath: str, format_type: FORMAT_TYPE_MP3 or FORMAT_TYPE_WAV = FORMAT_TYPE_MP3) -> str:
-        from inoft_vocal_framework.inoft_audio_engine_renderer.audio_engine_renderer_wrapping import render
+        from inoft_vocal_framework.audio_engine.audio_engine_wrapper import render
         return render(audio_blocks=[self], out_filepath=out_filepath, out_format_type=format_type)
 
     def _render(self) -> Optional[AudioSegment]:

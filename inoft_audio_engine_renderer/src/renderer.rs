@@ -7,7 +7,7 @@ use std::num::Wrapping;
 use std::borrow::{Borrow, BorrowMut};
 
 
-pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
+pub async fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
     let start = Instant::now();
 
     let mut out_samples: Vec<i16> = Vec::new();
@@ -15,7 +15,7 @@ pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
     let mut duration_longest_file_buffer: u32 = 0;
     let mut file_reader_longest_file: Option<&WavReader<BufReader<File>>> = None;
 
-    // The inoft_audio_engine_renderer has been optimized and tested to render audio with 16 bits per sample.
+    // The audio_engine has been optimized and tested to render audio with 16 bits per sample.
     // Changing this value to 24 (the only other possible setting), could cause unexpected behaviors.
     let target_spec = hound::WavSpec {
         channels: 1,
@@ -44,7 +44,7 @@ pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
 
         for (i_file, audio_clip) in audio_clips.iter().enumerate() {
             let mut audio_clip = audio_clips.get(i_file).unwrap().borrow_mut();
-            audio_clip.resample(target_spec);
+            audio_clip.resample(target_spec).await;
 
             let outing_start = Instant::now();
             println!("start_time: {:?}", audio_clip.player_start_time.offset);

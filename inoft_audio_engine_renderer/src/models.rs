@@ -1,7 +1,6 @@
 // pub const FORMAT_TYPE_WAV: &String = &String::from("wav");
 // pub const FORMAT_TYPE_MP3: &String = &String::from("mp3");
 
-
 use crate::audio_clip::AudioClip;
 use std::cell::RefCell;
 

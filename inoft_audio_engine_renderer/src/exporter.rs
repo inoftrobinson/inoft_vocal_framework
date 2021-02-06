@@ -49,10 +49,11 @@ pub struct GeneratePresignedUploadUrlResponse {
 }
 
 
-pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presigned_url_response_data: GeneratePresignedUploadUrlResponse) {
+pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presigned_url_response_data: GeneratePresignedUploadUrlResponse) -> String {
     let jsonified_data = presigned_url_response_data.data.expect("Error in retrieving the data item from the response data");
     let s3_target_url = jsonified_data.url;
     let s3_fields = jsonified_data.fields.unwrap();
+    let expected_file_url = format!("{}{}", s3_target_url, s3_fields.key);
 
     let mp3_file_part = reqwest::multipart::Part::bytes(mp3_buffer)
         .mime_str("application/octet-stream").unwrap();
@@ -75,6 +76,7 @@ pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presi
         .text().await.unwrap();
 
     println!("S3 response:\n {}", submission_response);
+    expected_file_url
 }
 
 
