@@ -40,6 +40,7 @@ pub struct AudioProjectWithHashedChildren {
 
 
 pub fn hash(data: &ReceivedParsedData) -> String {
+    let start = Instant::now();
     let mut hasher = Sha512::new();
 
     let mut audio_blocks_signatures: Vec<String> = Vec::new();
@@ -100,6 +101,8 @@ pub fn hash(data: &ReceivedParsedData) -> String {
     // Everything that needed sorting has already been sorted at this point
     hasher.update(audio_project_with_hashed_children);
     let audio_project_signature = format!("{:X}", hasher.finalize_reset());
+
+    println!("\nFinished hashing.\n  --execution_time:{}ms", (start.elapsed().as_micros() as f64 / 1000.0));
     audio_project_signature
 }
 
