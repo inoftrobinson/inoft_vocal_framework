@@ -50,6 +50,7 @@ class Sound(SoundProps):
             'id': self.id,
             'localFilepath': self.local_filepath,
             'fileUrl': self.file_url,
+            'volume': self.volume,
             'playerStartTime': self._player_start_time.serialize(),
             'playerEndTime': self._player_end_time.serialize(),
             'fileStartTime': self._file_start_time,

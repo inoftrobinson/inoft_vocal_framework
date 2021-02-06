@@ -12,6 +12,8 @@ use append::main;
 use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 #[path="audio_clip.rs"] mod audio_clip;
 #[path="loader.rs"] pub mod loader;
+#[path="hasher.rs"] pub mod hasher;
+#[path="tests/mod.rs"] pub mod tests;
 
 use audio_clip::AudioClip;
 
@@ -25,9 +27,17 @@ py_module_initializer!(audio_engine, |py, m| {
 });
 
 
+use sha2::{Sha512, Digest};
+use std::time::Instant;
+
 pub fn render(_py: Python, data: PyObject) -> PyResult<String> {
     let parsed_data = parser::parse_python(_py, data);
+    let expected_render_file_hash = hasher::hash(&parsed_data);
+    println!("expected_render_file_hash : {}", expected_render_file_hash);
+
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
-    let file_url = runtime.block_on(append::main(parsed_data));
+    let file_url = runtime.block_on(append::main(parsed_data))
+        .expect("Append future did not returned a valid file_url");
+
     Ok(file_url.unwrap_or(String::from("null")))
 }

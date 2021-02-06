@@ -10,6 +10,8 @@ mod exporter;
 #[path="models.rs"] pub mod models;
 #[path="renderer.rs"] pub mod renderer;
 #[path="loader.rs"] pub mod loader;
+#[path="hasher.rs"] pub mod hasher;
+#[path="tests/mod.rs"] pub mod tests;
 use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 mod audio_clip;
 use audio_clip::AudioClip;

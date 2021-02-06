@@ -33,5 +33,21 @@ def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: s
             'exportTarget': 'managed-inoft-vocal-engine'  # 'local'
         },
     }
+    import time
+    rust_start = time.time()
+    real_rust_time = 0
+    for i in range(1000):
+        out = render(data)
+        real_rust_time += int(out)
+    print(f"1000x sha rust : {time.time() - rust_start}")
+    print(f"1000x sha real rust : {real_rust_time / 1000000}")
+
+    python_start = time.time()
+    for i in range(1000):
+        from hashlib import sha512
+        value = "eaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzeteaaaaaaaaascfqdeaeadsqzarzeraeaaaaeeaqdqqczgjheheeheyilktjegtzet"
+        out = sha512(value.encode('utf-8')).hexdigest()
+    print(f"1000x sha python : {time.time() - python_start}")
+
     return render(data)
 

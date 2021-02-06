@@ -8,7 +8,7 @@ use std::mem::{size_of};
 extern crate hound;
 
 
-pub async fn main(data: ReceivedParsedData) -> Option<String> {
+pub async fn main(data: ReceivedParsedData) -> Result<Option<String>, ()> {
     let start = Instant::now();
 
     let path: &Path = data.target_spec.filepath.as_ref();
@@ -64,7 +64,7 @@ pub async fn main(data: ReceivedParsedData) -> Option<String> {
     };
     println!("\nFinished conversion and writing.\n  --execution_time:{}ms", writing_start.elapsed().as_millis());
     println!("\nFinished rendering, conversion and writing.\n  --execution_time:{}ms", start.elapsed().as_millis());
-    file_url
+    Ok(file_url)
     // writer.finalize().unwrap();
 
     /*for (i_reader, mut file_reader) in files_readers.iter().enumerate() {

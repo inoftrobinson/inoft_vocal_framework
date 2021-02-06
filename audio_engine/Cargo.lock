@@ -722,6 +722,7 @@ dependencies = [
  "rusoto_s3",
  "serde",
  "serde_json",
+ "sha2",
  "tokio 0.2.25",
  "tokio-test",
 ]

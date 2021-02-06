@@ -9,12 +9,16 @@ use std::any::Any;
 use std::{io, fs};
 use bytes::Bytes;
 use tokio::macros::support::Future;
+use serde::{Serialize, Deserialize};
+use std::borrow::Borrow;
 
 
+// todo: remove the passing and loading of clip ids ?
 pub struct AudioClip {
     pub clip_id: String,
     pub filepath: Option<String>,
     pub file_url: Option<String>,
+    pub volume: Option<u8>,
     pub player_start_time: Time,
     pub player_end_time: Time,
     pub file_start_time: i16,
@@ -26,10 +30,10 @@ pub struct AudioClip {
 
 
 impl AudioClip {
-    pub fn new(clip_id: String, filepath: Option<String>, file_url: Option<String>,
+    pub fn new(clip_id: String, filepath: Option<String>, file_url: Option<String>, volume: Option<u8>,
                player_start_time: Time, player_end_time: Time, file_start_time: i16, file_end_time: i16) -> RefCell<AudioClip> {
         RefCell::new(AudioClip {
-            clip_id, filepath, file_url,
+            clip_id, filepath, file_url, volume,
             player_start_time, player_end_time,
             file_start_time, file_end_time,
             resamples: None,

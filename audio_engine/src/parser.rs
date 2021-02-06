@@ -37,17 +37,21 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
                 let clip_id = clip_data.get_item(_py, "id").unwrap().to_string();
                 println!("{}", clip_data);
 
+                let volume = match clip_data.get_item(_py, "volume") {
+                    Ok(item) => { if item != _py.None() { Some(item.extract::<u8>(_py).unwrap()) } else { None } },
+                    Err(err) => { println!("{:?}", err); None }
+                };
                 let local_filepath = match clip_data.get_item(_py, "localFilepath") {
                     Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
-                    Err(err) => None
+                    Err(err) => { println!("{:?}", err); None }
                 };
                 let file_url = match clip_data.get_item(_py, "fileUrl") {
                     Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
-                    Err(err) => { None }
+                    Err(err) => { println!("{:?}", err); None }
                 };
 
                 current_track_clips.push(AudioClip::new(
-                    clip_id, local_filepath, file_url,
+                    clip_id, local_filepath, file_url, volume,
                     parse_time_object(_py, clip_data.get_item(_py, "playerStartTime").unwrap()),
                     parse_time_object(_py, clip_data.get_item(_py, "playerEndTime").unwrap()),
                     0,
