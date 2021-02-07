@@ -52,7 +52,9 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
             sample_rate: 24000,
             format_type: String::from("mp3"),
             export_target: String::from("managed-inoft-vocal-engine")
-        }
+        },
+        engine_account_id: Some(String::from("b1fe5939-032b-462d-92e0-a942cd445096")),
+        engine_project_id: Some(String::from("22ac1d08-292d-4f2e-a9e3-20d181f1f58f"))
     };
     data
 }

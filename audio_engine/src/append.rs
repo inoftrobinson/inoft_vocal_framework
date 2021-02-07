@@ -8,7 +8,7 @@ use std::mem::{size_of};
 extern crate hound;
 
 
-pub async fn main(data: ReceivedParsedData) -> Result<Option<String>, ()> {
+pub async fn main(data: ReceivedParsedData, expected_render_file_hash: String) -> Result<Option<String>, ()> {
     let start = Instant::now();
 
     let path: &Path = data.target_spec.filepath.as_ref();
@@ -28,11 +28,11 @@ pub async fn main(data: ReceivedParsedData) -> Result<Option<String>, ()> {
                 },
                 "managed-inoft-vocal-engine" => {
                     println!("Uploading mp3_buffer to managed inoft-vocal-engine....");
-                    let mp3_buffer_expected_bytes_size = (mp3_buffer.capacity() * size_of::<u8>());
+                    let mp3_buffer_expected_bytes_size = mp3_buffer.capacity() * size_of::<u8>();
                     println!("expected bytes size : {}", mp3_buffer_expected_bytes_size);
 
                     let upload_url_data = get_upload_url(
-                        String::from("test_great.mp3"),
+                    format!("{}.mp3", expected_render_file_hash),
                         mp3_buffer_expected_bytes_size
                     ).await.unwrap().unwrap();
                     Some(post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await)

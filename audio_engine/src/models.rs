@@ -15,6 +15,8 @@ pub struct ReceivedTargetSpec {
 }
 
 pub struct ReceivedParsedData {
+    pub engine_account_id: Option<String>,
+    pub engine_project_id: Option<String>,
     pub blocks: Vec<AudioBlock>,
     pub target_spec: ReceivedTargetSpec,
 }

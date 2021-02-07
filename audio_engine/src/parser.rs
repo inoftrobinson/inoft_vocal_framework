@@ -74,6 +74,14 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
 
     let target_spec_data = received_data.get_item(_py, "targetSpec").unwrap();
     let output_parsed_data = ReceivedParsedData {
+        engine_account_id: match received_data.get_item(_py, "engineAccountId") {
+            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+            Err(err) => { println!("{:?}", err); None }
+        },
+        engine_project_id: match received_data.get_item(_py, "engineProjectId") {
+            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+            Err(err) => { println!("{:?}", err); None }
+        },
         blocks: audio_blocks_items,
         target_spec: ReceivedTargetSpec {
             filepath: target_spec_data.get_item(_py, "filepath").unwrap().to_string(),

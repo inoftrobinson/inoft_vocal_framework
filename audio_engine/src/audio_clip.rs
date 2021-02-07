@@ -1,16 +1,11 @@
-use hound::{WavReader, WavSpec, WavSamples};
+use hound::{WavReader, WavSpec};
 use std::io::{BufReader};
-use std::fs::File;
 use crate::resampler::{resample_i16, resample_i32};
 use crate::models::Time;
 use std::cell::RefCell;
 use crate::loader::get_file_bytes_from_url;
-use std::any::Any;
-use std::{io, fs};
+use std::io;
 use bytes::Bytes;
-use tokio::macros::support::Future;
-use serde::{Serialize, Deserialize};
-use std::borrow::Borrow;
 
 
 // todo: remove the passing and loading of clip ids ?
@@ -60,11 +55,11 @@ impl AudioClip {
     pub async fn resample(&mut self, target_spec: WavSpec) {
         if self.file_url.is_none() != true {
             let bytes = get_file_bytes_from_url(&*self.file_url.as_ref().unwrap()).await;
-            let mut bytes_reader: WavReader<BufReader<&[u8]>> = WavReader::new(BufReader::new(&*bytes)).unwrap();
+            let bytes_reader: WavReader<BufReader<&[u8]>> = WavReader::new(BufReader::new(&*bytes)).unwrap();
             self.resamples = AudioClip::make_resamples(bytes_reader, target_spec);
         } else {
             let filepath = self.filepath.as_ref().unwrap();
-            let mut file_reader = WavReader::open(filepath).unwrap();
+            let file_reader = WavReader::open(filepath).unwrap();
             self.resamples = AudioClip::make_resamples(file_reader, target_spec);
         }
     }

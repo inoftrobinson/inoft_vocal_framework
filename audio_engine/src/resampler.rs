@@ -1,7 +1,6 @@
 use hound::{WavSpec};
 use hound::WavSamples;
 use std::io::BufReader;
-use std::fs::File;
 use std::time::{Instant};
 use std::io;
 

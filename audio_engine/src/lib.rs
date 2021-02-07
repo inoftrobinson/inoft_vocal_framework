@@ -18,7 +18,7 @@ use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 use audio_clip::AudioClip;
 
 
-use cpython::{PyResult, Python, py_module_initializer, py_fn, PyObject, ObjectProtocol};
+use cpython::{PyResult, Python, py_module_initializer, py_fn, PyObject};
 
 py_module_initializer!(audio_engine, |py, m| {
     m.add(py, "__doc__", "Render dynamic audio.")?;
@@ -27,8 +27,9 @@ py_module_initializer!(audio_engine, |py, m| {
 });
 
 
-use sha2::{Sha512, Digest};
 use std::time::Instant;
+use std::borrow::Borrow;
+
 
 pub fn render(_py: Python, data: PyObject) -> PyResult<String> {
     let parsed_data = parser::parse_python(_py, data);
@@ -36,8 +37,21 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<String> {
     println!("expected_render_file_hash : {}", expected_render_file_hash);
 
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
-    let file_url = runtime.block_on(append::main(parsed_data))
-        .expect("Append future did not returned a valid file_url");
 
-    Ok(file_url.unwrap_or(String::from("null")))
+    let engine_base_s3_url = "https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com";
+    let expected_render_url = format!(
+        "{}/{}/{}/files/{}.mp3",
+        engine_base_s3_url,
+        parsed_data.engine_account_id.borrow().as_ref().unwrap(),
+        parsed_data.engine_project_id.borrow().as_ref().unwrap(),
+        expected_render_file_hash
+    );
+    let file_exist = runtime.block_on(loader::file_exist_at_url(&*expected_render_url));
+    if file_exist == true {
+        Ok(expected_render_url)
+    } else {
+        let file_url = runtime.block_on(append::main(parsed_data, expected_render_file_hash))
+            .expect("Append future did not returned a valid file_url");
+        Ok(file_url.unwrap_or(String::from("null")))
+    }
 }
