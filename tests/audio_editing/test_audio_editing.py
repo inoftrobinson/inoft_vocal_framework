@@ -51,7 +51,6 @@ class MyTestCase(unittest.TestCase):
         )
         background_music.volume = 81
 
-
         file_url = audio_block_1.render_2(out_filepath="F:/Sons utiles/tests/test_python_1.mp3", format_type="mp3")
         print(file_url)
 

@@ -1,4 +1,4 @@
-use cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject};
+use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject};
 use crate::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time};
 use std::collections::HashMap;
 use std::cell::RefCell;

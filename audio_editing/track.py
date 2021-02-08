@@ -5,7 +5,7 @@ from pydub import AudioSegment
 
 from inoft_vocal_framework.audio_editing.models import PlayedSoundInfos, TrackStartTime
 from inoft_vocal_framework.audio_editing.sound import Sound, AudioStartTime
-from inoft_vocal_engine.practical_logger import message_with_vars
+from StructNoSQL.practical_logger import message_with_vars
 
 
 class Track:

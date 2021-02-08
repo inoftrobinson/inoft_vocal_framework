@@ -1,9 +1,4 @@
-#[cfg(feature = "python38")]
-extern crate cpython38 as cpython;
-
-#[cfg(feature = "python39")]
-extern crate cpython39 as cpython;
-
+extern crate cpython;
 /*mod libs;
 use libs::hound2;
  */
@@ -23,20 +18,27 @@ use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 use audio_clip::AudioClip;
 
 
-use cpython::{PyResult, Python, py_module_initializer, py_fn, PyObject};
-
-py_module_initializer!(audio_engine, |py, m| {
-    m.add(py, "__doc__", "Render dynamic audio.")?;
-    m.add(py, "render", py_fn!(py, render(data: PyObject)))?;
-    Ok(())
-});
-
-
 use std::time::Instant;
 use std::borrow::Borrow;
 
+use pyo3::prelude::*;
+use pyo3::wrap_pyfunction;
 
-pub fn render(_py: Python, data: PyObject) -> PyResult<String> {
+/// Formats the sum of two numbers as string.
+#[pyfunction]
+fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
+    Ok((a + b).to_string())
+}
+
+/// A Python module implemented in Rust.
+#[pymodule]
+fn string_sum(py: Python, m: &PyModule) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+
+    Ok(())
+}
+
+pub fn render(_py: Python, data: PyAny) -> PyResult<String> {
     let parsed_data = parser::parse_python(_py, data);
     let expected_render_file_hash = hasher::hash(&parsed_data);
     println!("expected_render_file_hash : {}", expected_render_file_hash);

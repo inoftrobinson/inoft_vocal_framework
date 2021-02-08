@@ -1,8 +1,12 @@
+import os
 from typing import List
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 
 
 def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: str) -> str:
+    path = os.path.dirname(os.path.abspath(__file__))
+    print(path)
+    os.add_dll_directory(path)
     from inoft_vocal_framework.audio_engine.audio_engine import render
     audio_blocks_data: List[dict] = list()
     for block in audio_blocks:
@@ -33,5 +37,5 @@ def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: s
             'exportTarget': 'managed-inoft-vocal-engine'  # 'local'
         },
     }
-    return render(data)
+    return audio_engine.render(data)
 
