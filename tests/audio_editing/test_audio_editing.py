@@ -40,7 +40,7 @@ class MyTestCase(unittest.TestCase):
         )"""
 
         background_music_track.create_sound(
-            local_filepath="F:/Sons utiles/ambiance_out.wav",
+            engine_file_key="ambiance",
             player_start=background_music_track.start_time + 20,
             player_end_time=background_music_track.start_time + 40
         )
@@ -49,7 +49,7 @@ class MyTestCase(unittest.TestCase):
             engine_file_key="output_final",
             player_start=background_music_track.start_time
         )
-        background_music.volume = 81
+        background_music.volume = 85
 
         file_url = audio_block_1.render_2(out_filepath="F:/Sons utiles/tests/test_python_1.mp3", format_type="mp3")
         print(file_url)

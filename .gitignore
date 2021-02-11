@@ -153,4 +153,4 @@ dmypy.json
 
 #/target
 audio_engine/examples.rs
-audio_engine/examples.rs
+audio_engine/lame-3.100
