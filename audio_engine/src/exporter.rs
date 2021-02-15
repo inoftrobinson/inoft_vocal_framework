@@ -3,18 +3,14 @@ use claxon::FlacReader;
 use std::fs::File;
 use std::time::Instant;
 use std::path::Path;
-use std::io::{Write, Read};
+use std::io::{Write};
 use crate::models::ReceivedTargetSpec;
 
 use tokio;
-use tokio::prelude::*;
-use tokio::time::{Duration};
-use std::collections::HashMap;
 use std::error::Error;
 
 use serde::Deserialize;
 use serde::Serialize;
-use std::mem::{size_of, size_of_val};
 use reqwest::Url;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -49,10 +45,11 @@ pub struct GeneratePresignedUploadUrlResponse {
 }
 
 
-pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presigned_url_response_data: GeneratePresignedUploadUrlResponse) {
+pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presigned_url_response_data: GeneratePresignedUploadUrlResponse) -> String {
     let jsonified_data = presigned_url_response_data.data.expect("Error in retrieving the data item from the response data");
     let s3_target_url = jsonified_data.url;
     let s3_fields = jsonified_data.fields.unwrap();
+    let expected_file_url = format!("{}{}", s3_target_url, s3_fields.key);
 
     let mp3_file_part = reqwest::multipart::Part::bytes(mp3_buffer)
         .mime_str("application/octet-stream").unwrap();
@@ -75,10 +72,11 @@ pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presi
         .text().await.unwrap();
 
     println!("S3 response:\n {}", submission_response);
+    expected_file_url
 }
 
 
-pub async fn get_upload_url(filename: String, filesize: usize) -> Result<(Option<GeneratePresignedUploadUrlResponse>), Box<dyn Error + Send + Sync>> {
+pub async fn get_upload_url(filename: String, filesize: usize) -> Result<Option<GeneratePresignedUploadUrlResponse>, Box<dyn Error + Send + Sync>> {
     let mut jsonified_output_data: Option<GeneratePresignedUploadUrlResponse> = None;
     let client = reqwest::ClientBuilder::new().build().unwrap();
 
@@ -97,7 +95,7 @@ pub async fn get_upload_url(filename: String, filesize: usize) -> Result<(Option
         },
         Err(err) => println!("Error: {}", err),
     }
-    Ok((jsonified_output_data))
+    Ok(jsonified_output_data)
 }
 
 // flac_song: &std::fs::File

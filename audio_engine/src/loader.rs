@@ -1,7 +1,5 @@
 use std::time::Instant;
-use reqwest::Url;
-use std::io::{BufReader};
-use hound::WavReader;
+use reqwest::{Url, StatusCode};
 use bytes::Bytes;
 
 /*
@@ -18,7 +16,7 @@ pub async fn get_file_bytes_from_url(url: &str) -> Bytes {
         .send().await.unwrap();
 
     let bytes: Bytes = file_response.bytes().await.unwrap() as Bytes;
-    let mut bytes_slice = &*bytes;
+    let bytes_slice = &*bytes;
     println!("Took {}ms to retrieve the file at url : {}", start.elapsed().as_millis(), url);
 
     match std::str::from_utf8(&bytes_slice) {
@@ -27,4 +25,15 @@ pub async fn get_file_bytes_from_url(url: &str) -> Bytes {
     };
     // todo: return none if there has been an error and that the received data is some text data
     bytes
+}
+
+pub async fn file_exist_at_url(url: &str) -> bool {
+    let start = Instant::now();
+    let client = reqwest::ClientBuilder::new().build().unwrap();
+    let file_response = client
+        .head(Url::parse(url).unwrap())
+        .send().await.unwrap();
+
+    println!("Took {}ms to check if file exist at url : {}", start.elapsed().as_millis(), url);
+    match file_response.status() { StatusCode::OK => true, _ => false }
 }

@@ -2,8 +2,10 @@
 // pub const FORMAT_TYPE_MP3: &String = &String::from("mp3");
 
 
-use crate::audio_clip::AudioClip;
 use std::cell::RefCell;
+use serde::{Serialize, Deserialize};
+pub use crate::audio_clip::AudioClip;
+
 
 pub struct ReceivedTargetSpec {
     pub filepath: String,
@@ -13,10 +15,13 @@ pub struct ReceivedTargetSpec {
 }
 
 pub struct ReceivedParsedData {
+    pub engine_account_id: Option<String>,
+    pub engine_project_id: Option<String>,
     pub blocks: Vec<AudioBlock>,
     pub target_spec: ReceivedTargetSpec,
 }
 
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Time {
     pub type_key: String,
     pub relationship_parent_id: Option<String>,

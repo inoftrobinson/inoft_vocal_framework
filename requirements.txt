@@ -1,9 +1,8 @@
-pydantic~=1.7.2
+pydantic~=1.7.3
 setuptools~=50.3.2
 boto3~=1.16.13
-StructNoSQL~=0.9.1
+StructNoSQL~=1.1.1
 botocore~=1.19.13
-Flask~=1.1.2
 requests~=2.24.0
 click~=7.1.2
 boto~=2.49.0

@@ -1,13 +1,13 @@
-use crate::models::{ReceivedParsedData, Track};
+use crate::models::{ReceivedParsedData};
 use std::time::Instant;
 use hound::{WavReader};
 use std::io::BufReader;
 use std::fs::File;
 use std::num::Wrapping;
-use std::borrow::{Borrow, BorrowMut};
+use std::borrow::{BorrowMut};
 
 
-pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
+pub async fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
     let start = Instant::now();
 
     let mut out_samples: Vec<i16> = Vec::new();
@@ -15,7 +15,7 @@ pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
     let mut duration_longest_file_buffer: u32 = 0;
     let mut file_reader_longest_file: Option<&WavReader<BufReader<File>>> = None;
 
-    // The inoft_audio_engine_renderer has been optimized and tested to render audio with 16 bits per sample.
+    // The audio_engine has been optimized and tested to render audio with 16 bits per sample.
     // Changing this value to 24 (the only other possible setting), could cause unexpected behaviors.
     let target_spec = hound::WavSpec {
         channels: 1,
@@ -26,7 +26,7 @@ pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
 
     if data.blocks.len() > 0 {
         let mut first_audio_block = data.blocks.get(0).unwrap();
-        let mut borrowed_first_audio_block = first_audio_block.borrow_mut();
+        let borrowed_first_audio_block = first_audio_block.borrow_mut();
         let mut first_track = borrowed_first_audio_block.tracks.get(0).unwrap();
         let borrowed_first_track = first_track.borrow_mut();
         let audio_clips = &borrowed_first_track.clips;
@@ -44,7 +44,7 @@ pub fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
 
         for (i_file, audio_clip) in audio_clips.iter().enumerate() {
             let mut audio_clip = audio_clips.get(i_file).unwrap().borrow_mut();
-            audio_clip.resample(target_spec);
+            audio_clip.resample(target_spec).await;
 
             let outing_start = Instant::now();
             println!("start_time: {:?}", audio_clip.player_start_time.offset);

@@ -19,8 +19,8 @@ class MyTestCase(unittest.TestCase):
         forest_background.change_volume(-6.0)
         forest_track.append_sound(forest_background)"""
 
-        from inoft_vocal_engine.speech_synthesis.polly.client import PollyClient
-        from inoft_vocal_engine.speech_synthesis.polly import VOICES
+        """from inoft_vocal_engine.speech_synthesis.polly.client import PollyClient
+        from inoft_vocal_engine.speech_synthesis.polly import VOICES"""
 
         # track_voice = audio_block_1.create_track(primary=True, loop=False)
         """voice_sound = track_voice.create_sound(local_filepath=PollyClient().synthesize(
@@ -34,18 +34,25 @@ class MyTestCase(unittest.TestCase):
         )"""
 
         background_music_track = audio_block_1.create_track(primary=True)
-        background_music = background_music_track.create_sound(
+        """background_music = background_music_track.create_sound(
             local_filepath="F:/Sons utiles/Musics/Vintage (1940s) French Music/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav",
             player_start=background_music_track.start_time
-        )
-        background_music.volume = -1.0
+        )"""
+
         background_music_track.create_sound(
-            local_filepath="F:/Sons utiles/ambiance_out.wav",
+            engine_file_key="ambiance",
             player_start=background_music_track.start_time + 20,
             player_end_time=background_music_track.start_time + 40
         )
 
-        audio_block_1.render_2(out_filepath="F:/Sons utiles/tests/test_python_1.mp3", format_type="mp3")
+        background_music = background_music_track.create_sound(
+            engine_file_key="output_final",
+            player_start=background_music_track.start_time
+        )
+        background_music.volume = 85
+
+        file_url = audio_block_1.render_2(out_filepath="F:/Sons utiles/tests/test_python_1.mp3", format_type="mp3")
+        print(file_url)
 
 
 if __name__ == '__main__':

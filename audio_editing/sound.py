@@ -16,7 +16,8 @@ class SoundProps:
         pass
 
 class Sound(SoundProps):
-    def __init__(self, local_filepath: str, custom_key: Optional[str] = None, volume_gain: Optional[float] = 0.0,
+    def __init__(self, local_filepath: Optional[str] = None, file_url: Optional[str] = None,
+                 volume_gain: Optional[float] = 0.0,
                  player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
                  player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
                  file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
@@ -29,15 +30,10 @@ class Sound(SoundProps):
         super().__init__()
 
         self._id = str(uuid4())
-        self.key: Optional[str] = None
         self.local_filepath = local_filepath
-        if self.local_filepath is None or not os.path.exists(self.local_filepath):
+        if self.local_filepath is not None and not os.path.exists(self.local_filepath):
             raise Exception(f"No file has not been found at {self.local_filepath}")
-
-        filepath_path = Path(self.local_filepath)
-        self.key = filepath_path.name
-        file_format = filepath_path.suffix.replace(".", "")
-        print(file_format)
+        self.file_url = file_url
         self._volume = volume_gain
 
         self._player_start_time = player_start_time
@@ -53,6 +49,8 @@ class Sound(SoundProps):
         return {
             'id': self.id,
             'localFilepath': self.local_filepath,
+            'fileUrl': self.file_url,
+            'volume': self.volume,
             'playerStartTime': self._player_start_time.serialize(),
             'playerEndTime': self._player_end_time.serialize(),
             'fileStartTime': self._file_start_time,

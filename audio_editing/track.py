@@ -5,7 +5,7 @@ from pydub import AudioSegment
 
 from inoft_vocal_framework.audio_editing.models import PlayedSoundInfos, TrackStartTime
 from inoft_vocal_framework.audio_editing.sound import Sound, AudioStartTime
-from inoft_vocal_engine.practical_logger import message_with_vars
+from StructNoSQL.practical_logger import message_with_vars
 
 
 class Track:
@@ -23,7 +23,6 @@ class Track:
             serialized_clips[clip_id] = clip_item.serialize()
 
         return {
-            'id': self.id,
             'clips': serialized_clips
         }
 
@@ -81,19 +80,34 @@ class Track:
         if audio_segment_result is not None:
             audio_segment_result.export(out_f=filepath, format=format_type)
 
-    def create_sound(self, local_filepath: str, custom_key: Optional[str] = None,
+    def create_sound(self, engine_file_key: Optional[str] = None, full_file_url: Optional[str] = None,
+                     local_filepath: Optional[str] = None,
                      player_start: Optional[AudioStartTime or TrackStartTime] = None,
                      player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
                      file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
                      file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
                      stretch_method: Sound.STRETCH_LOOP = Sound.STRETCH_LOOP) -> Sound:
+
+        file_url: Optional[str] = None
+        if engine_file_key is not None:
+            account_id = "b1fe5939-032b-462d-92e0-a942cd445096"
+            project_id = "22ac1d08-292d-4f2e-a9e3-20d181f1f58f"
+            file_url = f"https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/{account_id}/{project_id}/files/{engine_file_key}.wav"
+            if full_file_url is not None:
+                print("full_file_url not required and is being overridden by the engine_file_key")
+        else:
+            file_url = full_file_url
+
+        if file_url is not None and local_filepath is not None:
+            raise Exception(f"Cannot specify a file_url or engine_file_key with a local_filepath")
+
         sound = Sound(
-            local_filepath=local_filepath, custom_key=custom_key,
+            local_filepath=local_filepath, file_url=file_url,
             player_start_time=player_start, player_end_time=player_end_time,
             file_start_time=file_start_time, file_end_time=file_end_time,
             stretch_method=stretch_method
         )
-        self._sounds[sound.key] = sound
+        self._sounds[sound.id] = sound
         return sound
 
     def append_sound(self, sound: Sound):
