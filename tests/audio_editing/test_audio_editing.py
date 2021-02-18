@@ -49,7 +49,7 @@ class MyTestCase(unittest.TestCase):
             engine_file_key="output_final",
             player_start=background_music_track.start_time
         )
-        background_music.volume = 85
+        background_music.volume = 45
 
         file_url = audio_block_1.render_2(out_filepath="F:/Sons utiles/tests/test_python_1.mp3", format_type="mp3")
         print(file_url)

@@ -1,3 +1,9 @@
+#[cfg(feature = "python36")]
+extern crate cpython36 as cpython;
+
+#[cfg(feature = "python37")]
+extern crate cpython37 as cpython;
+
 #[cfg(feature = "python38")]
 extern crate cpython38 as cpython;
 

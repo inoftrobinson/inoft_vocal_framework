@@ -27,6 +27,8 @@ reqwest = { version = "0.10", features = ["json"] }
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = "1.0.48"
 sha2 = "0.9.3"
+cpython36 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-6"] }
+cpython37 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-7"] }
 cpython38 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-8"] }
 cpython39 = { package="cpython", optional=true, version="*", default-features=false, features=["extension-module"] }
 
@@ -36,6 +38,8 @@ tokio-test = "*"
 [features]
 default = []
 bundled = ["gcc"]
+python36 = ["cpython36"]
+python37 = ["cpython37"]
 python38 = ["cpython38"]
 python39 = ["cpython39"]
 

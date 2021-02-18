@@ -33,8 +33,9 @@ pub async fn main(data: ReceivedParsedData, expected_render_file_hash: String) -
 
                     let upload_url_data = get_upload_url(
                     format!("{}.mp3", expected_render_file_hash),
-                        mp3_buffer_expected_bytes_size
-                    ).await.unwrap().unwrap();
+                    mp3_buffer_expected_bytes_size
+                    ).await.expect("Error connecting to engine API")
+                        .expect("Error connecting to engine API");
                     Some(post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await)
                 }
                 _ => {
