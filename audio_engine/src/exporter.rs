@@ -12,6 +12,7 @@ use std::error::Error;
 use serde::Deserialize;
 use serde::Serialize;
 use reqwest::Url;
+use std::cmp::min;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct GeneratePresignedUploadUrlRequestData {
@@ -218,7 +219,9 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
             mp3_buffer = mp3_buffer[0..mp3_buffer_inverted_index].to_owned();
             break;
         }
-        mp3_buffer_inverted_index -= precision_10ms_samples_step;
+        mp3_buffer_inverted_index -= min(precision_10ms_samples_step, mp3_buffer_inverted_index);
+        // We use a min operation, to avoid index overflow if the inverted index is superior to zero, but removing the
+        // samples_step from it would make its value go below zero. If this happened, the index would jump to usize::MAX
     }
     println!("Finished removing of trailing empty data from the mp3_buffer.\n  --execution_time:{}ms", start_removing_trailing_empty_data.elapsed().as_millis());
 

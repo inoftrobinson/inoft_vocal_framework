@@ -4,6 +4,7 @@ mod resampler;
 mod exporter;
 // mod s3;
 #[path="models.rs"] pub mod models;
+#[path="decoder.rs"] pub mod decoder;
 #[path="renderer.rs"] pub mod renderer;
 #[path="loader.rs"] pub mod loader;
 #[path="hasher.rs"] pub mod hasher;

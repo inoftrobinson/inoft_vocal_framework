@@ -15,6 +15,7 @@ use libs::hound2;
  */
 #[path="append.rs"] mod append;
 use append::main;
+#[path="decoder.rs"] pub mod decoder;
 #[path="resampler.rs"] pub mod resampler;
 #[path="renderer.rs"] pub mod renderer;
 #[path="exporter.rs"] pub mod exporter;

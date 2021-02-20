@@ -1,11 +1,28 @@
-use hound::{WavReader, WavSpec};
-use std::io::{BufReader};
-use crate::resampler::{resample_i16, resample_i32};
+use hound::{WavReader, WavSpec, WavSamples, WavIntoSamples, SampleFormat, WavWriter};
+use symphonia;
+use std::io::{BufReader, BufWriter, Write, Read, Cursor};
+use crate::resampler::{resample};
 use crate::models::Time;
 use std::cell::RefCell;
 use crate::loader::get_file_bytes_from_url;
 use std::io;
-use bytes::Bytes;
+use bytes::{Bytes, Buf};
+use minimp3::{Decoder, Frame, Error};
+use std::fs::File;
+use symphonia::core::probe::Hint;
+use symphonia::core::io::{ReadOnlySource, MediaSourceStream, MediaSource, ByteStream};
+use std::path::Path;
+use symphonia::core::formats::{FormatOptions, FormatReader, SeekTo};
+use symphonia::core::meta::MetadataOptions;
+use symphonia::core::codecs::DecoderOptions;
+use crate::decoder;
+use std::borrow::Borrow;
+use symphonia::core::audio::SampleBuffer;
+use symphonia::core::errors::Error::DecodeError;
+use symphonia::core::units::{Duration};
+use symphonia::core::units;
+use symphonia_core::io::BitReaderLtr;
+use symphonia_core::codecs::CodecParameters;
 
 
 // todo: remove the passing and loading of clip ids ?
@@ -33,34 +50,35 @@ impl AudioClip {
             file_start_time, file_end_time,
             resamples: None,
             player_start_time_sample_index: None,
-            player_end_time_sample_index: None
+            player_end_time_sample_index: None,
         })
     }
 
-    fn make_resamples<R: io::Read>(mut wave_reader: WavReader<R>, target_spec: WavSpec) -> Option<Vec<i16>> {
-        let reader_spec = wave_reader.spec();
-        let mut resamples: Option<Vec<i16>> = None;
-        if reader_spec.bits_per_sample <= 16 {
-            let samples= wave_reader.samples();
-            resamples = Some(resample_i16(samples, reader_spec, target_spec));
-        } else if reader_spec.bits_per_sample <= 32 {
-            let samples = wave_reader.samples();
-            resamples = Some(resample_i32(samples, reader_spec, target_spec));
-        } else {
-            panic!("Bits per sample superior to 32 is not supported");
+    fn make_resamples(samples: Vec<i16>, codec_params: CodecParameters, target_spec: WavSpec) -> Option<Vec<i16>> {
+        Some(resample(samples, codec_params, target_spec))
+    }
+
+    pub fn generate_random_bytes(len: usize) -> Box<[u8]> {
+        let mut lcg: u32 = 0xec57c4bf;
+        let mut bytes = vec![0; len];
+        for quad in bytes.chunks_mut(4) {
+            lcg = lcg.wrapping_mul(1664525).wrapping_add(1013904223);
+            for (src, dest) in quad.iter_mut().zip(&lcg.to_ne_bytes()) {
+                *src = *dest;
+            }
         }
-        resamples
+        bytes.into_boxed_slice()
     }
 
     pub async fn resample(&mut self, target_spec: WavSpec) {
         if self.file_url.is_none() != true {
-            let bytes = get_file_bytes_from_url(&*self.file_url.as_ref().unwrap()).await;
-            let bytes_reader: WavReader<BufReader<&[u8]>> = WavReader::new(BufReader::new(&*bytes)).unwrap();
-            self.resamples = AudioClip::make_resamples(bytes_reader, target_spec);
+            let file_url = self.file_url.as_ref().unwrap();
+            let (samples, codec_params) = decoder::decode_from_file_url(file_url).await;
+            self.resamples = AudioClip::make_resamples(samples.unwrap(), codec_params.unwrap(), target_spec);
         } else {
             let filepath = self.filepath.as_ref().unwrap();
-            let file_reader = WavReader::open(filepath).unwrap();
-            self.resamples = AudioClip::make_resamples(file_reader, target_spec);
+            let (samples, codec_params) = decoder::decode_from_local_filepath(filepath);
+            self.resamples = AudioClip::make_resamples(samples.unwrap(), codec_params.unwrap(), target_spec);
         }
     }
 

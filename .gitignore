@@ -4,17 +4,6 @@ __pycache__/
 # *.py[cod]
 *$py.class
 
-# C extensions
-*.so
-
-# Audio and Audacity extensions
-*.au
-*.aup
-*.wav
-*.mp3
-*.HMP
-*.HM2
-
 # Exclusion of static discord bot token
 ../inoft_vocal_framework/platforms_handlers/discord/static_token.py
 ../inoft_vocal_framework/audio_engine/examples.rs

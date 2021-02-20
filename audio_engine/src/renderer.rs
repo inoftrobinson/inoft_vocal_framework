@@ -5,6 +5,8 @@ use std::io::BufReader;
 use std::fs::File;
 use std::num::Wrapping;
 use std::borrow::{BorrowMut};
+use crate::audio_clip::AudioClip;
+use std::cell::RefCell;
 
 
 pub async fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
@@ -29,7 +31,7 @@ pub async fn render_to_vec(data: &ReceivedParsedData) -> Vec<i16> {
         let borrowed_first_audio_block = first_audio_block.borrow_mut();
         let mut first_track = borrowed_first_audio_block.tracks.get(0).unwrap();
         let borrowed_first_track = first_track.borrow_mut();
-        let audio_clips = &borrowed_first_track.clips;
+        let audio_clips: &Vec<RefCell<AudioClip>> = &borrowed_first_track.clips;
 
         /*let track = Track {
             track_id: "".to_string(),
