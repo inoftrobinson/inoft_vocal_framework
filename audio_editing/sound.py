@@ -66,6 +66,10 @@ class Sound(SoundProps):
         return self._audio_segment
 
     @property
+    def start_time(self) -> AudioStartTime:
+        return AudioStartTime(sound=self, offset=0)
+
+    @property
     def player_start_time(self) -> AudioStartTime:
         return self._player_start_time
 

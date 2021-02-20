@@ -2,7 +2,7 @@ use std::path::Path;
 use std::time::Instant;
 use crate::{ReceivedParsedData};
 use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url, post_mp3_buffer_to_s3_with_presigned_url};
-use crate::renderer::render_to_vec;
+use crate::renderer::Renderer;
 use std::mem::{size_of};
 
 extern crate hound;
@@ -13,7 +13,7 @@ pub async fn main(data: ReceivedParsedData, expected_render_file_hash: String) -
 
     let path: &Path = data.target_spec.filepath.as_ref();
     let target_spec = &data.target_spec;
-    let rendered_samples = render_to_vec(&data).await;
+    let rendered_samples = Renderer::render(&data).await;
 
     let writing_start = Instant::now();
     println!("format type : {}", target_spec.format_type);
