@@ -12,7 +12,7 @@ pub struct ClipWithHashedChildren {
     player_start_time: Time,
     player_end_time: Time,
     file_start_time: i16,
-    file_end_time: i16,
+    file_end_time: Option<i16>,
 }
 
 #[derive(Serialize, Deserialize)]

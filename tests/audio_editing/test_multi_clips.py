@@ -23,12 +23,15 @@ class TestInputFormats(unittest.TestCase):
         music_1 = track_1.create_sound(
             # engine_file_key="how_much_you_want_her_20s",
             local_filepath="C:/Users/LABOURDETTE/Downloads/Isaac Delusion — How Much (You Want Her) 2017 (LYRICS VIDEO).mp3",
+            file_start_time=20,
+            file_end_time=25,
             player_start=track_1.start_time + 10,
             player_end_time=track_1.start_time + 20
         )
         music_2 = track_1.create_sound(
             local_filepath="C:/Users/LABOURDETTE/Downloads/ANRI - I Can't Stop The Loneliness.mp3",
-            player_start=music_1.start_time + 5,
+            player_start=music_1.end_time + 5,
+            player_end_time=music_1.end_time + 20
         )
 
         out_filepath = os.path.join(self.audio_dist_dirpath, f"multi_clip_test.mp3")

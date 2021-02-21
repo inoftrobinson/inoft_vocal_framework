@@ -34,7 +34,7 @@ pub struct AudioClip {
     pub player_start_time: Time,
     pub player_end_time: Time,
     pub file_start_time: i16,
-    pub file_end_time: i16,
+    pub file_end_time: Option<i16>,
     pub resamples: Option<Vec<i16>>,
     player_start_time_sample_index: Option<usize>,
     player_end_time_sample_index: Option<usize>,
@@ -43,7 +43,7 @@ pub struct AudioClip {
 
 impl AudioClip {
     pub fn new(clip_id: String, filepath: Option<String>, file_url: Option<String>, volume: Option<u8>,
-               player_start_time: Time, player_end_time: Time, file_start_time: i16, file_end_time: i16) -> RefCell<AudioClip> {
+               player_start_time: Time, player_end_time: Time, file_start_time: i16, file_end_time: Option<i16>) -> RefCell<AudioClip> {
         RefCell::new(AudioClip {
             clip_id, filepath, file_url, volume,
             player_start_time, player_end_time,
@@ -70,14 +70,19 @@ impl AudioClip {
         bytes.into_boxed_slice()
     }
 
-    pub async fn resample(&mut self, target_spec: WavSpec) {
+    pub async fn resample(&mut self, target_spec: WavSpec, limit_time_to_load: Option<i16>) {
+        println!("self.file_start_time : {}", self.file_start_time);
         if self.file_url.is_none() != true {
             let file_url = self.file_url.as_ref().unwrap();
-            let (samples, codec_params) = decoder::decode_from_file_url(file_url).await;
+            let (samples, codec_params) = decoder::decode_from_file_url(
+                file_url, self.file_start_time, limit_time_to_load
+            ).await;
             self.resamples = AudioClip::make_resamples(samples.unwrap(), codec_params.unwrap(), target_spec);
         } else {
             let filepath = self.filepath.as_ref().unwrap();
-            let (samples, codec_params) = decoder::decode_from_local_filepath(filepath);
+            let (samples, codec_params) = decoder::decode_from_local_filepath(
+                filepath, self.file_start_time, limit_time_to_load
+            );
             self.resamples = AudioClip::make_resamples(samples.unwrap(), codec_params.unwrap(), target_spec);
         }
     }

@@ -70,6 +70,10 @@ class Sound(SoundProps):
         return AudioStartTime(sound=self, offset=0)
 
     @property
+    def end_time(self) -> AudioEndTime:
+        return AudioEndTime(sound=self, offset=0)
+
+    @property
     def player_start_time(self) -> AudioStartTime:
         return self._player_start_time
 

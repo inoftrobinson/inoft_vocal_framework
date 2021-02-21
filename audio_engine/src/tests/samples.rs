@@ -23,7 +23,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                     offset: None
                                 },
                                 0,
-                                0
+                                None
                             ),
                             AudioClip::new(
                                 String::from("clip-1"),
@@ -40,7 +40,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                     offset: None
                                 },
                                 0,
-                                0
+                                None
                             ),
                             AudioClip::new(
                                 String::from("clip-2"),
@@ -56,7 +56,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                     relationship_parent_id: None,
                                     offset: None
                                 },
-                                0, 0
+                                0, None
                             )
                         ],
                         gain: 0,

@@ -27,7 +27,6 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
         let tracks_data: PyDict = audio_block_data.get_item(_py, "tracks").unwrap().extract::<PyDict>(_py).unwrap();
         println!("tracks_data : {:?}", tracks_data.len(_py));
 
-        //         for i_track in 0..tracks_data.len(_py) {
         for (track_id, track_data) in tracks_data.items(_py).iter() {
             let track_id = track_id.to_string();
             let mut current_track_clips: Vec<RefCell<AudioClip>> = Vec::new();
@@ -49,13 +48,20 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
                     Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
+                let file_start_time = match clip_data.get_item(_py, "fileStartTime") {
+                    Ok(item) => { if item != _py.None() { item.extract::<i16>(_py).unwrap() } else { 0 } },
+                    Err(err) => { println!("{:?}", err); 0 }
+                };
+                let file_end_time = match clip_data.get_item(_py, "fileEndTime") {
+                    Ok(item) => { if item != _py.None() { Some(item.extract::<i16>(_py).unwrap()) } else { None } },
+                    Err(err) => { println!("{:?}", err); None }
+                };
 
                 current_track_clips.push(AudioClip::new(
                     clip_id, local_filepath, file_url, volume,
                     parse_time_object(_py, clip_data.get_item(_py, "playerStartTime").unwrap()),
                     parse_time_object(_py, clip_data.get_item(_py, "playerEndTime").unwrap()),
-                    0,
-                    0,
+                    file_start_time, file_end_time,
                 ));
             }
             println!("{:?}", track_data);
