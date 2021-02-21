@@ -23,12 +23,13 @@ use bytes::Bytes;
 use symphonia_core::sample::SampleFormat;
 use symphonia_core::codecs::CodecParameters;
 use symphonia_core::formats::SeekTo;
+use crate::renderer::RenderedClipInfos;
 
 pub fn get_file_extension_from_file_url(file_url: &str) -> Option<&str> {
     file_url.split(".").last()
 }
 
-pub async fn decode_from_file_url(file_url: &str, file_start_time: i16, limit_time_to_load: Option<i16>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+pub async fn decode_from_file_url(file_url: &str, file_start_time: f32, limit_time_to_load: Option<f32>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
     let mut hint = Hint::new();
     let file_extension = get_file_extension_from_file_url(file_url).expect("No file extension found");
     hint.with_extension(file_extension);
@@ -40,7 +41,7 @@ pub async fn decode_from_file_url(file_url: &str, file_start_time: i16, limit_ti
     decode(media_source_stream, hint, file_start_time, limit_time_to_load)
 }
 
-pub fn decode_from_local_filepath(filepath: &str, file_start_time: i16, limit_time_to_load: Option<i16>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+pub fn decode_from_local_filepath(filepath: &str, file_start_time: f32, limit_time_to_load: Option<f32>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
     let mut hint = Hint::new();
     let path = Path::new(filepath);
     if let Some(extension) = path.extension() {
@@ -53,7 +54,7 @@ pub fn decode_from_local_filepath(filepath: &str, file_start_time: i16, limit_ti
     decode(media_source_stream, hint, file_start_time, limit_time_to_load)
 }
 
-pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_time: i16, limit_time_to_load: Option<i16>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_time: f32, limit_time_to_load: Option<f32>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
     // Use the default options for metadata and format readers.
     let format_opts: FormatOptions = Default::default();
     let metadata_opts: MetadataOptions = Default::default();

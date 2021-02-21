@@ -11,9 +11,13 @@ use std::collections::HashMap;
 use std::cmp::min;
 
 
-struct RenderedClipInfos {
-    player_start_time: i16,
-    player_end_time: i16
+pub struct RenderedClipInfos {
+    // We use floats instead of ints, otherwise we could lose second precision, and cut/extend a file for too long.
+    // Technically, we could store the player_sample_indexes instead of floats, but this would require to adjust
+    // the sample from/to the target rate and the file's rate. Its simpler to keep track of the time, by using floats
+    // to avoid losing precision. No heavy operations are performed on those floats, so they should not be too heavy.
+    player_start_time: f32,
+    player_end_time: f32
 }
 
 pub struct Renderer {
@@ -39,33 +43,33 @@ impl Renderer {
         renderer.out_samples
     }
 
-    fn handle_track_start_time_relation(&self, time: &Time) -> i16 {
-        time.offset.unwrap_or(0)
+    fn handle_track_start_time_relation(&self, time: &Time) -> f32 {
+        time.offset.unwrap_or(0.0)
     }
 
-    fn handle_audio_clip_start_time_relation(&self, time: &Time) -> i16 {
+    fn handle_audio_clip_start_time_relation(&self, time: &Time) -> f32 {
        if time.relationship_parent_id.is_none() {
             panic!("A relation was audio-clip_start-time but had no relationship_parent_id");
-        } else {
-            let relationship_parent_id = time.relationship_parent_id.as_ref().unwrap();
-            if self.rendered_clips_infos.contains_key(relationship_parent_id) {
-                let relation_ship_clip_infos = self.rendered_clips_infos.get(relationship_parent_id).unwrap();
-                relation_ship_clip_infos.player_start_time + time.offset.unwrap_or(0)
-            } else {
-                panic!("wrong order !");
-                // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
-            }
-        }
+       } else {
+           let relationship_parent_id = time.relationship_parent_id.as_ref().unwrap();
+           if self.rendered_clips_infos.contains_key(relationship_parent_id) {
+               let relation_ship_clip_infos = self.rendered_clips_infos.get(relationship_parent_id).unwrap();
+               relation_ship_clip_infos.player_start_time + time.offset.unwrap_or(0.0)
+           } else {
+               panic!("wrong order !");
+               // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
+           }
+       }
     }
 
-    fn handle_audio_clip_end_time_relation(&self, time: &Time) -> i16 {
+    fn handle_audio_clip_end_time_relation(&self, time: &Time) -> f32 {
        if time.relationship_parent_id.is_none() {
             panic!("A relation was audio-clip_end-time but had no relationship_parent_id");
         } else {
             let relationship_parent_id = time.relationship_parent_id.as_ref().unwrap();
             if self.rendered_clips_infos.contains_key(relationship_parent_id) {
                 let relation_ship_clip_infos = self.rendered_clips_infos.get(relationship_parent_id).unwrap();
-                relation_ship_clip_infos.player_end_time + time.offset.unwrap_or(0)
+                relation_ship_clip_infos.player_end_time + time.offset.unwrap_or(0.0)
             } else {
                 panic!("wrong order !");
                 // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
@@ -73,7 +77,7 @@ impl Renderer {
         }
     }
 
-    fn render_player_start_time(&mut self, audio_clip: &AudioClip) -> i16 {
+    fn render_player_start_time(&mut self, audio_clip: &AudioClip) -> f32 {
         let type_key = &*audio_clip.player_start_time.type_key;
         match type_key {
             "track_start-time" => self.handle_track_start_time_relation(&audio_clip.player_start_time),
@@ -84,10 +88,10 @@ impl Renderer {
     }
 
     fn render_player_start_time_to_sample_index(&mut self, audio_clip: &AudioClip) -> usize {
-        self.render_player_start_time(audio_clip) as usize * self.target_spec.sample_rate as usize
+        (self.render_player_start_time(audio_clip) * self.target_spec.sample_rate as f32) as usize
     }
 
-    fn render_player_end_time(&mut self, audio_clip: &AudioClip) -> Option<i16> {
+    fn render_player_end_time(&mut self, audio_clip: &AudioClip) -> Option<f32> {
         let type_key = &*audio_clip.player_end_time.type_key;
         match type_key {
             "until-self-end" => None,
@@ -100,7 +104,7 @@ impl Renderer {
 
     fn render_player_end_time_to_sample_index(&mut self, audio_clip: &AudioClip) -> Option<usize> {
         if let Some(player_end_time) = self.render_player_end_time(audio_clip) {
-            Some(player_end_time as usize * self.target_spec.sample_rate as usize)
+            Some((player_end_time * self.target_spec.sample_rate as f32) as usize)
         } else { None }
     }
 
@@ -125,13 +129,13 @@ impl Renderer {
 
                 let player_start_time = self.render_player_start_time(&audio_clip);
                 let player_end_time = self.render_player_end_time(&audio_clip);
-                let limit_time_to_load: Option<i16> = if !player_end_time.is_none() {
+                let limit_time_to_load: Option<f32> = if !player_end_time.is_none() {
                     let player_limit_time_to_load = player_end_time.unwrap() - player_start_time;
                     if audio_clip.file_end_time.is_none() {
                         Some(player_limit_time_to_load)
                     } else {
                         let file_limit_time_to_load = audio_clip.file_end_time.unwrap() - audio_clip.file_start_time;
-                        Some(min(player_limit_time_to_load, file_limit_time_to_load))
+                        Some(file_limit_time_to_load.min(player_limit_time_to_load))
                     }
                 } else if !audio_clip.file_end_time.is_none() {
                     Some(audio_clip.file_end_time.unwrap() - audio_clip.file_start_time)
@@ -144,12 +148,11 @@ impl Renderer {
                 let render_clips_infos = RenderedClipInfos {
                     player_start_time,
                     player_end_time: player_end_time.unwrap_or(
-                        player_start_time + ((audio_clip_resamples.len() / self.target_spec.sample_rate as usize) as i16)
+                        player_start_time + (audio_clip_resamples.len() as f32 / self.target_spec.sample_rate as f32)
                     )
                 };
                 self.render_clip(audio_clip_resamples, &render_clips_infos).await;
                 self.rendered_clips_infos.insert(cloned_clip_id, render_clips_infos);
-
                 // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
             }
         }
@@ -161,8 +164,8 @@ impl Renderer {
         // todo: file start time and file end time
         let outing_start = Instant::now();
 
-        let player_start_sample_index = render_clip_infos.player_start_time as usize * self.target_spec.sample_rate as usize;
-        let player_end_sample_index = render_clip_infos.player_end_time as usize * self.target_spec.sample_rate as usize;
+        let player_start_sample_index = (render_clip_infos.player_start_time * self.target_spec.sample_rate as f32) as usize;
+        let player_end_sample_index = (render_clip_infos.player_end_time * self.target_spec.sample_rate as f32) as usize;
 
         if player_end_sample_index > self.out_samples.len() {
             // We initialize all the required samples to zero here instead of checking in the below  sample assignation loop if we need to

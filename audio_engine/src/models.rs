@@ -25,7 +25,7 @@ pub struct ReceivedParsedData {
 pub struct Time {
     pub type_key: String,
     pub relationship_parent_id: Option<String>,
-    pub offset: Option<i16>,
+    pub offset: Option<f32>,
 }
 
 pub struct Track {

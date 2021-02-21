@@ -8,7 +8,7 @@ pub fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
     Time {
         type_key: object_item.get_item(_py, "type").unwrap().to_string(),
         relationship_parent_id: Some(object_item.get_item(_py, "relationship_parent_id").unwrap().to_string()),
-        offset: Some(object_item.get_item(_py, "offset").unwrap().extract::<i16>(_py).unwrap()),
+        offset: Some(object_item.get_item(_py, "offset").unwrap().extract::<f32>(_py).unwrap()),
     }
 }
 
@@ -49,11 +49,11 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
                     Err(err) => { println!("{:?}", err); None }
                 };
                 let file_start_time = match clip_data.get_item(_py, "fileStartTime") {
-                    Ok(item) => { if item != _py.None() { item.extract::<i16>(_py).unwrap() } else { 0 } },
-                    Err(err) => { println!("{:?}", err); 0 }
+                    Ok(item) => { if item != _py.None() { item.extract::<f32>(_py).unwrap() } else { 0.0 } },
+                    Err(err) => { println!("{:?}", err); 0.0 }
                 };
                 let file_end_time = match clip_data.get_item(_py, "fileEndTime") {
-                    Ok(item) => { if item != _py.None() { Some(item.extract::<i16>(_py).unwrap()) } else { None } },
+                    Ok(item) => { if item != _py.None() { Some(item.extract::<f32>(_py).unwrap()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
 

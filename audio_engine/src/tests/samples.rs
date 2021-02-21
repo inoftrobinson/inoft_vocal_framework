@@ -22,7 +22,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                     relationship_parent_id: None,
                                     offset: None
                                 },
-                                0,
+                                0.0,
                                 None
                             ),
                             AudioClip::new(
@@ -39,7 +39,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                     relationship_parent_id: None,
                                     offset: None
                                 },
-                                0,
+                                0.0,
                                 None
                             ),
                             AudioClip::new(
@@ -49,14 +49,15 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                 Time {
                                     type_key: String::from("parent_start-time"),
                                     relationship_parent_id: Some(String::from("track-1")),
-                                    offset: Some(20)
+                                    offset: Some(20.0)
                                 },
                                 Time {
                                     type_key: String::from("until-self-end"),
                                     relationship_parent_id: None,
                                     offset: None
                                 },
-                                0, None
+                                0.0,
+                                None
                             )
                         ],
                         gain: 0,

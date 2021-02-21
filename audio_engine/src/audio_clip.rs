@@ -33,8 +33,8 @@ pub struct AudioClip {
     pub volume: Option<u8>,
     pub player_start_time: Time,
     pub player_end_time: Time,
-    pub file_start_time: i16,
-    pub file_end_time: Option<i16>,
+    pub file_start_time: f32,
+    pub file_end_time: Option<f32>,
     pub resamples: Option<Vec<i16>>,
     player_start_time_sample_index: Option<usize>,
     player_end_time_sample_index: Option<usize>,
@@ -43,7 +43,7 @@ pub struct AudioClip {
 
 impl AudioClip {
     pub fn new(clip_id: String, filepath: Option<String>, file_url: Option<String>, volume: Option<u8>,
-               player_start_time: Time, player_end_time: Time, file_start_time: i16, file_end_time: Option<i16>) -> RefCell<AudioClip> {
+               player_start_time: Time, player_end_time: Time, file_start_time: f32, file_end_time: Option<f32>) -> RefCell<AudioClip> {
         RefCell::new(AudioClip {
             clip_id, filepath, file_url, volume,
             player_start_time, player_end_time,
@@ -70,7 +70,7 @@ impl AudioClip {
         bytes.into_boxed_slice()
     }
 
-    pub async fn resample(&mut self, target_spec: WavSpec, limit_time_to_load: Option<i16>) {
+    pub async fn resample(&mut self, target_spec: WavSpec, limit_time_to_load: Option<f32>) {
         println!("self.file_start_time : {}", self.file_start_time);
         if self.file_url.is_none() != true {
             let file_url = self.file_url.as_ref().unwrap();
@@ -88,7 +88,7 @@ impl AudioClip {
     }
 
     pub fn render_player_start_time_to_sample_index(&mut self, target_sample_rate: u32) -> usize {
-        self.player_start_time_sample_index = Some((self.player_start_time.offset.unwrap_or(0) as i32 * target_sample_rate as i32) as usize);
+        self.player_start_time_sample_index = Some((self.player_start_time.offset.unwrap_or(0.0) * target_sample_rate as f32) as usize);
         self.player_start_time_sample_index.unwrap()
     }
 
