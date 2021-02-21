@@ -1,29 +1,22 @@
-use symphonia::core::probe::Hint;
-use symphonia::core::io::{ReadOnlySource, MediaSourceStream, BitStreamLtr, ByteStream, BitStream, BufStream};
-use symphonia::core::units::{Duration, Time};
-use std::path::Path;
 use std::fs::File;
-use symphonia::core::formats::{FormatOptions};
+use std::io::{BufReader, BufWriter, Write, Cursor};
+use std::path::Path;
+use log::{error, info, warn};
+
+use symphonia::core::probe::Hint;
+use symphonia::core::io::MediaSourceStream;
+use symphonia::core::units::{Duration, Time};
+use symphonia::core::formats::FormatOptions;
 use symphonia::core::meta::MetadataOptions;
 use symphonia::core::codecs::DecoderOptions;
 use symphonia::core::errors::Error;
-use crate::loader::get_file_bytes_from_url;
-use std::io;
-use std::io::{BufReader, BufWriter, Write, Cursor};
-use log::{error, info, warn};
-use std::borrow::{Borrow, BorrowMut};
-use symphonia::core::audio::{AudioBufferRef, SignalSpec, SampleBuffer};
-
-mod decoder_utils;
-use bincode;
-use hound::{WavSamples, WavReader, WavWriter};
-use serde_json::to_writer;
-use bytes::buf::ext::Writer;
-use bytes::Bytes;
-use symphonia_core::sample::SampleFormat;
 use symphonia_core::codecs::CodecParameters;
 use symphonia_core::formats::SeekTo;
-use crate::renderer::RenderedClipInfos;
+use symphonia::core::audio::SampleBuffer;
+
+mod decoder_utils;
+use crate::loader::get_file_bytes_from_url;
+
 
 pub fn get_file_extension_from_file_url(file_url: &str) -> Option<&str> {
     file_url.split(".").last()
@@ -72,7 +65,6 @@ pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_tim
 
             let mut decoder = symphonia::default::get_codecs().make(&stream_codec_params, &decode_options).unwrap();
 
-            // Decode all packets, ignoring decode errors.
             let file_start_sample_index = file_start_time as usize * stream_sample_rate as usize;
             let index_stop_samples_load = if limit_time_to_load.is_none() { usize::MAX } else {
                 file_start_sample_index + (limit_time_to_load.unwrap() as usize * stream_sample_rate as usize)
@@ -81,12 +73,13 @@ pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_tim
             let mut all_samples: Vec<i16> = Vec::new();
             let mut index: usize = 0;
             loop {
+                // Decode all packets, ignoring decode errors.
                 match reader.next_packet() {
                     Err(_err) => break,
                     Ok(packet) => {
                         match decoder.decode(&packet) {
                             Err(Error::DecodeError(err)) => {
-                                warn!("decode error: {}", err);
+                                warn!("Decoding error: {}", err);
                                 continue;
                             },
                             Err(_err) => break,
@@ -103,7 +96,7 @@ pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_tim
                                     all_samples.extend(sample_buffer.samples());
                                     index += capacity;
                                 } else {
-                                    println!("Breaked loading of samples at index {}", index);
+                                    println!("Broken loading of samples at index {}", index);
                                     break
                                 }
                                 continue
