@@ -16,6 +16,8 @@ use symphonia::core::audio::SampleBuffer;
 
 mod decoder_utils;
 use crate::loader::get_file_bytes_from_url;
+use std::fmt::Debug;
+use serde::__private::Formatter;
 
 
 pub fn get_file_extension_from_file_url(file_url: &str) -> Option<&str> {
@@ -47,7 +49,7 @@ pub fn decode_from_local_filepath(filepath: &str, file_start_time: f32, limit_ti
     decode(media_source_stream, hint, file_start_time, limit_time_to_load)
 }
 
-pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_time: f32, limit_time_to_load: Option<f32>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_time: f32, limit_time_to_load: Option<f32>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
     // Use the default options for metadata and format readers.
     let format_opts: FormatOptions = Default::default();
     let metadata_opts: MetadataOptions = Default::default();
@@ -70,8 +72,33 @@ pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_tim
                 file_start_sample_index + (limit_time_to_load.unwrap() as usize * stream_sample_rate as usize)
             };
 
+            // In order to find out how much samples there is per packet, we can either try to replicate the inner
+            // sophisticated logic of the symphonia library, which would be the most performant, but would mean a lot
+            // of code to maintain, since depending on the file formats, encoding, sample rates, channels, etc, we can
+            // have various values. Or, we can have a dumber approach, is to always decode the first packet of a clip,
+            // check the num of samples for it, and then use it in the packet loop. We just to not forget to initialize
+            // the index to the index_increment instead of the 0 (to make count the first next_buffer) and to add the
+            // samples for the first_sample_buffer if need to. PS : yes, we could compute the increment in the packet
+            // loop itself, but it would be very complicated, because if the first index is below the file_start_sample_index,
+            // we would never have decoded a packet, so we would not yet have initialized our index_increment, so we would either
+            // need to add a special case to decode a packet in the "if index < file_start_sample_index {" condition, or we would
+            // need to decode the packet on each iteration of the loop, which would make no sense for the case where we do not intend to
+            // add the decoded samples inside the all_samples vector. To resume, this approach is ugly, but performant and easy to maintain.
+            let first_audio_buffer = decoder.decode(&reader.next_packet().unwrap()).unwrap();
+            let first_audio_buffer_spec = first_audio_buffer.spec();
+            let first_audio_buffer_num_channels = first_audio_buffer_spec.channels.count();
+            let first_audio_buffer_duration = Duration::from(first_audio_buffer.capacity() as u64);
+            let mut first_sample_buffer = SampleBuffer::<i16>::new(first_audio_buffer_duration, *first_audio_buffer_spec);
+            first_sample_buffer.copy_interleaved_ref(first_audio_buffer);
+            let index_increment = first_sample_buffer.samples().len() / first_audio_buffer_num_channels;
+            // The only manual adjustment we need to make not handled by our little system, is to divide the num of samples by the num of channels.
+
             let mut all_samples: Vec<i16> = Vec::new();
-            let mut index: usize = 0;
+            let mut index: usize = index_increment;
+
+            if index <= index_stop_samples_load {
+                all_samples.extend(first_sample_buffer.samples());
+            }
             loop {
                 // Decode all packets, ignoring decode errors.
                 match reader.next_packet() {
@@ -85,21 +112,24 @@ pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_tim
                             Err(_err) => break,
                             Ok(decoded) => {
                                 if index < file_start_sample_index {
-                                    index += decoded.capacity();
+                                    index += index_increment;
+                                    continue;
                                 } else if index <= index_stop_samples_load {
                                     let spec = *decoded.spec();
                                     let capacity = decoded.capacity();
                                     let duration = Duration::from(capacity as u64);
 
                                     let mut sample_buffer = SampleBuffer::<i16>::new(duration, spec);
+                                    println!("sample buffer len : {}", sample_buffer.len());
                                     sample_buffer.copy_interleaved_ref(decoded);
                                     all_samples.extend(sample_buffer.samples());
-                                    index += capacity;
+                                    println!("len samples : {}", all_samples.len());
+                                    index += index_increment;
+                                    continue;
                                 } else {
                                     println!("Broken loading of samples at index {}", index);
-                                    break
+                                    break;
                                 }
-                                continue
                             }
                         }
                     }
@@ -109,23 +139,6 @@ pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_tim
 
             println!("decoder samples length : {}", all_samples.len());
             (Some(all_samples), Some(stream_codec_params))
-            /*else {
-            // todo: when using a file start time or file end time that trim the file duration, only seek the data that will be used
-                // Playback mode.
-                pretty_print_format(path_str, &probed);
-
-                // Seek to the desired timestamp if requested.
-                if let Some(seek_value) = matches.value_of("seek") {
-                    let pos = seek_value.parse::<f64>().unwrap_or(0.0);
-                    probed.format.seek(SeekTo::Time{ time: Time::from(pos) }).unwrap();
-                }
-
-                // Set the decoder options.
-                let options = DecoderOptions {
-                    verify: matches.is_present("verify"),
-                    ..Default::default()
-                };
-            };*/
         }
         Err(err) => {
             // The input was not supported by any format reader.
@@ -135,3 +148,4 @@ pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_tim
         }
     }
 }
+

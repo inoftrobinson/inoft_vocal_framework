@@ -30,36 +30,51 @@ use symphonia::core::meta::{Tag, Visual, ColorMode};
 pub fn pretty_print_stream(stream: &Stream, idx: usize) {
     let params = &stream.codec_params;
 
-    print!("|     [{:0>2}] Codec:           ", idx + 1);
-
+    println!("Stream {} data : ", idx);
     if let Some(codec) = symphonia::default::get_codecs().get_codec(params.codec) {
-        println!("{} ({})", codec.long_name, codec.short_name);
-    }
-    else {
-        println!("Unknown (#{})", params.codec);
+        println!("    --codec: {} ({})", codec.long_name, codec.short_name);
     }
 
     if let Some(sample_rate) = params.sample_rate {
-        println!("|          Sample Rate:     {}", sample_rate);
+        println!("    --sample_rate: {}", sample_rate);
     }
     if let Some(n_frames) = params.n_frames {
-        println!("|          Frames:          {}", n_frames);
+        println!("    --n_frames: {}", n_frames);
+    }
+    if let Some(max_frames_per_packet) = params.max_frames_per_packet {
+        println!("    --max_frames_per_packet: {}", max_frames_per_packet);
     }
     if let Some(sample_format) = params.sample_format {
-        println!("|          Sample Format:   {:?}", sample_format);
+        println!("    --sample_format: {:?}", sample_format);
     }
     if let Some(bits_per_sample) = params.bits_per_sample {
-        println!("|          Bits per Sample: {}", bits_per_sample);
+        println!("    --bits_per_sample: {}", bits_per_sample);
+    }
+    if let Some(bits_per_coded_sample) = params.bits_per_coded_sample {
+        println!("    --bits_per_coded_sample: {}", bits_per_coded_sample);
     }
     if let Some(channels) = params.channels {
-        println!("|          Channel(s):      {}", channels.count());
-        println!("|          Channel Map:     {}", channels);
+        println!("    --channels.count(): {}", channels.count());
+        println!("    --channels (map): {}", channels);
     }
     if let Some(channel_layout) = params.channel_layout {
-        println!("|          Channel Layout:  {:?}", channel_layout);
+        println!("    --channel_layout: {:?}", channel_layout);
+    }
+    if let Some(extra_data) = &params.extra_data {
+        println!("    --extra_data: {:?}", extra_data);
+    }
+    if let Some(leading_padding) = &params.leading_padding {
+        println!("    --leading_padding: {}", leading_padding);
+    }
+    if let Some(trailing_padding) = &params.trailing_padding {
+        println!("    --trailing_padding: {}", trailing_padding);
+    }
+    println!("    --packet_data_integrity: {}", params.packet_data_integrity);
+    if let Some(time_base) = &params.time_base {
+        println!("    --time_base: {:?}", time_base);
     }
     if let Some(language) = &stream.language {
-        println!("|          Language:        {}", language);
+        println!("    --language: {}", language);
     }
 }
 
