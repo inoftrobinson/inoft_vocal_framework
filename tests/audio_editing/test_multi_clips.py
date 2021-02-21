@@ -53,13 +53,45 @@ class TestInputFormats(unittest.TestCase):
             os.startfile(out_filepath)
             self.assertTrue(click.confirm(text="Everything's good ?"))
 
+    def test_clip_formats_and_mono_mp3(self):
+        audio_block_1 = AudioBlock()
+        track_1 = audio_block_1.create_track()
+
+        sound_1 = track_1.create_sound(
+            local_filepath="C:/Users/LABOURDETTE/Downloads/Isaac Delusion — How Much (You Want Her) 2017 (LYRICS VIDEO).mp3",
+            file_start_time=0,
+            file_end_time=10,
+            player_start=track_1.start_time,
+            player_end_time=track_1.start_time + 5
+        )
+        sound_2 = track_1.create_sound(
+            local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_wav_16bit.wav"),
+            file_start_time=20,
+            file_end_time=25,
+            player_start=sound_1.end_time + 1,
+            player_end_time=sound_1.end_time + 6
+        )
+        sound_3 = track_1.create_sound(
+            local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_mono_mp3.mp3"),
+            file_start_time=20,
+            file_end_time=25,
+            player_start=sound_2.end_time + 1,
+            player_end_time=sound_2.end_time + 6
+        )
+
+        out_filepath = os.path.join(self.audio_dist_dirpath, f"test_clip_formats_and_mono_mp3.mp3")
+        file_url = audio_block_1.render_2(out_filepath=out_filepath, format_type="mp3")
+        if click.confirm("Open file ?"):
+            os.startfile(out_filepath)
+            self.assertTrue(click.confirm(text="Everything's good ?"))
+
     def test_clip_reuse(self):
         filepath = os.path.join(self.audio_samples_dirpath, "hop_short_wav_16bit.wav")
         audio_block_1 = AudioBlock()
         track_1 = audio_block_1.create_track()
 
         sound_1 = track_1.create_sound(
-            local_filepath="C:/Users/LABOURDETTE/Downloads/Isaac Delusion — How Much (You Want Her) 2017 (LYRICS VIDEO).mp3",
+            local_filepath=filepath,
             file_start_time=0,
             file_end_time=10,
             player_start=track_1.start_time,
@@ -73,19 +105,12 @@ class TestInputFormats(unittest.TestCase):
             player_end_time=sound_1.end_time + 6
         )
         sound_3 = track_1.create_sound(
-            local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_mono_mp3.mp3"),
-            file_start_time=20,
-            file_end_time=25,
-            player_start=sound_2.end_time + 1,
-            player_end_time=sound_2.end_time + 6
-        )
-        """sound_3 = track_1.create_sound(
             local_filepath=filepath,
             file_start_time=30,
             file_end_time=35,
             player_start=sound_2.end_time + 1,
             player_end_time=sound_2.end_time + 6
-        )"""
+        )
 
         out_filepath = os.path.join(self.audio_dist_dirpath, f"test_clip_reuse.mp3")
         file_url = audio_block_1.render_2(out_filepath=out_filepath, format_type="mp3")

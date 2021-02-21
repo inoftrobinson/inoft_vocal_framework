@@ -120,10 +120,8 @@ fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_time: f
                                     let duration = Duration::from(capacity as u64);
 
                                     let mut sample_buffer = SampleBuffer::<i16>::new(duration, spec);
-                                    println!("sample buffer len : {}", sample_buffer.len());
                                     sample_buffer.copy_interleaved_ref(decoded);
                                     all_samples.extend(sample_buffer.samples());
-                                    println!("len samples : {}", all_samples.len());
                                     index += index_increment;
                                     continue;
                                 } else {
