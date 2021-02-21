@@ -86,13 +86,13 @@ class Track:
                      player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
                      file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
                      file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
-                     stretch_method: Sound.STRETCH_LOOP = Sound.STRETCH_LOOP) -> Sound:
+                     stretch_method: Sound.STRETCH_LOOP = Sound.STRETCH_LOOP, speech: bool = False) -> Sound:
 
         file_url: Optional[str] = None
         if engine_file_key is not None:
             account_id = "b1fe5939-032b-462d-92e0-a942cd445096"
             project_id = "22ac1d08-292d-4f2e-a9e3-20d181f1f58f"
-            file_url = f"https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/{account_id}/{project_id}/files/{engine_file_key}.wav"
+            file_url = f"https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/{account_id}/{project_id}/files/{engine_file_key}"
             if full_file_url is not None:
                 print("full_file_url not required and is being overridden by the engine_file_key")
         else:

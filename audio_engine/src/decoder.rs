@@ -62,7 +62,6 @@ pub fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_tim
     match symphonia::default::get_probe().format(&hint, media_source_stream, &format_opts, &metadata_opts) {
         Ok(probed) => {
             let mut reader = probed.format;
-            // reader.seek(SeekTo::Time { time: Time::from(20.0)});
 
             let decode_options = DecoderOptions { verify: false, ..Default::default() };
             let stream = reader.default_stream().unwrap();
