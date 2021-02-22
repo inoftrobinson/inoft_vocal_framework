@@ -4,6 +4,7 @@ use std::io::BufReader;
 use std::time::{Instant};
 use std::io;
 use symphonia::core::codecs::CodecParameters;
+use crate::tracer::TraceItem;
 
 
 fn resample_sample_rate_without_channels_conversion(samples: Vec<i16>, resample_interval: f32) -> Vec<i16> {
@@ -110,18 +111,20 @@ fn panic_target_num_channels_not_supported(target_num_channels: u16) {
 // source 2 -> target 1 (handled by resample_sample_rate_and_channels_from_one_to_two)
 // Any other scenario will cause the resampler to panic.
 
-pub fn resample(samples: Vec<i16>, source_spec: CodecParameters, target_spec: WavSpec) -> Vec<i16> {
+pub fn resample(trace: &mut TraceItem, samples: Vec<i16>, source_spec: CodecParameters, target_spec: WavSpec) -> Vec<i16> {
+    let trace_initialization = trace.create_child(String::from("initialization"));
     let source_sample_rate = source_spec.sample_rate.unwrap();
     let source_num_channels = source_spec.channels.unwrap().count() as u16;
     let source_bits_per_sample = source_spec.bits_per_sample.unwrap_or(16) as u16;
     let target_sample_rate = target_spec.sample_rate;
     println!("resample samples len : {}", samples.len());
+    trace_initialization.close();
 
     if source_sample_rate == target_spec.sample_rate && source_num_channels == target_spec.channels && source_bits_per_sample == target_spec.bits_per_sample {
         samples
     } else {
+        let trace_resampling = trace.create_child(String::from("resampling"));
         let resample_interval = source_sample_rate as f32 / target_sample_rate as f32;
-        let resample_start = Instant::now();
         print_resampling_starting(samples.len(), source_sample_rate, target_sample_rate, resample_interval, None);
 
         let mut handler: Option<fn(Vec<i16>, f32) -> Vec<i16>> = None;
@@ -145,7 +148,8 @@ pub fn resample(samples: Vec<i16>, source_spec: CodecParameters, target_spec: Wa
             panic_target_num_channels_not_supported(target_spec.channels);
         }
         let out_samples = handler.unwrap()(samples, resample_interval);
-        print_resampling_completed(resample_start.elapsed().as_millis(), out_samples.len());
+        trace_resampling.close();
+        print_resampling_completed(trace_resampling.elapsed, out_samples.len());
         out_samples
     }
 }

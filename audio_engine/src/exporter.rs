@@ -134,7 +134,7 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
     //  zeros, which we remove right after encoding with lame, by using a simple loop with a step size.
 
     let samples_slice = samples.as_slice();
-    lame.encode(samples_slice, samples_slice, mp3_buffer.as_mut_slice());
+    let _ = lame.encode(samples_slice, samples_slice, mp3_buffer.as_mut_slice());
 
     let precision_10ms_samples_step = (target_spec.sample_rate / 100) as usize;
     // We need a custom sample_step to iterate over the mp3_buffer, because if we iterate over every single sample

@@ -25,6 +25,7 @@ use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 #[path="audio_clip.rs"] mod audio_clip;
 #[path="loader.rs"] pub mod loader;
 #[path="hasher.rs"] pub mod hasher;
+#[path="tracer.rs"] pub mod tracer;
 #[path="tests/mod.rs"] pub mod tests;
 
 use audio_clip::AudioClip;

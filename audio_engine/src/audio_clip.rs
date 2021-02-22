@@ -23,6 +23,7 @@ use symphonia::core::units::{Duration};
 use symphonia::core::units;
 use symphonia_core::io::BitReaderLtr;
 use symphonia_core::codecs::CodecParameters;
+use crate::tracer::TraceItem;
 
 
 // todo: remove the passing and loading of clip ids ?
@@ -54,8 +55,8 @@ impl AudioClip {
         })
     }
 
-    fn make_resamples(samples: Vec<i16>, codec_params: CodecParameters, target_spec: WavSpec) -> Option<Vec<i16>> {
-        Some(resample(samples, codec_params, target_spec))
+    fn make_resamples(trace: &mut TraceItem, samples: Vec<i16>, codec_params: CodecParameters, target_spec: WavSpec) -> Option<Vec<i16>> {
+        Some(resample(trace, samples, codec_params, target_spec))
     }
 
     pub fn generate_random_bytes(len: usize) -> Box<[u8]> {
@@ -70,21 +71,28 @@ impl AudioClip {
         bytes.into_boxed_slice()
     }
 
-    pub async fn resample(&mut self, target_spec: WavSpec, limit_time_to_load: Option<f32>) {
-        println!("self.file_start_time : {}", self.file_start_time);
-        if self.file_url.is_none() != true {
+    pub async fn resample(&mut self, trace: &mut TraceItem, target_spec: WavSpec, limit_time_to_load: Option<f32>) {
+        let (samples, codec_params) = if self.file_url.is_none() != true {
+            let trace_decoding_from_file_url = trace.create_child(String::from("Decoding from file url"));
             let file_url = self.file_url.as_ref().unwrap();
             let (samples, codec_params) = decoder::decode_from_file_url(
-                file_url, self.file_start_time, limit_time_to_load
+                trace_decoding_from_file_url, file_url, self.file_start_time, limit_time_to_load
             ).await;
-            self.resamples = AudioClip::make_resamples(samples.unwrap(), codec_params.unwrap(), target_spec);
+            trace_decoding_from_file_url.close();
+            (samples, codec_params)
         } else {
+            let trace_decoding_from_local_filepath = trace.create_child(String::from("Decoding from local filepath"));
             let filepath = self.filepath.as_ref().unwrap();
             let (samples, codec_params) = decoder::decode_from_local_filepath(
-                filepath, self.file_start_time, limit_time_to_load
+                trace_decoding_from_local_filepath, filepath, self.file_start_time, limit_time_to_load
             );
-            self.resamples = AudioClip::make_resamples(samples.unwrap(), codec_params.unwrap(), target_spec);
-        }
+            trace_decoding_from_local_filepath.close();
+            (samples, codec_params)
+        };
+
+        let trace_make_resamples = trace.create_child(String::from("Make resamples"));
+        self.resamples = AudioClip::make_resamples(trace_make_resamples, samples.unwrap(), codec_params.unwrap(), target_spec);
+        trace_make_resamples.close();
     }
 
     pub fn render_player_start_time_to_sample_index(&mut self, target_sample_rate: u32) -> usize {

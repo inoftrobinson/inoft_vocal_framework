@@ -92,15 +92,15 @@ class TestInputFormats(unittest.TestCase):
 
         sound_1 = track_1.create_sound(
             local_filepath=filepath,
-            file_start_time=0,
-            file_end_time=10,
+            file_start_time=20,
+            file_end_time=30,
             player_start=track_1.start_time,
             player_end_time=track_1.start_time + 5
         )
         sound_2 = track_1.create_sound(
             local_filepath=filepath,
-            file_start_time=20,
-            file_end_time=25,
+            file_start_time=10,
+            file_end_time=18,
             player_start=sound_1.end_time + 1,
             player_end_time=sound_1.end_time + 6
         )

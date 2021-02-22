@@ -18,25 +18,40 @@ mod decoder_utils;
 use crate::loader::get_file_bytes_from_url;
 use std::fmt::Debug;
 use serde::__private::Formatter;
+use crate::tracer::TraceItem;
 
 
 pub fn get_file_extension_from_file_url(file_url: &str) -> Option<&str> {
     file_url.split(".").last()
 }
 
-pub async fn decode_from_file_url(file_url: &str, file_start_time: f32, limit_time_to_load: Option<f32>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+pub async fn decode_from_file_url(
+    trace: &mut TraceItem, file_url: &str,
+    file_start_time: f32, limit_time_to_load: Option<f32>
+) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+
     let mut hint = Hint::new();
     let file_extension = get_file_extension_from_file_url(file_url).expect("No file extension found");
     hint.with_extension(file_extension);
 
+    let trace_file_retrieving = trace.create_child(String::from("File bytes retrieving"));
     let file_bytes = get_file_bytes_from_url(file_url).await;
+    trace_file_retrieving.close();
+
+    let trace_bytes_conversion_to_stream = trace.create_child(String::from("Bytes conversion to stream"));
     let boxed_file_bytes = file_bytes.to_vec().into_boxed_slice();
     let media_source_cursor = Cursor::new(boxed_file_bytes.clone());
     let mut media_source_stream = MediaSourceStream::new(Box::new(media_source_cursor));
-    decode(media_source_stream, hint, file_start_time, limit_time_to_load)
+    trace_bytes_conversion_to_stream.close();
+
+    decode(trace, media_source_stream, hint, file_start_time, limit_time_to_load)
 }
 
-pub fn decode_from_local_filepath(filepath: &str, file_start_time: f32, limit_time_to_load: Option<f32>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+pub fn decode_from_local_filepath(
+    trace: &mut TraceItem, filepath: &str,
+    file_start_time: f32, limit_time_to_load: Option<f32>
+) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+
     let mut hint = Hint::new();
     let path = Path::new(filepath);
     if let Some(extension) = path.extension() {
@@ -44,12 +59,21 @@ pub fn decode_from_local_filepath(filepath: &str, file_start_time: f32, limit_ti
             hint.with_extension(extension_str);
         }
     }
+    let trace_file_opening = trace.create_child(String::from("File opening"));
     let file_source = Box::new(File::open(path).unwrap());
     let media_source_stream = MediaSourceStream::new(file_source);
-    decode(media_source_stream, hint, file_start_time, limit_time_to_load)
+    trace_file_opening.close();
+
+    decode(trace, media_source_stream, hint, file_start_time, limit_time_to_load)
 }
 
-fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_time: f32, limit_time_to_load: Option<f32>) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+fn decode(
+    trace: &mut TraceItem, media_source_stream: MediaSourceStream,
+    hint: Hint, file_start_time: f32, limit_time_to_load: Option<f32>
+) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+
+    let trace_decoding = trace.create_child(String::from("decoding"));
+
     // Use the default options for metadata and format readers.
     let format_opts: FormatOptions = Default::default();
     let metadata_opts: MetadataOptions = Default::default();
@@ -136,12 +160,14 @@ fn decode(media_source_stream: MediaSourceStream, hint: Hint, file_start_time: f
             decoder.close();
 
             println!("decoder samples length : {}", all_samples.len());
+            trace_decoding.close();
             (Some(all_samples), Some(stream_codec_params))
         }
         Err(err) => {
             // The input was not supported by any format reader.
             error!("File not supported. reason? {}", err);
             println!("File not supported. reason? {}", err);
+            trace_decoding.close();
             (None, None)
         }
     }
