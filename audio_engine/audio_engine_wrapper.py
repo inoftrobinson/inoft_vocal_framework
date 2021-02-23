@@ -34,7 +34,7 @@ def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: s
             'filepath': out_filepath,
             'sampleRate': 24000,  # todo: make sampleRate configurable
             'formatType': out_format_type,
-            'exportTarget': 'local'  # 'managed-inoft-vocal-engine'  # 'local'
+            'exportTarget': 'managed-inoft-vocal-engine'  # 'local'
         },
     }
     """data = {}
@@ -43,5 +43,6 @@ def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: s
     data['blocks'] = []
     data['targetSpec'] = {'filepath': 'dummy.mp3', 'sampleRate': 24000, 'formatType': 'wav', 'exportTarget': 'managed-inoft-vocal-engine'}
     """
+    print("launching rust")
     return audio_engine.render(data)
 

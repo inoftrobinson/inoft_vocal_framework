@@ -219,7 +219,7 @@ impl Renderer {
         // todo: handle audio clip being loaded before its relationship parent(s)
         trace_rendering.close();
         println!("Total rendering time : {}ms", trace_rendering.elapsed);
-        trace_rendering.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/json/trace.json");
+        // trace_rendering.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/json/trace.json");
     }
 
     async fn render_clip(&mut self, trace: &mut TraceItem, mut audio_clip_resamples: &Vec<i16>, render_clip_infos: &RenderedClipInfos) {

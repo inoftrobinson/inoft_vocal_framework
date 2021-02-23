@@ -1,6 +1,9 @@
 use std::time::Instant;
 use reqwest::{Url, StatusCode};
 use bytes::Bytes;
+use std::fs::File;
+use std::path::Path;
+use std::io::Write;
 
 /*
 let url = "https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/b1fe5939-032b-462d-92e0-a942cd445096/22ac1d08-292d-4f2e-a9e3-20d181f1f58f/files/testgreat.mp3";
@@ -18,6 +21,12 @@ pub async fn get_file_bytes_from_url(url: &str) -> Bytes {
     let bytes: Bytes = file_response.bytes().await.unwrap() as Bytes;
     let bytes_slice = &*bytes;
     println!("Took {}ms to retrieve the file at url : {}", start.elapsed().as_millis(), url);
+
+    let expected_filepath = format!("/mnt/files/{}", url);
+    if !Path::new(&expected_filepath).exists() {
+        println!("Writing to file ! :)");
+        File::create(expected_filepath).unwrap().write_all(bytes_slice);
+    }
 
     match std::str::from_utf8(&bytes_slice) {
         Ok(v) => println!("Received text data, not good :/ : {}", v),
