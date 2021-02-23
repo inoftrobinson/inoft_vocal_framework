@@ -31,6 +31,7 @@ impl TraceItem {
 
     pub fn close(&mut self) {
         self.elapsed = self.start_instant.elapsed().as_micros();
+        println!("{} took {}s", self.name, self.elapsed as f32 / 1000000.0);
     }
 
     pub fn serialize(&self) -> SerializedTraceItemData {

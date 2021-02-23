@@ -30,21 +30,38 @@ pub async fn decode_from_file_url(
     file_start_time: f32, limit_time_to_load: Option<f32>
 ) -> (Option<Vec<i16>>, Option<CodecParameters>) {
 
-    let mut hint = Hint::new();
-    let file_extension = get_file_extension_from_file_url(file_url).expect("No file extension found");
-    hint.with_extension(file_extension);
+    let filename = file_url.split("/").last().unwrap();
+    let expected_efs_filepath = format!("/mnt/files/{}", filename);
+    let expected_efs_path = Path::new(&expected_efs_filepath);
+    if false && expected_efs_path.exists() {
+        decode_from_local_filepath(trace, &*expected_efs_filepath, file_start_time, limit_time_to_load)
+    } else {
+        let mut hint = Hint::new();
+        let file_extension = get_file_extension_from_file_url(file_url).expect("No file extension found");
+        hint.with_extension(file_extension);
 
-    let trace_file_retrieving = trace.create_child(String::from("File bytes retrieving"));
-    let file_bytes = get_file_bytes_from_url(file_url).await;
-    trace_file_retrieving.close();
+        let trace_file_retrieving = trace.create_child(String::from("File bytes retrieving"));
+        let boxed_file_bytes = get_file_bytes_from_url(file_url).await;
+        trace_file_retrieving.close();
 
-    let trace_bytes_conversion_to_stream = trace.create_child(String::from("Bytes conversion to stream"));
-    let boxed_file_bytes = file_bytes.to_vec().into_boxed_slice();
-    let media_source_cursor = Cursor::new(boxed_file_bytes.clone());
-    let mut media_source_stream = MediaSourceStream::new(Box::new(media_source_cursor));
-    trace_bytes_conversion_to_stream.close();
+        let trace_writing_retrieved_file_to_local_storage = trace.create_child(String::from("Writing retrieved file to local storage"));
+        let mut file = match File::create(&expected_efs_filepath) {
+            Err(why) => panic!("couldn't create {:?}: {}", expected_efs_filepath, why),
+            Ok(file) => file,
+        };
+        match file.write_all(&*boxed_file_bytes) {
+            Err(why) => panic!("couldn't write to {:?}: {}", expected_efs_filepath, why),
+            Ok(_) => println!("successfully wrote to {:?}", expected_efs_filepath),
+        }
+        trace_writing_retrieved_file_to_local_storage.close();
 
-    decode(trace, media_source_stream, hint, file_start_time, limit_time_to_load)
+        let trace_bytes_conversion_to_stream = trace.create_child(String::from("Bytes conversion to stream"));
+        let media_source_cursor = Cursor::new(boxed_file_bytes.clone());
+        let mut media_source_stream = MediaSourceStream::new(Box::new(media_source_cursor));
+        trace_bytes_conversion_to_stream.close();
+
+        decode(trace, media_source_stream, hint, file_start_time, limit_time_to_load)
+    }
 }
 
 pub fn decode_from_local_filepath(
