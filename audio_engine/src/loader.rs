@@ -1,10 +1,6 @@
 use std::time::Instant;
 use reqwest::{Url, StatusCode};
 use bytes::Bytes;
-use std::fs::File;
-use std::path::Path;
-use std::io::{Write, Read};
-use std::fs;
 use std::env::current_exe;
 
 /*

@@ -1,16 +1,10 @@
 use crate::models::{ReceivedParsedData, AudioBlock, Time};
-use std::time::Instant;
-use hound::{WavReader};
-use std::io::BufReader;
-use std::fs::File;
 use std::num::Wrapping;
-use std::borrow::{BorrowMut, Borrow};
+use std::borrow::{BorrowMut};
 use crate::audio_clip::AudioClip;
-use std::cell::{RefCell, RefMut, Ref};
+use std::cell::{RefCell};
 use std::collections::HashMap;
-use std::cmp::min;
 use crate::tracer::TraceItem;
-use serde::Serialize;
 
 
 pub struct RenderedClipInfos {
@@ -175,7 +169,7 @@ impl Renderer {
 
             for audio_clip_ref in audio_clips.iter() {
                 let mut audio_clip = audio_clip_ref.borrow_mut();
-                let mut trace_clip = trace_rendering.create_child(String::from(format!("clip_{}", audio_clip.clip_id)));
+                let trace_clip = trace_rendering.create_child(String::from(format!("clip_{}", audio_clip.clip_id)));
                 let cloned_clip_id = audio_clip.clip_id.clone();
 
                 let trace_player_times_rendering = trace_clip.create_child(String::from("player_times_rendering"));
@@ -222,7 +216,7 @@ impl Renderer {
         // trace_rendering.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/json/trace.json");
     }
 
-    async fn render_clip(&mut self, trace: &mut TraceItem, mut audio_clip_resamples: &Vec<i16>, render_clip_infos: &RenderedClipInfos) {
+    async fn render_clip(&mut self, trace: &mut TraceItem, audio_clip_resamples: &Vec<i16>, render_clip_infos: &RenderedClipInfos) {
         // todo: file start time and file end time
 
         let trace_initialization = trace.create_child(String::from("Initialization"));

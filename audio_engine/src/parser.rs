@@ -1,5 +1,5 @@
 use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject};
-use crate::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time};
+use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileReceivedParsedData};
 use std::collections::HashMap;
 use std::cell::RefCell;
 
@@ -13,7 +13,7 @@ pub fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
 }
 
 
-pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData {
+pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> ReceivedParsedData {
     let mut flattened_tracks_refs: HashMap<String, &Track> = HashMap::new();
     let mut flattened_audio_clips_refs: HashMap<String, &RefCell<AudioClip>> = HashMap::new();
     let mut audio_blocks_items: Vec<AudioBlock> = Vec::new();
@@ -114,4 +114,11 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
     }
 
     output_parsed_data
+}
+
+
+pub fn parse_python_resample_call(_py: Python, data: PyObject) -> ResampleSaveFileReceivedParsedData {
+    let file_url: String = data.get_item(_py, "fileUrl").unwrap().to_string();
+    let target_dirpath: String = data.get_item(_py, "targetDirpath").unwrap().to_string();
+    ResampleSaveFileReceivedParsedData { file_url, target_dirpath }
 }

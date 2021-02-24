@@ -1,6 +1,6 @@
 use std::path::Path;
 use std::time::Instant;
-use crate::{ReceivedParsedData};
+use crate::models::{ReceivedParsedData};
 use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url, post_mp3_buffer_to_s3_with_presigned_url};
 use crate::renderer::Renderer;
 use std::mem::{size_of};
@@ -51,8 +51,8 @@ pub async fn main(data: ReceivedParsedData, expected_render_file_hash: String) -
                 sample_format: hound::SampleFormat::Int,
             };
             let mut writer =  hound::WavWriter::create(path, wav_target_spec).unwrap();
-            for i_sample in 0..rendered_samples.len() {
-                writer.write_sample(rendered_samples[i_sample]).unwrap();
+            for sample in rendered_samples {
+                writer.write_sample(sample).unwrap();
             }
             None
         },

@@ -1,29 +1,11 @@
+use std::cell::RefCell;
 use hound::{WavReader, WavSpec, WavSamples, WavIntoSamples, SampleFormat, WavWriter};
-use symphonia;
-use std::io::{BufReader, BufWriter, Write, Read, Cursor};
 use crate::resampler::{resample};
 use crate::models::Time;
-use std::cell::RefCell;
-use crate::loader::get_file_bytes_from_url;
-use std::io;
-use bytes::{Bytes, Buf};
-use minimp3::{Decoder, Frame, Error};
-use std::fs::File;
-use symphonia::core::probe::Hint;
-use symphonia::core::io::{ReadOnlySource, MediaSourceStream, MediaSource, ByteStream};
-use std::path::Path;
-use symphonia::core::formats::{FormatOptions, FormatReader, SeekTo};
-use symphonia::core::meta::MetadataOptions;
-use symphonia::core::codecs::DecoderOptions;
 use crate::decoder;
-use std::borrow::Borrow;
-use symphonia::core::audio::SampleBuffer;
-use symphonia::core::errors::Error::DecodeError;
-use symphonia::core::units::{Duration};
-use symphonia::core::units;
-use symphonia_core::io::BitReaderLtr;
-use symphonia_core::codecs::CodecParameters;
 use crate::tracer::TraceItem;
+
+// todo: do a benchmark comparison between WavHound and symphonia for opening WavFiles
 
 
 // todo: remove the passing and loading of clip ids ?
@@ -53,10 +35,6 @@ impl AudioClip {
             player_start_time_sample_index: None,
             player_end_time_sample_index: None,
         })
-    }
-
-    fn make_resamples(trace: &mut TraceItem, samples: Vec<i16>, codec_params: CodecParameters, target_spec: WavSpec) -> Option<Vec<i16>> {
-        Some(resample(trace, samples, codec_params, target_spec))
     }
 
     pub fn generate_random_bytes(len: usize) -> Box<[u8]> {
@@ -91,7 +69,7 @@ impl AudioClip {
         };
 
         let trace_make_resamples = trace.create_child(String::from("Make resamples"));
-        self.resamples = AudioClip::make_resamples(trace_make_resamples, samples.unwrap(), codec_params.unwrap(), target_spec);
+        self.resamples = Some(resample(trace_make_resamples, samples.unwrap(), codec_params.unwrap(), target_spec));
         trace_make_resamples.close();
     }
 

@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use serde::Serialize;
 use std::time::Instant;
 use std::fs::File;

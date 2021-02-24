@@ -1,12 +1,10 @@
 use lame::Lame;
-use claxon::FlacReader;
 use std::fs::File;
 use std::time::Instant;
 use std::path::Path;
 use std::io::{Write};
 use crate::models::ReceivedTargetSpec;
 
-use tokio;
 use std::error::Error;
 
 use serde::Deserialize;
@@ -57,6 +55,7 @@ pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presi
     let mp3_file_part = reqwest::multipart::Part::bytes(mp3_buffer)
         .mime_str("application/octet-stream").unwrap();
 
+    // todo: instead of parsing and resetting the fields, just populate the request with all the s3_fields
     let mut form = reqwest::multipart::Form::new()
         .text("key", s3_fields.key)
         .text("acl", s3_fields.acl)
