@@ -1,45 +1,28 @@
 use hound::{WavSpec};
-use hound::WavSamples;
-use std::io::BufReader;
-use std::time::{Instant};
 use std::io;
+use symphonia::core::codecs::CodecParameters;
+use crate::tracer::TraceItem;
 
 
-fn i16_resample_sample_rate_without_channels_conversion<R: io::Read>(samples: WavSamples<R, i16>, resample_interval: f32) -> Vec<i16> {
+fn resample_sample_rate_without_channels_conversion(samples: Vec<i16>, resample_interval: f32) -> Vec<i16> {
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
-    for (i, sample) in samples.enumerate() {
-        let sample_value = sample.unwrap();
+    for (i, sample) in samples.iter().enumerate() {
         let float_index = i as f32;
         while float_index > resample_count {
-            out_samples.push(sample_value);
+            out_samples.push(*sample);
             resample_count += resample_interval;
         }
     }
     out_samples
 }
 
-fn i32_resample_sample_rate_without_channels_conversion<R: io::Read>(samples: WavSamples<R, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
-    // For comments, see i16_resample_sample_rate_without_channels_conversion
+fn resample_sample_rate_and_channels_from_one_to_two(samples: Vec<i16>, resample_interval: f32) -> Vec<i16> {
+    // This function is almost exactly like the resample_sample_rate_without_channels_conversion function.
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
-    for (i, sample) in samples.enumerate() {
-        let sample_value = ((sample.unwrap() as f32) / bits_divider) as i16;
-        let float_index = i as f32;
-        while float_index > resample_count {
-            out_samples.push(sample_value);
-            resample_count += resample_interval;
-        }
-    }
-    out_samples
-}
-
-fn i16_resample_sample_rate_and_channels_from_one_to_two<R: io::Read>(samples: WavSamples<R, i16>, resample_interval: f32) -> Vec<i16> {
-    // This function is almost exactly like the i16_resample_sample_rate_without_channels_conversion function.
-    let mut out_samples: Vec<i16> = Vec::new();
-    let mut resample_count: f32 = 0.0;
-    for (i, sample) in samples.enumerate() {
-        let sample_value = sample.unwrap();
+    for (i, sample) in samples.iter().enumerate() {
+        let sample_value = *sample;
         let float_index = i as f32;
         while float_index > resample_count {
             // To change the channel from one to two, we just need to add twice the sample_value to the out_samples.
@@ -53,34 +36,17 @@ fn i16_resample_sample_rate_and_channels_from_one_to_two<R: io::Read>(samples: W
     out_samples
 }
 
-fn i32_resample_sample_rate_and_channels_from_one_to_two<R: io::Read>(samples: WavSamples<R, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
-    // For comments, see i16_resample_sample_rate_and_channels_from_one_to_two
-    let mut out_samples: Vec<i16> = Vec::new();
-    let mut resample_count: f32 = 0.0;
-    for (i, sample) in samples.enumerate() {
-        let sample_value = ((sample.unwrap() as f32) / bits_divider) as i16;
-        let float_index = i as f32;
-        while float_index > resample_count {
-            out_samples.push(sample_value);
-            out_samples.push(sample_value);
-            resample_count += resample_interval;
-        }
-    }
-    out_samples
-}
-
-
-fn i16_resample_sample_rate_and_channels_from_two_to_one<R: io::Read>(samples: WavSamples<R, i16>, resample_interval: f32) -> Vec<i16> {
+fn resample_sample_rate_and_channels_from_two_to_one(samples: Vec<i16>, resample_interval: f32) -> Vec<i16> {
     let mut out_samples: Vec<i16> = Vec::new();
     let mut resample_count: f32 = 0.0;
 
     let num_samples_unique_across_channels = samples.len() / 2;
-    let mut samples_enumerator = samples.enumerate();
+    let mut samples_enumerator = samples.iter().enumerate();
     for i in 0..num_samples_unique_across_channels {
         let float_index = i as f32;
         // A WAV file with 2 channels is represented like [240, 240, 102, 102, 720, 720].
-        let channel_one_sample_data = samples_enumerator.next().unwrap().1.unwrap();
-        let channel_two_sample_data = samples_enumerator.next().unwrap().1.unwrap();
+        let channel_one_sample_data = samples_enumerator.next().unwrap().1;
+        let channel_two_sample_data = samples_enumerator.next().unwrap().1;
         // So, since this function only support conversion from two channels to one, we can simply use an
         // iterator twice, to get the sample value both in the first channel, and in the second channel.
         let sample_value = (channel_one_sample_data / 2) + (channel_two_sample_data / 2);
@@ -94,27 +60,6 @@ fn i16_resample_sample_rate_and_channels_from_two_to_one<R: io::Read>(samples: W
     }
     out_samples
 }
-
-fn i32_resample_sample_rate_channels_and_from_two_to_one<R: io::Read>(samples: WavSamples<R, i32>, resample_interval: f32, bits_divider: f32) -> Vec<i16> {
-    // For comments, see i16_resample_sample_rate_and_channels_from_two_to_one
-    let mut out_samples: Vec<i16> = Vec::new();
-    let mut resample_count: f32 = 0.0;
-
-    let num_samples_unique_across_channels = samples.len() / 2;
-    let mut samples_enumerator = samples.enumerate();
-    for i in 0..num_samples_unique_across_channels {
-        let float_index = i as f32;
-        let channel_one_sample_data = samples_enumerator.next().unwrap().1.unwrap();
-        let channel_two_sample_data = samples_enumerator.next().unwrap().1.unwrap();
-        let sample_value = ((((channel_one_sample_data / 2) + (channel_two_sample_data / 2)) as f32) / bits_divider) as i16;
-        while float_index > resample_count {
-            out_samples.push(sample_value);
-            resample_count += resample_interval;
-        }
-    }
-    out_samples
-}
-
 
 fn print_resampling_starting(source_num_samples: usize, source_sample_rate: u32, target_sample_rate: u32, resample_interval: f32, bits_divider: Option<f32>) {
     println!(
@@ -157,82 +102,51 @@ fn panic_target_num_channels_not_supported(target_num_channels: u16) {
 
 
 // The resampler can handle 4 different channels conversions :
-// source 1 -> target 1 (handled by i16_resample_sample_rate_without_channels_conversion)
-// source 1 -> target 2 (handled by i16_resample_sample_rate_and_channels_from_two_to_one)
-// source 2 -> target 2 (handled by i16_resample_sample_rate_without_channels_conversion)
-// source 2 -> target 1 (handled by i16_resample_sample_rate_and_channels_from_one_to_two)
+// source 1 -> target 1 (handled by resample_sample_rate_without_channels_conversion)
+// source 1 -> target 2 (handled by resample_sample_rate_and_channels_from_two_to_one)
+// source 2 -> target 2 (handled by resample_sample_rate_without_channels_conversion)
+// source 2 -> target 1 (handled by resample_sample_rate_and_channels_from_one_to_two)
 // Any other scenario will cause the resampler to panic.
 
-pub fn resample_i16<R: io::Read>(samples: WavSamples<R, i16>, source_spec: WavSpec, target_spec: WavSpec) -> Vec<i16> {
-    let source_sample_rate = source_spec.sample_rate;
+pub fn resample(trace: &mut TraceItem, samples: Vec<i16>, source_spec: CodecParameters, target_spec: WavSpec) -> Vec<i16> {
+    let trace_initialization = trace.create_child(String::from("initialization"));
+    let source_sample_rate = source_spec.sample_rate.unwrap();
+    let source_num_channels = source_spec.channels.unwrap().count() as u16;
+    let source_bits_per_sample = source_spec.bits_per_sample.unwrap_or(16) as u16;
     let target_sample_rate = target_spec.sample_rate;
+    println!("resample samples len : {}", samples.len());
+    trace_initialization.close();
 
-    if source_spec.sample_rate == target_spec.sample_rate && source_spec.channels == target_spec.channels && source_spec.bits_per_sample == target_spec.bits_per_sample {
-        samples.map(|s| s.unwrap()).collect()
+    if source_sample_rate == target_spec.sample_rate && source_num_channels == target_spec.channels && source_bits_per_sample == target_spec.bits_per_sample {
+        samples
     } else {
+        let trace_resampling = trace.create_child(String::from("resampling"));
         let resample_interval = source_sample_rate as f32 / target_sample_rate as f32;
-        let resample_start = Instant::now();
         print_resampling_starting(samples.len(), source_sample_rate, target_sample_rate, resample_interval, None);
 
-        let mut handler: Option<fn(WavSamples<R, i16>, f32) -> Vec<i16>> = None;
+        let mut handler: Option<fn(Vec<i16>, f32) -> Vec<i16>> = None;
         if target_spec.channels == 1 {
-            if source_spec.channels == 1 {
-                handler = Some(i16_resample_sample_rate_without_channels_conversion);
-            } else if source_spec.channels == 2 {
-                handler = Some(i16_resample_sample_rate_and_channels_from_two_to_one);
+            if source_num_channels == 1 {
+                handler = Some(resample_sample_rate_without_channels_conversion);
+            } else if source_num_channels == 2 {
+                handler = Some(resample_sample_rate_and_channels_from_two_to_one);
             } else {
-                panic_source_num_channels_not_supported(source_spec.channels);
+                panic_source_num_channels_not_supported(source_num_channels);
             }
         } else if target_spec.channels == 2 {
-            if source_spec.channels == 2 {
-                handler = Some(i16_resample_sample_rate_without_channels_conversion);
-            } else if source_spec.channels == 1 {
-                handler = Some(i16_resample_sample_rate_and_channels_from_one_to_two);
+            if source_num_channels == 2 {
+                handler = Some(resample_sample_rate_without_channels_conversion);
+            } else if source_num_channels == 1 {
+                handler = Some(resample_sample_rate_and_channels_from_one_to_two);
             } else {
-                panic_source_num_channels_not_supported(source_spec.channels);
+                panic_source_num_channels_not_supported(source_num_channels);
             }
         } else {
             panic_target_num_channels_not_supported(target_spec.channels);
         }
         let out_samples = handler.unwrap()(samples, resample_interval);
-        print_resampling_completed(resample_start.elapsed().as_millis(), out_samples.len());
+        trace_resampling.close();
+        print_resampling_completed(trace_resampling.elapsed, out_samples.len());
         out_samples
     }
-}
-
-pub fn resample_i32<R: io::Read>(samples: WavSamples<R, i32>, source_spec: WavSpec, target_spec: WavSpec) -> Vec<i16> {
-    let source_sample_rate = source_spec.sample_rate;
-    let target_sample_rate = target_spec.sample_rate;
-
-    let resample_interval = source_sample_rate as f32 / target_sample_rate as f32;
-    let bits_divider = (source_spec.bits_per_sample as f32 / target_spec.bits_per_sample as f32) * 256.0;
-    // todo: document why we need to multiply the divider by 256 (honestly, i do not know why 256 exactly, but it works, so...)
-    let resample_start = Instant::now();
-    print_resampling_starting(samples.len(), source_sample_rate, target_sample_rate, resample_interval, Some(bits_divider));
-
-    // The audio engine is made to handle 16 bits data, so if the resample_i32 function is called, we now for sure that we need
-    // to resample. We do not even need to do a comparison of the source spec and target spec like in the resample_i16 function.
-    let mut handler: Option<fn(WavSamples<R, i32>, f32, f32) -> Vec<i16>> = None;
-    if target_spec.channels == 1 {
-        if source_spec.channels == 1 {
-            handler = Some(i32_resample_sample_rate_without_channels_conversion);
-        } else if source_spec.channels == 2 {
-            handler = Some(i32_resample_sample_rate_channels_and_from_two_to_one);
-        } else {
-            panic_source_num_channels_not_supported(source_spec.channels);
-        }
-    } else if target_spec.channels == 2 {
-        if source_spec.channels == 2 {
-            handler = Some(i32_resample_sample_rate_without_channels_conversion);
-        } else if source_spec.channels == 1 {
-            handler = Some(i32_resample_sample_rate_and_channels_from_one_to_two);
-        } else {
-            panic_source_num_channels_not_supported(source_spec.channels);
-        }
-    } else {
-        panic_target_num_channels_not_supported(target_spec.channels);
-    }
-    let out_samples = handler.unwrap()(samples, resample_interval, bits_divider);
-    print_resampling_completed(resample_start.elapsed().as_millis(), out_samples.len());
-    out_samples
 }

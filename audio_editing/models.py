@@ -24,7 +24,7 @@ class Time:
         return new_instance
 
     def serialize(self) -> dict:
-        return {'type': 'until-self-end', 'relationship_parent_id': "", 'offset': 0}
+        # return {'type': 'until-self-end', 'relationship_parent_id': "", 'offset': 0}
         # todo: add support for different time relation in the rust client
 
         from inoft_vocal_framework.audio_editing.track import Track
@@ -39,7 +39,7 @@ class Time:
 
 class TrackStartTime(Time):
     def __init__(self, track: Any, offset: Optional[int or float] = None):
-        super().__init__(type_key='parent_start-time', relationship_parent=track, offset=offset)
+        super().__init__(type_key='track_start-time', relationship_parent=track, offset=offset)
 
     def absolute(self) -> int or float:
         return self.offset

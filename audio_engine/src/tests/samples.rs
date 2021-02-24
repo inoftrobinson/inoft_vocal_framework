@@ -8,6 +8,23 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                     Track {
                         track_id: String::from("track-1"),
                         clips: vec![
+                             AudioClip::new(
+                                String::from("clip-1"),
+                                Some("F:/Sons utiles/Musics/Vintage (1940s) French Music/La Vie en Rose - Edith Piaf - Louiguy - Luypaerts.mp3".to_string()), None,
+                                Some(100),
+                                Time {
+                                    type_key: String::from("parent_start-time"),
+                                    relationship_parent_id: Some(String::from("track-1")),
+                                    offset: None
+                                },
+                                Time {
+                                    type_key: String::from("until-self-end"),
+                                    relationship_parent_id: None,
+                                    offset: None
+                                },
+                                0.0,
+                                None
+                            ),
                             AudioClip::new(
                                 String::from("clip-1"),
                                 Some("F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string()), None,
@@ -22,8 +39,8 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                     relationship_parent_id: None,
                                     offset: None
                                 },
-                                0,
-                                0
+                                0.0,
+                                None
                             ),
                             AudioClip::new(
                                 String::from("clip-2"),
@@ -32,14 +49,15 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                 Time {
                                     type_key: String::from("parent_start-time"),
                                     relationship_parent_id: Some(String::from("track-1")),
-                                    offset: Some(20)
+                                    offset: Some(20.0)
                                 },
                                 Time {
                                     type_key: String::from("until-self-end"),
                                     relationship_parent_id: None,
                                     offset: None
                                 },
-                                0, 0
+                                0.0,
+                                None
                             )
                         ],
                         gain: 0,

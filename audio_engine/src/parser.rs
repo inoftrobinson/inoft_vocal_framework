@@ -1,5 +1,5 @@
 use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject};
-use crate::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time};
+use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileReceivedParsedData};
 use std::collections::HashMap;
 use std::cell::RefCell;
 
@@ -8,12 +8,12 @@ pub fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
     Time {
         type_key: object_item.get_item(_py, "type").unwrap().to_string(),
         relationship_parent_id: Some(object_item.get_item(_py, "relationship_parent_id").unwrap().to_string()),
-        offset: Some(object_item.get_item(_py, "offset").unwrap().extract::<i16>(_py).unwrap()),
+        offset: Some(object_item.get_item(_py, "offset").unwrap().extract::<f32>(_py).unwrap()),
     }
 }
 
 
-pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData {
+pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> ReceivedParsedData {
     let mut flattened_tracks_refs: HashMap<String, &Track> = HashMap::new();
     let mut flattened_audio_clips_refs: HashMap<String, &RefCell<AudioClip>> = HashMap::new();
     let mut audio_blocks_items: Vec<AudioBlock> = Vec::new();
@@ -27,7 +27,6 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
         let tracks_data: PyDict = audio_block_data.get_item(_py, "tracks").unwrap().extract::<PyDict>(_py).unwrap();
         println!("tracks_data : {:?}", tracks_data.len(_py));
 
-        //         for i_track in 0..tracks_data.len(_py) {
         for (track_id, track_data) in tracks_data.items(_py).iter() {
             let track_id = track_id.to_string();
             let mut current_track_clips: Vec<RefCell<AudioClip>> = Vec::new();
@@ -49,13 +48,20 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
                     Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
+                let file_start_time = match clip_data.get_item(_py, "fileStartTime") {
+                    Ok(item) => { if item != _py.None() { item.extract::<f32>(_py).unwrap() } else { 0.0 } },
+                    Err(err) => { println!("{:?}", err); 0.0 }
+                };
+                let file_end_time = match clip_data.get_item(_py, "fileEndTime") {
+                    Ok(item) => { if item != _py.None() { Some(item.extract::<f32>(_py).unwrap()) } else { None } },
+                    Err(err) => { println!("{:?}", err); None }
+                };
 
                 current_track_clips.push(AudioClip::new(
                     clip_id, local_filepath, file_url, volume,
                     parse_time_object(_py, clip_data.get_item(_py, "playerStartTime").unwrap()),
                     parse_time_object(_py, clip_data.get_item(_py, "playerEndTime").unwrap()),
-                    0,
-                    0,
+                    file_start_time, file_end_time,
                 ));
             }
             println!("{:?}", track_data);
@@ -108,4 +114,11 @@ pub fn parse_python(_py: Python, received_data: PyObject) -> ReceivedParsedData 
     }
 
     output_parsed_data
+}
+
+
+pub fn parse_python_resample_call(_py: Python, data: PyObject) -> ResampleSaveFileReceivedParsedData {
+    let file_url: String = data.get_item(_py, "fileUrl").unwrap().to_string();
+    let target_dirpath: String = data.get_item(_py, "targetDirpath").unwrap().to_string();
+    ResampleSaveFileReceivedParsedData { file_url, target_dirpath }
 }

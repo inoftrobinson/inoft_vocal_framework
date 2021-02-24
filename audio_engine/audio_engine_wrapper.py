@@ -4,10 +4,7 @@ from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 
 
 def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: str) -> str:
-    # path = os.path.dirname(os.path.abspath(__file__))
     from inoft_vocal_framework.audio_engine import audio_engine
-    # from inoft_vocal_framework.audio_engine import audio_engine_linux
-    # from inoft_vocal_framework.audio_engine import audio_engine_lib
     audio_blocks_data: List[dict] = list()
     for block in audio_blocks:
         audio_blocks_data.append(block.serialize())
@@ -32,7 +29,7 @@ def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: s
         'blocks': audio_blocks_data,
         'targetSpec': {
             'filepath': out_filepath,
-            'sampleRate': 48000,
+            'sampleRate': 24000,  # todo: make sampleRate configurable
             'formatType': out_format_type,
             'exportTarget': 'managed-inoft-vocal-engine'  # 'local'
         },
@@ -41,7 +38,12 @@ def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: s
     data['engineAccountId'] = "b1fe5939-032b-462d-92e0-a942cd445096"
     data['engineProjectId'] = "22ac1d08-292d-4f2e-a9e3-20d181f1f58f"
     data['blocks'] = []
-    data['targetSpec'] = {'filepath': 'dummy.mp3', 'sampleRate': 48000, 'formatType': 'wav', 'exportTarget': 'managed-inoft-vocal-engine'}
+    data['targetSpec'] = {'filepath': 'dummy.mp3', 'sampleRate': 24000, 'formatType': 'wav', 'exportTarget': 'managed-inoft-vocal-engine'}
     """
     return audio_engine.render(data)
+
+def resample_save_file_from_url(file_url: str, target_dirpath: str) -> bool:
+    from inoft_vocal_framework.audio_engine import audio_engine
+    data = {'fileUrl': file_url, 'targetDirpath': target_dirpath}
+    return audio_engine.resample_save_file_from_url(data)
 

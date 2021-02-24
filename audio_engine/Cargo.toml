@@ -11,12 +11,15 @@ name = "audio_engine"
 crate-type = ["cdylib"]
 
 [dependencies]
-hound = "3.4.0"
-minimp3 = "0.5"
+hound = { version = "3.4.0" }
+minimp3 = "0.5.1"
+symphonia = { version = "0.1", features = [ "mp3", "wav", "flac", "ogg", "pcm" ] }
+symphonia-core = { version = "0.1.0" }
+log = { version = "0.4", features = [ "release_max_level_info" ] }
+bincode = "1.3.1"
 rusoto_core = "0.45.0"
 rusoto_s3 = "0.45.0"
 tokio = { version = "0.2.23", features = ["full"] }
-mini-redis = "0.3"
 lame = "0.1.3"
 lame-sys = "0.1.2"
 claxon = "0.4.3"
@@ -27,8 +30,14 @@ reqwest = { version = "0.10", features = ["json"] }
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = "1.0.48"
 sha2 = "0.9.3"
+cpython36 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-6"] }
+cpython37 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-7"] }
 cpython38 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-8"] }
 cpython39 = { package="cpython", optional=true, version="*", default-features=false, features=["extension-module"] }
+
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+cpal = "0.12.0"
+rb = "0.3.2"
 
 [dev-dependencies]
 tokio-test = "*"
@@ -36,6 +45,8 @@ tokio-test = "*"
 [features]
 default = []
 bundled = ["gcc"]
+python36 = ["cpython36"]
+python37 = ["cpython37"]
 python38 = ["cpython38"]
 python39 = ["cpython39"]
 

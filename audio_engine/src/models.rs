@@ -7,6 +7,11 @@ use serde::{Serialize, Deserialize};
 pub use crate::audio_clip::AudioClip;
 
 
+pub struct ResampleSaveFileReceivedParsedData {
+    pub file_url: String,
+    pub target_dirpath: String,
+}
+
 pub struct ReceivedTargetSpec {
     pub filepath: String,
     pub sample_rate: i32,
@@ -25,7 +30,7 @@ pub struct ReceivedParsedData {
 pub struct Time {
     pub type_key: String,
     pub relationship_parent_id: Option<String>,
-    pub offset: Option<i16>,
+    pub offset: Option<f32>,
 }
 
 pub struct Track {

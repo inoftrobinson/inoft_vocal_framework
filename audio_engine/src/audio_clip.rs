@@ -1,11 +1,11 @@
-use hound::{WavReader, WavSpec};
-use std::io::{BufReader};
-use crate::resampler::{resample_i16, resample_i32};
-use crate::models::Time;
 use std::cell::RefCell;
-use crate::loader::get_file_bytes_from_url;
-use std::io;
-use bytes::Bytes;
+use hound::{WavReader, WavSpec, WavSamples, WavIntoSamples, SampleFormat, WavWriter};
+use crate::resampler::{resample};
+use crate::models::Time;
+use crate::decoder;
+use crate::tracer::TraceItem;
+
+// todo: do a benchmark comparison between WavHound and symphonia for opening WavFiles
 
 
 // todo: remove the passing and loading of clip ids ?
@@ -16,8 +16,8 @@ pub struct AudioClip {
     pub volume: Option<u8>,
     pub player_start_time: Time,
     pub player_end_time: Time,
-    pub file_start_time: i16,
-    pub file_end_time: i16,
+    pub file_start_time: f32,
+    pub file_end_time: Option<f32>,
     pub resamples: Option<Vec<i16>>,
     player_start_time_sample_index: Option<usize>,
     player_end_time_sample_index: Option<usize>,
@@ -26,46 +26,55 @@ pub struct AudioClip {
 
 impl AudioClip {
     pub fn new(clip_id: String, filepath: Option<String>, file_url: Option<String>, volume: Option<u8>,
-               player_start_time: Time, player_end_time: Time, file_start_time: i16, file_end_time: i16) -> RefCell<AudioClip> {
+               player_start_time: Time, player_end_time: Time, file_start_time: f32, file_end_time: Option<f32>) -> RefCell<AudioClip> {
         RefCell::new(AudioClip {
             clip_id, filepath, file_url, volume,
             player_start_time, player_end_time,
             file_start_time, file_end_time,
             resamples: None,
             player_start_time_sample_index: None,
-            player_end_time_sample_index: None
+            player_end_time_sample_index: None,
         })
     }
 
-    fn make_resamples<R: io::Read>(mut wave_reader: WavReader<R>, target_spec: WavSpec) -> Option<Vec<i16>> {
-        let reader_spec = wave_reader.spec();
-        let mut resamples: Option<Vec<i16>> = None;
-        if reader_spec.bits_per_sample <= 16 {
-            let samples= wave_reader.samples();
-            resamples = Some(resample_i16(samples, reader_spec, target_spec));
-        } else if reader_spec.bits_per_sample <= 32 {
-            let samples = wave_reader.samples();
-            resamples = Some(resample_i32(samples, reader_spec, target_spec));
-        } else {
-            panic!("Bits per sample superior to 32 is not supported");
+    pub fn generate_random_bytes(len: usize) -> Box<[u8]> {
+        let mut lcg: u32 = 0xec57c4bf;
+        let mut bytes = vec![0; len];
+        for quad in bytes.chunks_mut(4) {
+            lcg = lcg.wrapping_mul(1664525).wrapping_add(1013904223);
+            for (src, dest) in quad.iter_mut().zip(&lcg.to_ne_bytes()) {
+                *src = *dest;
+            }
         }
-        resamples
+        bytes.into_boxed_slice()
     }
 
-    pub async fn resample(&mut self, target_spec: WavSpec) {
-        if self.file_url.is_none() != true {
-            let bytes = get_file_bytes_from_url(&*self.file_url.as_ref().unwrap()).await;
-            let bytes_reader: WavReader<BufReader<&[u8]>> = WavReader::new(BufReader::new(&*bytes)).unwrap();
-            self.resamples = AudioClip::make_resamples(bytes_reader, target_spec);
+    pub async fn resample(&mut self, trace: &mut TraceItem, target_spec: WavSpec, limit_time_to_load: Option<f32>) {
+        let (samples, codec_params) = if self.file_url.is_none() != true {
+            let trace_decoding_from_file_url = trace.create_child(String::from("Decoding from file url"));
+            let file_url = self.file_url.as_ref().unwrap();
+            let (samples, codec_params) = decoder::decode_from_file_url(
+                trace_decoding_from_file_url, file_url, self.file_start_time, limit_time_to_load
+            ).await;
+            trace_decoding_from_file_url.close();
+            (samples, codec_params)
         } else {
+            let trace_decoding_from_local_filepath = trace.create_child(String::from("Decoding from local filepath"));
             let filepath = self.filepath.as_ref().unwrap();
-            let file_reader = WavReader::open(filepath).unwrap();
-            self.resamples = AudioClip::make_resamples(file_reader, target_spec);
-        }
+            let (samples, codec_params) = decoder::decode_from_local_filepath(
+                trace_decoding_from_local_filepath, filepath, self.file_start_time, limit_time_to_load
+            );
+            trace_decoding_from_local_filepath.close();
+            (samples, codec_params)
+        };
+
+        let trace_make_resamples = trace.create_child(String::from("Make resamples"));
+        self.resamples = Some(resample(trace_make_resamples, samples.unwrap(), codec_params.unwrap(), target_spec));
+        trace_make_resamples.close();
     }
 
     pub fn render_player_start_time_to_sample_index(&mut self, target_sample_rate: u32) -> usize {
-        self.player_start_time_sample_index = Some((self.player_start_time.offset.unwrap_or(0) as i32 * target_sample_rate as i32) as usize);
+        self.player_start_time_sample_index = Some((self.player_start_time.offset.unwrap_or(0.0) * target_sample_rate as f32) as usize);
         self.player_start_time_sample_index.unwrap()
     }
 

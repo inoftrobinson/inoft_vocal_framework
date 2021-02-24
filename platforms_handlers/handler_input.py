@@ -9,6 +9,7 @@ from inoft_vocal_framework.platforms_handlers.notifications_subscribers import N
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
+from inoft_vocal_framework.user_data.user_data import UserData
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
@@ -165,6 +166,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
     @property
     def persistent_user_id(self) -> str:
         if not isinstance(self._persistent_user_id, str) or (self._persistent_user_id.replace(" ", "") == ""):
+            user_id: Optional[str] = None
             if self.is_alexa is True:
                 user_id = SafeDict(self.alexaHandlerInput.session.user).get("userId").to_str(default=None)
             elif self.is_dialogflow is True:
@@ -174,7 +176,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             elif self.is_discord is True:
                 user_id = self.discordHandlerInput.request.author.id
 
-            if not isinstance(user_id, str) or user_id.replace(" ", "") == "":
+            if user_id is None or not isinstance(user_id, str) or user_id.replace(" ", "") == "":
                 from inoft_vocal_framework.utils.general import generate_uuid4
                 self._persistent_user_id = generate_uuid4()
                 # We need to set the persistent_user_id before memorizing it, because the memorize function will access the
@@ -454,6 +456,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def forget_session_then_state(self) -> None:
         self.session_forget("thenState")
+
+    def user_data(self) -> UserData:
+        return self._user_data
 
     def memorize_session_last_intent_handler(self, handler_class_type_instance_name) -> None:
         from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftRequestHandler, InoftStateHandler

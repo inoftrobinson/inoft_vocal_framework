@@ -11,8 +11,8 @@ pub struct ClipWithHashedChildren {
     volume: Option<u8>,
     player_start_time: Time,
     player_end_time: Time,
-    file_start_time: i16,
-    file_end_time: i16,
+    file_start_time: f32,
+    file_end_time: Option<f32>,
 }
 
 #[derive(Serialize, Deserialize)]
