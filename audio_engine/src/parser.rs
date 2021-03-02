@@ -1,5 +1,5 @@
 use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject};
-use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileReceivedParsedData};
+use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData};
 use std::collections::HashMap;
 use std::cell::RefCell;
 
@@ -123,8 +123,14 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
 }
 
 
-pub fn parse_python_resample_call(_py: Python, data: PyObject) -> ResampleSaveFileReceivedParsedData {
+pub fn parse_python_resample_from_file_url_call(_py: Python, data: PyObject) -> ResampleSaveFileFromUrlData {
     let file_url: String = data.get_item(_py, "fileUrl").unwrap().to_string();
     let target_spec = parse_target_spec(_py, data);
-    ResampleSaveFileReceivedParsedData { file_url, target_spec }
+    ResampleSaveFileFromUrlData { file_url, target_spec }
+}
+
+pub fn parse_python_resample_from_local_file_call(_py: Python, data: PyObject) -> ResampleSaveFileFromLocalFileData {
+    let source_filepath: String = data.get_item(_py, "sourceFilepath").unwrap().to_string();
+    let target_spec = parse_target_spec(_py, data);
+    ResampleSaveFileFromLocalFileData { source_filepath, target_spec }
 }

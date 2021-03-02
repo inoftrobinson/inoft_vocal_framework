@@ -39,7 +39,7 @@ impl Renderer {
     pub async fn render(trace: &mut TraceItem, data: &ReceivedParsedData) -> Vec<i16> {
         let mut renderer = Renderer {
             out_samples: Vec::new(),
-            },
+            target_spec: data.target_spec.to_wav_spec(),
             rendered_clips_infos: HashMap::new()
         };
         renderer.render_to_vec(trace, &data.blocks).await;

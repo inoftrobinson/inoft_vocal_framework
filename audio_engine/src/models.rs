@@ -30,8 +30,13 @@ pub struct ReceivedParsedData {
     pub target_spec: ReceivedTargetSpec,
 }
 
-pub struct ResampleSaveFileReceivedParsedData {
+pub struct ResampleSaveFileFromUrlData {
     pub file_url: String,
+    pub target_spec: ReceivedTargetSpec
+}
+
+pub struct ResampleSaveFileFromLocalFileData {
+    pub source_filepath: String,
     pub target_spec: ReceivedTargetSpec
 }
 
