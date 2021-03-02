@@ -4,11 +4,23 @@ use std::collections::HashMap;
 use std::cell::RefCell;
 
 
-pub fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
+fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
     Time {
         type_key: object_item.get_item(_py, "type").unwrap().to_string(),
         relationship_parent_id: Some(object_item.get_item(_py, "relationship_parent_id").unwrap().to_string()),
         offset: Some(object_item.get_item(_py, "offset").unwrap().extract::<f32>(_py).unwrap()),
+    }
+}
+
+fn parse_target_spec(_py: Python, received_data: PyObject) -> ReceivedTargetSpec {
+    let target_spec_data = received_data.get_item(_py, "targetSpec").unwrap();
+    ReceivedTargetSpec {
+        filepath: target_spec_data.get_item(_py, "filepath").unwrap().to_string(),
+        sample_rate: target_spec_data.get_item(_py, "sampleRate").unwrap().extract::<u32>(_py).unwrap(),
+        bitrate: target_spec_data.get_item(_py, "bitrate").unwrap().extract::<u16>(_py).unwrap(),
+        num_channels: target_spec_data.get_item(_py, "numChannels").unwrap().extract::<u16>(_py).unwrap(),
+        format_type: target_spec_data.get_item(_py, "formatType").unwrap().to_string(),
+        export_target: target_spec_data.get_item(_py, "exportTarget").unwrap().to_string(),
     }
 }
 
@@ -78,7 +90,6 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
         });
     }
 
-    let target_spec_data = received_data.get_item(_py, "targetSpec").unwrap();
     let output_parsed_data = ReceivedParsedData {
         engine_account_id: match received_data.get_item(_py, "engineAccountId") {
             Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
@@ -89,12 +100,7 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
             Err(err) => { println!("{:?}", err); None }
         },
         blocks: audio_blocks_items,
-        target_spec: ReceivedTargetSpec {
-            filepath: target_spec_data.get_item(_py, "filepath").unwrap().to_string(),
-            sample_rate: target_spec_data.get_item(_py, "sampleRate").unwrap().extract::<i32>(_py).unwrap(),
-            format_type: target_spec_data.get_item(_py, "formatType").unwrap().to_string(),
-            export_target: target_spec_data.get_item(_py, "exportTarget").unwrap().to_string(),
-        },
+        target_spec: parse_target_spec(_py, received_data)
     };
 
     for audio_block in output_parsed_data.blocks.iter() {
@@ -119,6 +125,6 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
 
 pub fn parse_python_resample_call(_py: Python, data: PyObject) -> ResampleSaveFileReceivedParsedData {
     let file_url: String = data.get_item(_py, "fileUrl").unwrap().to_string();
-    let target_dirpath: String = data.get_item(_py, "targetDirpath").unwrap().to_string();
-    ResampleSaveFileReceivedParsedData { file_url, target_dirpath }
+    let target_spec = parse_target_spec(_py, data);
+    ResampleSaveFileReceivedParsedData { file_url, target_spec }
 }

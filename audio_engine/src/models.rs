@@ -1,22 +1,26 @@
-// pub const FORMAT_TYPE_WAV: &String = &String::from("wav");
-// pub const FORMAT_TYPE_MP3: &String = &String::from("mp3");
-
-
 use std::cell::RefCell;
 use serde::{Serialize, Deserialize};
 pub use crate::audio_clip::AudioClip;
 
 
-pub struct ResampleSaveFileReceivedParsedData {
-    pub file_url: String,
-    pub target_dirpath: String,
-}
-
 pub struct ReceivedTargetSpec {
     pub filepath: String,
-    pub sample_rate: i32,
+    pub sample_rate: u32,
+    pub bitrate: u16,
+    pub num_channels: u16,
     pub format_type: String,
     pub export_target: String,
+}
+
+impl ReceivedTargetSpec {
+    pub fn to_wav_spec(&self) -> hound::WavSpec {
+        hound::WavSpec {
+            channels: self.num_channels,
+            sample_rate: self.sample_rate,
+            bits_per_sample: self.bitrate,
+            sample_format: hound::SampleFormat::Int
+        }
+    }
 }
 
 pub struct ReceivedParsedData {
@@ -25,6 +29,12 @@ pub struct ReceivedParsedData {
     pub blocks: Vec<AudioBlock>,
     pub target_spec: ReceivedTargetSpec,
 }
+
+pub struct ResampleSaveFileReceivedParsedData {
+    pub file_url: String,
+    pub target_spec: ReceivedTargetSpec
+}
+
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Time {

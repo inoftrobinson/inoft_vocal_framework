@@ -113,10 +113,9 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
     let start = Instant::now();
 
     let mut lame = Lame::new().expect("Coudn't create Lame");
-    lame.set_channels(1).expect("Couldn't set num channels");
+    lame.set_channels(target_spec.num_channels as u8).expect("Couldn't set num channels");
     lame.set_sample_rate(target_spec.sample_rate as u32).expect("Couldn't set up sample rate");
-    lame.set_kilobitrate(48).expect("Coudn't set up kilobitrate");
-    // todo: make kilobitrate parametrable
+    lame.set_kilobitrate(target_spec.bitrate as i32).expect("Coudn't set up kilobitrate");
     lame.set_quality(9).expect("Set quality error");
     // We set the quality to the 'worst' and fastest quality possible. With the formats used
     // by the inoft_vocal_framework, we do not hear the difference between the qualities.

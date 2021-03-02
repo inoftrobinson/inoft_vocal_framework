@@ -114,7 +114,6 @@ pub fn resample(trace: &mut TraceItem, samples: Vec<i16>, source_spec: CodecPara
     let source_num_channels = source_spec.channels.unwrap().count() as u16;
     let source_bits_per_sample = source_spec.bits_per_sample.unwrap_or(16) as u16;
     let target_sample_rate = target_spec.sample_rate;
-    println!("resample samples len : {}", samples.len());
     trace_initialization.close();
 
     if source_sample_rate == target_spec.sample_rate && source_num_channels == target_spec.channels && source_bits_per_sample == target_spec.bits_per_sample {

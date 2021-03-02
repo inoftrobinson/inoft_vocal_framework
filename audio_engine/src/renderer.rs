@@ -36,18 +36,13 @@ struct PreAudioClipsContainer<'a> {
 
 
 impl Renderer {
-    pub async fn render(data: &ReceivedParsedData) -> Vec<i16> {
+    pub async fn render(trace: &mut TraceItem, data: &ReceivedParsedData) -> Vec<i16> {
         let mut renderer = Renderer {
             out_samples: Vec::new(),
-            target_spec: hound::WavSpec {
-                channels: 1,
-                sample_rate: data.target_spec.sample_rate as u32,
-                bits_per_sample: 16,
-                sample_format: hound::SampleFormat::Int,
             },
             rendered_clips_infos: HashMap::new()
         };
-        renderer.render_to_vec(&data.blocks).await;
+        renderer.render_to_vec(trace, &data.blocks).await;
         renderer.out_samples
     }
 
@@ -116,10 +111,8 @@ impl Renderer {
         } else { None }
     }
 
-    async fn render_to_vec(&mut self, audio_blocks: &Vec<AudioBlock>) {
+    async fn render_to_vec(&mut self, trace: &mut TraceItem, audio_blocks: &Vec<AudioBlock>) {
         // todo: optimize the re-use of the multi file multiple times
-        let mut trace_rendering = TraceItem::new(String::from("root"));
-
         if audio_blocks.len() > 0 {
             let mut first_audio_block = audio_blocks.get(0).unwrap();
             let borrowed_first_audio_block = first_audio_block.borrow_mut();
@@ -169,7 +162,7 @@ impl Renderer {
 
             for audio_clip_ref in audio_clips.iter() {
                 let mut audio_clip = audio_clip_ref.borrow_mut();
-                let trace_clip = trace_rendering.create_child(String::from(format!("clip_{}", audio_clip.clip_id)));
+                let trace_clip = trace.create_child(String::from(format!("clip_{}", audio_clip.clip_id)));
                 let cloned_clip_id = audio_clip.clip_id.clone();
 
                 let trace_player_times_rendering = trace_clip.create_child(String::from("player_times_rendering"));
@@ -211,9 +204,8 @@ impl Renderer {
             }
         }
         // todo: handle audio clip being loaded before its relationship parent(s)
-        trace_rendering.close();
-        println!("Total rendering time : {}ms", trace_rendering.elapsed);
-        // trace_rendering.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/json/trace.json");
+        trace.close();
+        // trace.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/json/trace.json");
     }
 
     async fn render_clip(&mut self, trace: &mut TraceItem, audio_clip_resamples: &Vec<i16>, render_clip_infos: &RenderedClipInfos) {

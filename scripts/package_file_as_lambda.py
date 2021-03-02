@@ -24,7 +24,7 @@ def package(build_filename: str, lambda_layer_filepath: str):
         # Include the framework files to the archive
         click.echo("Searching framework files to zip...")
         for root_dirpath, dirs, filenames in os.walk(framework_root_path, topdown=True):
-            # The topdown arg allow use to modify the dirs list in the walk, and so we can easily exclude folders.
+            # The topdown arg allow use modify the dirs list in the walk, and so we can easily exclude folders.
             dirs[:] = [dirpath for dirpath in dirs if Path(dirpath).name not in folders_names_to_excludes]
             relative_root_dirpath = os.path.join("inoft_vocal_framework", root_dirpath.replace(framework_root_path, "").strip("\\").strip("/"))
             for filename in filenames:

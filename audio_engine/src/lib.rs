@@ -14,6 +14,7 @@
 #[path="loader.rs"] pub mod loader;
 #[path="hasher.rs"] pub mod hasher;
 #[path="tracer.rs"] pub mod tracer;
+#[path="saver.rs"] pub mod saver;
 #[path="tests/mod.rs"] pub mod tests;
 
 use std::borrow::Borrow;
@@ -41,25 +42,9 @@ pub async fn ex(data: ResampleSaveFileReceivedParsedData) -> bool {
         trace, &*data.file_url, 0.0, None
     ).await;
 
-    let source_filename = data.file_url.split("/").last().unwrap();
-    let source_file_extension = source_filename.split(".").last().unwrap();
-    let filename_with_wav_extension = source_filename.replacen(source_file_extension, "wav", 1);
-    let expected_efs_filepath = format!("{}/{}", data.target_dirpath, filename_with_wav_extension);
-
-    // /mnt/files/
-
-    let target_spec = hound::WavSpec {
-        channels: 1,
-        sample_rate: 48000,
-        bits_per_sample: 16,
-        sample_format: hound::SampleFormat::Int,
-    };
+    let target_spec = data.target_spec.to_wav_spec();
     let resamples = resample(trace, samples.unwrap(), codec_params.unwrap(), target_spec);
-
-    let mut writer =  hound::WavWriter::create(expected_efs_filepath, target_spec).unwrap();
-    for sample in resamples {
-        writer.write_sample(sample).unwrap();
-    }
+    saver::save_samples(trace, resamples, &data.target_spec, String::from("desired_filename_example")).await;
 
     trace.close();
     true
@@ -74,9 +59,11 @@ pub fn resample_save_file_from_url(_py: Python, data: PyObject) -> PyResult<bool
 
 
 pub fn render(_py: Python, data: PyObject) -> PyResult<String> {
+    let mut trace = TraceItem::new(String::from("render"));
+
+    let trace_initialization = trace.create_child(String::from("Initialization"));
     let parsed_data = parser::parse_python_render_call(_py, data);
     let expected_render_file_hash = hasher::hash(&parsed_data);
-    println!("expected_render_file_hash : {}", expected_render_file_hash);
 
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
 
@@ -88,12 +75,19 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<String> {
         parsed_data.engine_project_id.borrow().as_ref().unwrap(),
         expected_render_file_hash
     );
+    trace_initialization.close();
+
+    let trace_check_matching_file_exist = trace.create_child(String::from("Check matching file already exist"));
     let file_exist = runtime.block_on(loader::file_exist_at_url(&*expected_render_url));
+    trace_check_matching_file_exist.close();
+
     if file_exist == true {
+        trace.close();
         Ok(expected_render_url)
     } else {
-        let file_url = runtime.block_on(append::main(parsed_data, expected_render_file_hash))
+        let file_url = runtime.block_on(append::main(&mut trace, parsed_data, expected_render_file_hash))
             .expect("Append future did not returned a valid file_url");
+        trace.close();
         Ok(file_url.unwrap_or(String::from("null")))
     }
 }
