@@ -1,5 +1,5 @@
 import os
-from typing import List, Union
+from typing import List, Union, Any, Dict
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 
 
@@ -7,8 +7,8 @@ OUT_FORMATS_UNION = Union["mp3", "wav"]
 
 
 def render(
-        audio_blocks: List[AudioBlock], out_filepath: str, num_channels: int, sample_rate: int,
-        out_format_type: OUT_FORMATS_UNION, export_target='managed-inoft-vocal-engine'
+    audio_blocks: List[AudioBlock], out_filepath: str, num_channels: int, sample_rate: int,
+    out_format_type: OUT_FORMATS_UNION, export_target='managed-inoft-vocal-engine'
 ) -> str:
     from inoft_vocal_framework.audio_engine import audio_engine
     audio_blocks_data: List[dict] = list()
@@ -30,10 +30,10 @@ def render(
     return audio_engine.render(data)
 
 def resample_save_file_from_url(
-        file_url: str, out_filepath: str,
-        num_channels: int, sample_rate: int, bitrate: int,
-        out_format_type: OUT_FORMATS_UNION, export_target='local'
-) -> bool:
+    file_url: str, out_filepath: str,
+    num_channels: int, sample_rate: int, bitrate: int,
+    out_format_type: OUT_FORMATS_UNION, export_target='local'
+) -> Dict[str, Any]:
     # todo: add export_target support
     from inoft_vocal_framework.audio_engine import audio_engine
     data = {

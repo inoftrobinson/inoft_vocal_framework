@@ -1,2 +1,7 @@
-recursive-include inoft_vocal_framework/templates *.yaml *.json
-recursive-include inoft_vocal_framework/platforms_handlers/simulator *.yaml *.json
+recursive-include templates *.yaml *.json
+recursive-include platforms_handlers/simulator *.yaml *.json
+include audio_engine/audio_engine.pyd
+include audio_engine/audio_engine.so
+include audio_engine/libmp3lame.dll
+recursive-include audio_engine/libs *
+# todo: include the .dll files only on windows install, and .so files only on linux install

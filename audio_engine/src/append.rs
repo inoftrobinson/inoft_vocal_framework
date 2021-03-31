@@ -6,11 +6,12 @@ use crate::renderer::Renderer;
 use std::mem::{size_of};
 use crate::saver;
 use crate::tracer::TraceItem;
+use self::hound::Error;
 
 extern crate hound;
 
 
-pub async fn main(trace: &mut TraceItem, data: ReceivedParsedData, expected_render_file_hash: String) -> Result<Option<String>, ()> {
+pub async fn main(trace: &mut TraceItem, data: ReceivedParsedData, expected_render_file_hash: String) -> Result<Option<String>, hound::Error> {
     let trace_rendering_samples = trace.create_child(String::from("Render samples"));
     let rendered_samples = Renderer::render(trace_rendering_samples, &data).await;
     trace_rendering_samples.close();

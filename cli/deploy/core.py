@@ -265,7 +265,7 @@ class Core(CoreClients):
             click.echo(f"Error while getting/creating/uploading to the S3 bucket : {e}")
             return False
 
-    def remove_from_s3(self, file_name: str, bucket_name: str):
+    def remove_from_s3(self, object_key: str, bucket_name: str):
         try:
             self.s3_client.head_bucket(Bucket=bucket_name)
         except botocore.exceptions.ClientError as e:

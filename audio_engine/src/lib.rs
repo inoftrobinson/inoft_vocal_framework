@@ -23,10 +23,14 @@ use std::fs::File;
 use std::path::Path;
 use std::io::Write;
 use crate::tracer::TraceItem;
-use cpython::{PyResult, Python, py_module_initializer, py_fn, PyObject};
+use cpython::{PyResult, PyDict, Python, py_module_initializer, py_fn, PyObject};
 use crate::models::{ResampleSaveFileFromUrlData, ReceivedParsedData, ResampleSaveFileFromLocalFileData, ReceivedTargetSpec};
 use symphonia_core::codecs::CodecParameters;
 use hound::WavSpec;
+use std::panic;
+use std::any::Any;
+use serde::ser::Error;
+use serde::Serialize;
 
 
 py_module_initializer!(audio_engine, |py, m| {
@@ -38,9 +42,11 @@ py_module_initializer!(audio_engine, |py, m| {
 });
 
 
-async fn execute_resample_save_file_from_vec(trace: &mut TraceItem, samples: Vec<i16>, codec_params: CodecParameters, target_spec: &ReceivedTargetSpec) {
+async fn execute_resample_save_file_from_vec(
+    trace: &mut TraceItem, samples: Vec<i16>, codec_params: CodecParameters, target_spec: &ReceivedTargetSpec
+) -> Result<Option<String>, hound::Error> {
     let resamples = resample(trace, samples, codec_params, target_spec.to_wav_spec());
-    saver::save_samples(trace, resamples, target_spec, String::from("desired_filename_example")).await;
+    saver::save_samples(trace, resamples, target_spec, String::from("desired_filename_example")).await
 }
 
 async fn execute_resample_save_file_from_local_file(data: ResampleSaveFileFromLocalFileData) -> bool {
@@ -53,14 +59,16 @@ async fn execute_resample_save_file_from_local_file(data: ResampleSaveFileFromLo
     true
 }
 
-async fn execute_resample_save_file_from_url(data: ResampleSaveFileFromUrlData) -> bool {
+async fn execute_resample_save_file_from_url(data: ResampleSaveFileFromUrlData) -> Result<Option<String>, hound::Error> {
     let trace = &mut TraceItem::new(String::from("Resample save file from url"));
     let (samples, codec_params) = decoder::decode_from_file_url(
         trace, &*data.file_url, 0.0, None
     ).await;
-    execute_resample_save_file_from_vec(trace, samples.unwrap(), codec_params.unwrap(), &data.target_spec).await;
+    let result = execute_resample_save_file_from_vec(
+        trace, samples.unwrap(), codec_params.unwrap(), &data.target_spec
+    ).await;
     trace.close();
-    true
+    result
 }
 
 pub fn resample_save_file_from_local_file(_py: Python, data: PyObject) -> PyResult<bool> {
@@ -70,11 +78,37 @@ pub fn resample_save_file_from_local_file(_py: Python, data: PyObject) -> PyResu
     Ok(result)
 }
 
-pub fn resample_save_file_from_url(_py: Python, data: PyObject) -> PyResult<bool> {
+pub fn resample_save_file_from_url(_py: Python, data: PyObject) -> PyResult<PyDict> {
     let parsed_data = parser::parse_python_resample_from_file_url_call(_py, data);
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
+    println!("test print");
+    /*let result = runtime.block_on(async {
+        panic::catch_unwind(|| async {
+            execute_resample_save_file_from_url(parsed_data).await
+        }.await)
+    });*/
+
     let result = runtime.block_on(execute_resample_save_file_from_url(parsed_data));
-    Ok(result)
+
+    /*let result = panic::catch_unwind(|| { runtime.block_on(
+        execute_resample_save_file_from_url(parsed_data)
+    )});*/
+
+    /*let result = runtime.block_on(async move {
+        let e = panic::catch_unwind(|| {
+            execute_resample_save_file_from_url(parsed_data)
+        })
+    }.await);*/
+
+    let dict = PyDict::new(_py);
+    match &result {
+        Ok(_) => dict.set_item(_py, "success", true).unwrap(),
+        Err(_) => {
+            dict.set_item(_py, "success", false).unwrap();
+            dict.set_item(_py, "exception", format!("{:?}", result.err().unwrap())).unwrap();
+        }
+    };
+    Ok(dict)
 }
 
 
