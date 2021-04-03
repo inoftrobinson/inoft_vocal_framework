@@ -1,0 +1,10 @@
+root_file: __init__.py
+type: "layer"
+folders_includes:
+  audio_engine/libs:
+    additional_linux:
+      excluded_files_extensions: [".pyd"]
+    additional_windows:
+      excluded_folders_names: ["audio_engine/libs"]
+      excluded_files_extensions: [".so"]
+

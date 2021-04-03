@@ -1,14 +1,14 @@
 pydantic~=1.7.3
 setuptools~=50.3.2
 boto3~=1.16.13
-StructNoSQL~=1.2.1
+StructNoSQL~=1.4.6
 botocore~=1.19.13
 requests~=2.24.0
 click~=7.1.2
 boto~=2.49.0
 Jinja2~=2.11.2
 inflect~=4.1.0
-PyYAML~=5.3.1
+PyYAML~=5.4.1
 future~=0.18.2
 pydub~=0.24.1
 discord~=1.0.1

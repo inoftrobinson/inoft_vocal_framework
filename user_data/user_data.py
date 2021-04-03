@@ -36,7 +36,7 @@ class UserData:
     def delete_field(self, field_path: str, query_kwargs: Optional[dict] = None):
         return self.table.delete_field(key_value=self.user_id, field_path=field_path, query_kwargs=query_kwargs)
 
-    def delete_multiple_fields(self, removers: List[FieldRemover]):
+    def delete_multiple_fields(self, removers: Dict[str, FieldRemover]):
         return self.table.delete_multiple_fields(key_value=self.user_id, removers=removers)
 
     def remove_field(self, field_path: str, query_kwargs: Optional[dict] = None):

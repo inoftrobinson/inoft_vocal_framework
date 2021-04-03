@@ -192,7 +192,7 @@ class DeployHandler(Core):
 
             # Include the projects files
             for root_dirpath, dirs, filenames in os.walk(app_folder_path, topdown=True):
-                # The topdown arg allow use to modify the dirs list in the walk, and so we can easily exclude folders.
+                # The topdown arg allow use modify the dirs list in the walk, and so we can easily exclude folders.
                 dirs[:] = [dirpath for dirpath in dirs if Path(dirpath).name not in folders_names_to_excludes]
 
                 if Path(root_dirpath).name == "inoft_vocal_framework":

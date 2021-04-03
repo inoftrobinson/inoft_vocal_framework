@@ -1,3 +1,5 @@
+import os
+
 from setuptools import setup, find_packages
 
 """
@@ -13,10 +15,9 @@ from setuptools import setup, find_packages
 
 setup(
     name="inoftvocal",
-    version="0.90.5.7",
+    version="1.1.1.0",
     packages=find_packages(),
     include_package_data=True,
-    package_data={'inoftvocal': ['*.json', '*.yaml']},
     install_requires=["PyYAML", "pydantic", "boto3", "click", "inflect", "discord.py"],
     entry_points={
         "console_scripts": [

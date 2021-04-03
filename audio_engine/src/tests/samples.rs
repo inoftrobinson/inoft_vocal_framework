@@ -68,6 +68,8 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
         target_spec: ReceivedTargetSpec {
             filepath: String::from("F:/Sons utiles/tests/output_1.mp3"),
             sample_rate: 24000,
+            bitrate: 16,
+            num_channels: 1,
             format_type: String::from("mp3"),
             export_target: String::from("managed-inoft-vocal-engine")
         },

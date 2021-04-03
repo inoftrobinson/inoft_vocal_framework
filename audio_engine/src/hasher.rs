@@ -28,7 +28,7 @@ pub struct AudioBlockWithHashedChildren {
 
 #[derive(Serialize, Deserialize)]
 pub struct AudioProjectWithHashedChildren {
-    sample_rate: i32,
+    sample_rate: u32,
     audio_blocks_signature: String,
 }
 

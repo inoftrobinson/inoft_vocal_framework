@@ -4,68 +4,26 @@ use crate::models::{ReceivedParsedData};
 use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url, post_mp3_buffer_to_s3_with_presigned_url};
 use crate::renderer::Renderer;
 use std::mem::{size_of};
+use crate::saver;
+use crate::tracer::TraceItem;
+use self::hound::Error;
 
 extern crate hound;
 
 
-pub async fn main(data: ReceivedParsedData, expected_render_file_hash: String) -> Result<Option<String>, ()> {
-    let start = Instant::now();
+pub async fn main(trace: &mut TraceItem, data: ReceivedParsedData, expected_render_file_hash: String) -> Result<Option<String>, hound::Error> {
+    let trace_rendering_samples = trace.create_child(String::from("Render samples"));
+    let rendered_samples = Renderer::render(trace_rendering_samples, &data).await;
+    trace_rendering_samples.close();
 
-    let path: &Path = data.target_spec.filepath.as_ref();
-    let target_spec = &data.target_spec;
-    let rendered_samples = Renderer::render(&data).await;
+    let trace_saving_samples = trace.create_child(String::from("Saving samples"));
+    let file_url = saver::save_samples(
+        trace_saving_samples, rendered_samples,
+        &data.target_spec, expected_render_file_hash
+    ).await;
+    trace_saving_samples.close();
 
-    let writing_start = Instant::now();
-    println!("format type : {}", target_spec.format_type);
-    let file_url = match &*target_spec.format_type {
-        "mp3" => {
-            let mp3_buffer = from_samples_to_mono_mp3(rendered_samples, target_spec);
-            match &*target_spec.export_target {
-                "local" => {
-                    println!("Writing mp3_buffer to file...");
-                    write_mp3_buffer_to_file(mp3_buffer, &*target_spec.filepath);
-                    None
-                },
-                "managed-inoft-vocal-engine" => {
-                    println!("Uploading mp3_buffer to managed inoft-vocal-engine....");
-                    let mp3_buffer_expected_bytes_size = mp3_buffer.capacity() * size_of::<u8>();
-                    println!("expected bytes size : {}", mp3_buffer_expected_bytes_size);
-
-                    let upload_url_data = get_upload_url(
-                    format!("{}.mp3", expected_render_file_hash),
-                    mp3_buffer_expected_bytes_size
-                    ).await.expect("Error connecting to engine API")
-                        .expect("Error connecting to engine API");
-                    Some(post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await)
-                }
-                _ => {
-                    panic!("Export target not supported");
-                }
-            }
-        },
-        "wav" => {
-            let wav_target_spec = hound::WavSpec {
-                channels: 1,
-                sample_rate: target_spec.sample_rate as u32,
-                bits_per_sample: 16,
-                sample_format: hound::SampleFormat::Int,
-            };
-            let mut writer =  hound::WavWriter::create(path, wav_target_spec).unwrap();
-            for sample in rendered_samples {
-                writer.write_sample(sample).unwrap();
-            }
-            None
-        },
-        _ => {
-            panic!(
-                "Format type not supported. Only 'mp3' and 'wav' formats are supported to export audio.\
-                \n  --request_format_type:{}", target_spec.format_type
-            );
-        }
-    };
-    println!("\nFinished conversion and writing.\n  --execution_time:{}ms", writing_start.elapsed().as_millis());
-    println!("\nFinished rendering, conversion and writing.\n  --execution_time:{}ms", start.elapsed().as_millis());
-    Ok(file_url)
+    file_url
     // writer.finalize().unwrap();
 
     /*for (i_reader, mut file_reader) in files_readers.iter().enumerate() {
