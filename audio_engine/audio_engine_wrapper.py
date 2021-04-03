@@ -31,6 +31,8 @@ def render(audio_blocks: List[AudioBlock], out_filepath: str, out_format_type: s
             'filepath': out_filepath,
             'sampleRate': 24000,  # todo: make sampleRate configurable
             'formatType': out_format_type,
+            'numChannels': 2,
+            'bitrate': 16,
             'exportTarget': 'managed-inoft-vocal-engine'  # 'local'
         },
     }

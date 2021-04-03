@@ -80,23 +80,21 @@ class Track:
         if audio_segment_result is not None:
             audio_segment_result.export(out_f=filepath, format=format_type)
 
-    def create_sound(self, engine_file_key: Optional[str] = None, full_file_url: Optional[str] = None,
-                     local_filepath: Optional[str] = None,
-                     player_start: Optional[AudioStartTime or TrackStartTime] = None,
-                     player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
-                     file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
-                     file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
-                     stretch_method: Sound.STRETCH_LOOP = Sound.STRETCH_LOOP, speech: bool = False) -> Sound:
+    def create_sound(
+            self, engine_file_key: Optional[str] = None, file_url: Optional[str] = None, local_filepath: Optional[str] = None,
+            player_start: Optional[AudioStartTime or TrackStartTime] = None,
+            player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
+            file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
+            file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
+            stretch_method: Sound.STRETCH_LOOP = Sound.STRETCH_LOOP, speech: bool = False
+    ) -> Sound:
 
-        file_url: Optional[str] = None
         if engine_file_key is not None:
+            if file_url is not None:
+                print("file_url not required and is being overridden by the engine_file_key")
             account_id = "b1fe5939-032b-462d-92e0-a942cd445096"
             project_id = "22ac1d08-292d-4f2e-a9e3-20d181f1f58f"
             file_url = f"https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/{account_id}/{project_id}/files/{engine_file_key}"
-            if full_file_url is not None:
-                print("full_file_url not required and is being overridden by the engine_file_key")
-        else:
-            file_url = full_file_url
 
         if file_url is not None and local_filepath is not None:
             raise Exception(f"Cannot specify a file_url or engine_file_key with a local_filepath")
@@ -109,6 +107,14 @@ class Track:
         )
         self._sounds[sound.id] = sound
         return sound
+
+    def create_speech(
+            self, text: str, voice_key: str,
+            player_start: Optional[AudioStartTime or TrackStartTime] = None,
+            player_end_time: Optional[AudioStartTime or TrackStartTime] = None
+    ):
+        # todo: implement create_speech
+        print(f"Should create speech for {text}")
 
     def append_sound(self, sound: Sound):
         if not isinstance(sound, Sound):
@@ -133,5 +139,5 @@ class Track:
         return self
 
     @property
-    def start_time(self) -> TrackStartTime:
+    def player_start(self) -> TrackStartTime:
         return TrackStartTime(track=self, offset=0)
