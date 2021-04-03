@@ -9,6 +9,7 @@ from .speechs.ssml_builder_core import Speech, SpeechsList
 
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
 from inoft_vocal_framework.audio_engine import audio_engine_wrapper
+from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 
 # todo: if the framework do not find the AWS credentials, ask with a dialog
 #  if the developer want to run the app with the database disabled

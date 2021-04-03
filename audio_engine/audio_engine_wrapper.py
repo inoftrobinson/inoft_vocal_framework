@@ -24,6 +24,8 @@ def render(
             'filepath': out_filepath,
             'formatType': out_format_type,
             'sampleRate': sample_rate,
+            'numChannels': 2,
+            'bitrate': 16,
             'exportTarget': 'managed-inoft-vocal-engine'  # 'local'
         },
     }

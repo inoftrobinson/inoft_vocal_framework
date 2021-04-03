@@ -33,7 +33,11 @@ to take more than 20 seconds to execute, increase the timeout to fit your needs.
 
 #### Setting up environment variables
 
+When using the framework as a folder inside the deployment package
 - `LD_LIBRARY_PATH` = `/var/task/inoft_vocal_framework/audio_engine/libs` (this allow the Linux dynamic linked library to find its dependencies)
+
+When using the framework as a dependency loaded as a lambda layer :
+- `LD_LIBRARY_PATH` = `/opt/python/lib/python3.8/site-packages/inoft_vocal_framework/audio_engine/libs`
 
 ![](assets/AwsLambdaEnvironmentVariables.PNG)
 

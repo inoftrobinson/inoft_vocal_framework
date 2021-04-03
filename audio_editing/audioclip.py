@@ -24,7 +24,7 @@ class AudioBlock:
 
     def render_2(self, out_filepath: str, format_type: FORMAT_TYPE_MP3 or FORMAT_TYPE_WAV = FORMAT_TYPE_MP3) -> str:
         from inoft_vocal_framework.audio_engine.audio_engine_wrapper import render
-        return render(audio_blocks=[self], out_filepath=out_filepath, out_format_type=format_type)
+        return render(audio_blocks=[self], out_filepath=out_filepath, num_channels=1, sample_rate=24000, out_format_type=format_type)
 
     def _render(self) -> Optional[AudioSegment]:
         if len(self.tracks) > 0:
