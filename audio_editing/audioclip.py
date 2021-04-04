@@ -1,12 +1,6 @@
 import time
-
-from pydub import AudioSegment
-
-from inoft_vocal_framework.audio_editing.sound import Sound
 from inoft_vocal_framework.audio_editing.track import Track
-from inoft_vocal_framework.audio_editing.relation import Relation
-from inoft_vocal_framework.dummy_object import DummyObject
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Dict
 
 
 class AudioBlock:
@@ -22,65 +16,16 @@ class AudioBlock:
             serialized_tracks[track.id] = track.serialize()
         return {'tracks': serialized_tracks}
 
-    def render_2(self, out_filepath: str, format_type: FORMAT_TYPE_MP3 or FORMAT_TYPE_WAV = FORMAT_TYPE_MP3) -> str:
+    def manual_render(
+            self, num_channels: int, sample_rate: int, bitrate: int,
+            out_filepath: str, format_type: FORMAT_TYPE_MP3 or FORMAT_TYPE_WAV = FORMAT_TYPE_MP3
+    ) -> str:
         from inoft_vocal_framework.audio_engine.audio_engine_wrapper import render
-        return render(audio_blocks=[self], out_filepath=out_filepath, num_channels=1, sample_rate=24000, out_format_type=format_type)
-
-    def _render(self) -> Optional[AudioSegment]:
-        if len(self.tracks) > 0:
-            id_longer_primary_track = None
-            duration_longer_primary_track = 0
-
-            for i, track in enumerate(self.tracks):
-                track._audio_segment = track._render()
-                track.audio_segment.export(out_f=f"F:/Sons utiles/track_{i}.mp3", format="mp3")
-                if track.is_primary:
-                    if track.audio_segment.duration_seconds > duration_longer_primary_track:
-                        id_longer_primary_track = i
-                        duration_longer_primary_track = track.audio_segment.duration_seconds
-
-            if id_longer_primary_track is not None:
-                last_overlayed_audio = self.tracks[id_longer_primary_track].audio_segment
-                self.tracks.pop(id_longer_primary_track)
-            else:
-                last_overlayed_audio = self.tracks[0].audio_segment
-                self.tracks.pop(0)
-
-            for track in self.tracks:
-                last_overlayed_audio = last_overlayed_audio.overlay(track.audio_segment, loop=track.loop_until_primary_tracks_finish)
-            return last_overlayed_audio
-        elif len(self.tracks) > 0:
-            return self.tracks[0].audio_segment
-        else:
-            return None
-
-    def _export(self, filepath: str, format_type: str = "mp3"):
-        render_start_time = time.time()
-        audio_segment_result = self._render()
-        if audio_segment_result is not None:
-            export_start_time = time.time()
-            audio_segment_result.export(out_f=filepath, format=format_type, bitrate="48k")
-            print(f"export time : {time.time() - export_start_time}")
-            print(f"render & export time : {time.time() - render_start_time}")
-
-    def play(self):
-        return
-        if len(self.tracks) > 0:
-            if id_longer_primary_track is not None:
-                last_overlayed_audio = self.tracks[id_longer_primary_track]._audio_segment
-                self.tracks.pop(id_longer_primary_track)
-            else:
-                last_overlayed_audio = self.tracks[0]._audio_segment
-                self.tracks.pop(0)
-
-            for track in self.tracks:
-                last_overlayed_audio = last_overlayed_audio.overlay(track._audio_segment,
-                                                                    loop=track.loop_until_primary_tracks_finish)
-            return last_overlayed_audio
-        elif len(self.tracks) > 0:
-            return self.tracks[0]._audio_segment
-        else:
-            return None
+        return render(
+            audio_blocks=[self],
+            num_channels=num_channels, sample_rate=sample_rate, bitrate=bitrate,
+            out_filepath=out_filepath, out_format_type=format_type
+        )
 
     def create_track(self, primary: bool = True, loop: bool = False) -> Track:
         track = Track(is_primary=primary, loop_until_primary_tracks_finish=loop)
@@ -91,12 +36,16 @@ class AudioBlock:
         if not isinstance(track, Track):
             raise Exception(f"You can only add Track objects to an AudioBlock but you tried to add {track}")
         self.tracks.append(track)
+        return self
 
-    def __add__(self, track: Track):
-        self.add_track(track=track)
+    def add_tracks(self, tracks: List[Track]):
+        for track_item in tracks:
+            self.add_track(track=track_item)
+        return self
 
     def track(self, name: str) -> Optional[Track]:
         for track in self.tracks:
+            # todo: move to a dict
             if track.name == name:
                 return track
         return None
@@ -124,16 +73,16 @@ if __name__ == "__main__":
         text="Je suis un test d'audio dynamique ?",
         voice_id=VOICES.French_France_Female_CELINE.id,
         filepath_to_save_to="F:/Sons utiles/test_synthesised_dialogue.mp3"
-    ), custom_key="voice", player_start=track_voice.start_time)
+    ), custom_key="voice", player_start_time=track_voice.start_time)
     rifle_shots = track_voice.create_sound(
         local_filepath="F:/Sons utiles/Sound Effects/Guns/Automatic/238916__qubodup__rifle-shooting.flac",
-        player_start=voice_sound.player_end_time + 20, player_end_time=voice_sound.player_end_time + 40
+        player_start_time=voice_sound.player_end_time + 20, player_end_time=voice_sound.player_end_time + 40
     )
 
     background_music_track = audio_block_1.create_track(primary=True)
     background_music = background_music_track.create_sound(
         local_filepath="F:/Sons utiles/Musics/Vintage (1940s) French Music/CHANSON FRANCAISE 1930-1940 (192  kbps).mp3",
-        player_start=background_music_track.start_time
+        player_start_time=background_music_track.start_time
     )
     background_music.volume = -1.0
 

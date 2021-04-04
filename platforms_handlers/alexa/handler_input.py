@@ -1,5 +1,6 @@
 from typing import Optional
 
+from inoft_vocal_framework import AudioBlock
 from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayerWrapper
 from inoft_vocal_framework.platforms_handlers.alexa.context import Context
 from inoft_vocal_framework.platforms_handlers.alexa.request import Request
@@ -41,9 +42,20 @@ class AlexaHandlerInput:
     def say(self, text_or_ssml: str) -> None:
         self.response.say(text_or_ssml=text_or_ssml)
 
+    def say_ssml(self, ssml: str) -> None:
+        self.response.say_ssml(ssml=ssml)
+
     def reprompt(self, text_or_ssml: str) -> None:
         # todo: fix reprompt (for alexa and dialogflow)
         self.response.say_reprompt(text_or_ssml=text_or_ssml)
+
+    def play_audio_block(self, audio_block: AudioBlock, num_channels: int = 1, sample_rate: int = 24000) -> bool:
+        file_url = audio_block.manual_render(
+            num_channels=num_channels, sample_rate=sample_rate, bitrate=48,
+            out_filepath="null", format_type="mp3"
+        )
+        self.say_ssml(f'<audio src="{file_url}" />')
+        return True  # todo: return False is rendering failed
 
     @property
     def audioplayer(self) -> AudioPlayerWrapper:

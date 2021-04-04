@@ -10,11 +10,8 @@ def get_dict_of_all_custom_defined_variables_of_class(class_object: object) -> d
             output_vars_dict[key_var] = value_var
     return output_vars_dict
 
-def is_text_ssml(text_or_ssml: str):
-    if "<speak>" in text_or_ssml and "</speak>" in text_or_ssml:
-        return True
-    else:
-        return False
+def is_text_ssml(text_or_ssml: str) -> bool:
+    return "<speak>" in text_or_ssml and "</speak>" in text_or_ssml
 
 def generate_uuid4() -> str:
     from uuid import uuid4 as uuid4_generator

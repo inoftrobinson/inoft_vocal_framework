@@ -26,7 +26,7 @@ class TestInputFormats(unittest.TestCase):
             local_filepath="C:/Users/LABOURDETTE/Downloads/Isaac Delusion — How Much (You Want Her) 2017 (LYRICS VIDEO).mp3",
             file_start_time=20,
             file_end_time=25,
-            player_start=track_1.start_time + 10,
+            player_start_time=track_1.player_start + 10,
             player_end_time=track_1.start_time + 20
         )
 
@@ -38,12 +38,12 @@ class TestInputFormats(unittest.TestCase):
         )
         voice_sound = track_1.create_sound(
             full_file_url=f"https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/{response[1]}",
-            player_start=track_1.start_time + 21,
+            player_start_time=track_1.start_time + 21,
         )
 
         music_2 = track_1.create_sound(
             local_filepath="C:/Users/LABOURDETTE/Downloads/ANRI - I Can't Stop The Loneliness.mp3",
-            player_start=voice_sound.end_time + 5,
+            player_start_time=voice_sound.end_time + 5,
             player_end_time=voice_sound.end_time + 20
         )
 
@@ -61,21 +61,21 @@ class TestInputFormats(unittest.TestCase):
             local_filepath="C:/Users/LABOURDETTE/Downloads/Isaac Delusion — How Much (You Want Her) 2017 (LYRICS VIDEO).mp3",
             file_start_time=0,
             file_end_time=10,
-            player_start=track_1.start_time,
+            player_start_time=track_1.start_time,
             player_end_time=track_1.start_time + 5
         )
         sound_2 = track_1.create_sound(
             local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_wav_16bit.wav"),
             file_start_time=20,
             file_end_time=25,
-            player_start=sound_1.end_time + 1,
+            player_start_time=sound_1.end_time + 1,
             player_end_time=sound_1.end_time + 6
         )
         sound_3 = track_1.create_sound(
             local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_mono_mp3.mp3"),
             file_start_time=20,
             file_end_time=25,
-            player_start=sound_2.end_time + 1,
+            player_start_time=sound_2.end_time + 1,
             player_end_time=sound_2.end_time + 6
         )
 
@@ -94,21 +94,21 @@ class TestInputFormats(unittest.TestCase):
             local_filepath=filepath,
             file_start_time=20,
             file_end_time=30,
-            player_start=track_1.start_time,
+            player_start_time=track_1.start_time,
             player_end_time=track_1.start_time + 5
         )
         sound_2 = track_1.create_sound(
             local_filepath=filepath,
             file_start_time=10,
             file_end_time=18,
-            player_start=sound_1.end_time + 1,
+            player_start_time=sound_1.end_time + 1,
             player_end_time=sound_1.end_time + 6
         )
         sound_3 = track_1.create_sound(
             local_filepath=filepath,
             file_start_time=30,
             file_end_time=35,
-            player_start=sound_2.end_time + 1,
+            player_start_time=sound_2.end_time + 1,
             player_end_time=sound_2.end_time + 6
         )
 

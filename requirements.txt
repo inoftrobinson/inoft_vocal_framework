@@ -10,6 +10,5 @@ Jinja2~=2.11.2
 inflect~=4.1.0
 PyYAML~=5.4.1
 future~=0.18.2
-pydub~=0.24.1
 discord~=1.0.1
 tqdm~=4.57.0

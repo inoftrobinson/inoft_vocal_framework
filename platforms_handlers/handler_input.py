@@ -2,6 +2,7 @@ import logging
 from collections import Callable
 from typing import Optional
 
+from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
 from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
@@ -324,6 +325,16 @@ class HandlerInput(CurrentUsedPlatformInfo):
         elif self.is_discord is True:
             self.discordHandlerInput.say(text_or_ssml=text_or_ssml)
 
+    def say_ssml(self, ssml: str) -> None:
+        if self.is_alexa is True:
+            self.alexaHandlerInput.say_ssml(ssml=ssml)
+        elif self.is_dialogflow is True:
+            raise Exception("Not implemented")
+        elif self.is_bixby is True:
+            raise Exception("Not implemented")
+        elif self.is_discord is True:
+            raise Exception("Not implemented")
+
     def reprompt(self, text_or_ssml: str) -> None:
         if self.is_alexa is True:
             self.alexaHandlerInput.reprompt(text_or_ssml=text_or_ssml)
@@ -456,6 +467,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def forget_session_then_state(self) -> None:
         self.session_forget("thenState")
+
+    def play_audio_block(self, audio_block: AudioBlock) -> bool:
+        if self.is_alexa is True:
+            return self.alexaHandlerInput.play_audio_block(audio_block=audio_block)
+        return False
 
     def user_data(self) -> UserData:
         return self._user_data
@@ -616,6 +632,10 @@ class HandlerInputWrapper:
         self.handler_input.say(text_or_ssml=text_or_ssml)
         return self
 
+    def say_ssml(self, ssml: str):
+        self.handler_input.say_ssml(ssml=ssml)
+        return self
+
     def reprompt(self, text_or_ssml: str):
         self.handler_input.reprompt(text_or_ssml=text_or_ssml)
         return self
@@ -685,6 +705,9 @@ class HandlerInputWrapper:
 
     # todo: add the then states saved in the persistent attributes, allow to
     #  set who should take over if there is a then state in persistent and session
+
+    def play_audio_block(self, audio_block: AudioBlock) -> bool:
+        return self.handler_input.play_audio_block(audio_block=audio_block)
 
     def to_platform_dict(self) -> dict:
         return self.handler_input.to_platform_dict()

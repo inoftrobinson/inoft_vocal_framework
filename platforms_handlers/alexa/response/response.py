@@ -174,6 +174,10 @@ class OutputSpeech:
     def do_not_include(self):
         return self.is_speech_empty()
 
+    def return_transformations(self):
+        if self.ssml is not None and not is_text_ssml(self.ssml):
+            self._ssml = f"<speak>{self.ssml}</speak>"
+
 class Reprompt:
     json_key = "reprompt"
 
@@ -195,26 +199,21 @@ class Response:
 
     def say(self, text_or_ssml: str):
         if is_text_ssml(text_or_ssml=text_or_ssml) is True:
-            new_speech = ("\n" if self.outputSpeech.ssml is not None else "") + text_or_ssml
-            if self.outputSpeech.ssml is None:
-                self.outputSpeech.ssml = new_speech
-            else:
-                self.outputSpeech.ssml += new_speech
+            self.say_ssml(ssml=text_or_ssml)
         else:
-            new_speech = ("\n" if self.outputSpeech.text is not None else "") + text_or_ssml
-            if self.outputSpeech.text is None:
-                self.outputSpeech.text = new_speech
-            else:
-                self.outputSpeech.text += new_speech
+            self.outputSpeech.text = f'{self.outputSpeech.text}\n{text_or_ssml}' if self.outputSpeech.text is not None else text_or_ssml
+
+    def say_ssml(self, ssml: str):
+        self.outputSpeech.ssml = f'{self.outputSpeech.ssml}\n{ssml}' if self.outputSpeech.ssml is not None else ssml
 
     def clear_speech(self):
         self.outputSpeech.reset()
 
     def say_reprompt(self, text_or_ssml: str):
         if is_text_ssml(text_or_ssml=text_or_ssml) is True:
-            self.reprompt.outputSpeech.ssml += ("\n" if self.reprompt.outputSpeech.ssml is not None else "" + text_or_ssml)
+            self.reprompt.outputSpeech.ssml = f'{self.reprompt.outputSpeech.ssml}\n{text_or_ssml}' if self.reprompt.outputSpeech.ssml is not None else text_or_ssml
         else:
-            self.reprompt.outputSpeech.text += ("\n" if self.reprompt.outputSpeech.text is not None else "" + text_or_ssml)
+            self.reprompt.outputSpeech.text = f'{self.reprompt.outputSpeech.text}\n{text_or_ssml}' if self.reprompt.outputSpeech.text is not None else text_or_ssml
 
     def clear_reprompt_speech(self):
         self.reprompt.outputSpeech.reset()
@@ -227,10 +226,12 @@ class Response:
                 return directive
 
     # todo: to remove its deprecated (use the audioplayer object)
-    def play_audio(self, identifier: str,  mp3_file_url: str,
-                   title: str, subtitle: str, icon_image_url: str, background_image_url: str,
-                   milliseconds_start_offset: int = 0, played_type: str = None, play_behavior: str = None,
-                   override_default_end_session: bool = False):
+    def play_audio(
+            self, identifier: str,  mp3_file_url: str,
+            title: str, subtitle: str, icon_image_url: str, background_image_url: str,
+            milliseconds_start_offset: int = 0, played_type: str = None, play_behavior: str = None,
+            override_default_end_session: bool = False
+    ):
 
         from inoft_vocal_framework.platforms_handlers.alexa.audioplayer import AudioPlayer
         if played_type is None:
@@ -281,10 +282,11 @@ class Response:
         self._shouldEndSession = shouldEndSession
 
     def to_dict(self) -> dict:
-        dict_object = NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,
-                                                                     key_names_identifier_objects_to_go_into=["json_key"])
-        dict_object["version"] = "1.0"
-        dict_object["sessionAttributes"] = dict()
+        dict_object = NestedObjectToDict.get_dict_from_nested_object(
+            object_to_process=self, key_names_identifier_objects_to_go_into=['json_key']
+        )
+        dict_object['version'] = "1.0"
+        dict_object['sessionAttributes'] = dict()
         return dict_object
 
 if __name__ == "__main__":

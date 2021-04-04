@@ -22,7 +22,7 @@ class TestInputFormats(unittest.TestCase):
         background_music_track = audio_block_1.create_track(primary=True)
         background_music_track.create_sound(
             local_filepath=os.path.join(self.audio_samples_dirpath, filename),
-            player_start=background_music_track.start_time + 2,
+            player_start_time=background_music_track.start_time + 2,
             player_end_time=background_music_track.start_time + 30
         )
         out_filepath = os.path.join(self.audio_dist_dirpath, f"temp_test.{format_type}")

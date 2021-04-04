@@ -7,7 +7,7 @@ OUT_FORMATS_UNION = Union["mp3", "wav"]
 
 
 def render(
-    audio_blocks: List[AudioBlock], out_filepath: str, num_channels: int, sample_rate: int,
+    audio_blocks: List[AudioBlock], out_filepath: str, num_channels: int, sample_rate: int, bitrate: int,
     out_format_type: OUT_FORMATS_UNION, export_target='managed-inoft-vocal-engine'
 ) -> str:
     from inoft_vocal_framework.audio_engine import audio_engine
@@ -24,9 +24,10 @@ def render(
             'filepath': out_filepath,
             'formatType': out_format_type,
             'sampleRate': sample_rate,
-            'numChannels': 2,
-            'bitrate': 16,
+            'numChannels': num_channels,
+            'bitrate': bitrate,
             'exportTarget': 'managed-inoft-vocal-engine'  # 'local'
+            # todo: add support for local exportTarget
         },
     }
     return audio_engine.render(data)

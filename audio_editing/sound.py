@@ -1,12 +1,7 @@
 import os
-from pathlib import Path
 from typing import Optional
 from uuid import uuid4
-
-from pydub import AudioSegment
-
 from inoft_vocal_framework.audio_editing.models import TrackStartTime, AudioStartTime, AudioEndTime, UntilSelfEnd
-from inoft_vocal_framework.audio_editing.relation import Relation
 
 
 class SoundProps:
@@ -60,10 +55,6 @@ class Sound(SoundProps):
     @property
     def id(self) -> str:
         return self._id
-
-    @property
-    def audio_segment(self) -> AudioSegment:
-        return self._audio_segment
 
     @property
     def start_time(self) -> AudioStartTime:

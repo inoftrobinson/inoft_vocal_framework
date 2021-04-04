@@ -11,11 +11,11 @@ class TestSingleFile(unittest.TestCase):
         primary_track = audio_block_1.create_track(primary=True, loop=False)
         ambiance_sound = primary_track.create_sound(
             local_filepath="F:/Sons utiles/ambiance_out.wav",
-            player_start=primary_track.start_time + 0, player_end_time=primary_track.start_time + 0
+            player_start_time=primary_track.start_time + 0, player_end_time=primary_track.start_time + 0
         )
         background_music_sound = primary_track.create_sound(
             local_filepath="F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav",
-            player_start=primary_track.start_time
+            player_start_time=primary_track.start_time
         )
 
         # played_files: dict = audio_block_1.play()
