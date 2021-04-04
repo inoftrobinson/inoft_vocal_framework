@@ -11,17 +11,19 @@ class SoundProps:
         pass
 
 class Sound(SoundProps):
-    def __init__(self, local_filepath: Optional[str] = None, file_url: Optional[str] = None,
-                 volume_gain: Optional[float] = 0.0,
-                 player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
-                 player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
-                 file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
-                 file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
-                 stretch_method: SoundProps.STRETCH_LOOP = SoundProps.STRETCH_LOOP,
-                 source_file_s3_bucket_name: Optional[str] = None, source_file_s3_bucket_region: Optional[str] = None,
-                 source_file_s3_item_path: Optional[str] = None,
-                 render_file_s3_bucket_name: Optional[str] = None, render_file_s3_bucket_region: Optional[str] = None,
-                 render_file_s3_item_path: Optional[str] = None):
+    def __init__(
+            self, file_bytes: Optional[bytes] = None, local_filepath: Optional[str] = None, file_url: Optional[str] = None,
+            volume_gain: Optional[float] = 0.0,
+            player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
+            player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
+            file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
+            file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
+            stretch_method: SoundProps.STRETCH_LOOP = SoundProps.STRETCH_LOOP,
+            source_file_s3_bucket_name: Optional[str] = None, source_file_s3_bucket_region: Optional[str] = None,
+            source_file_s3_item_path: Optional[str] = None,
+            render_file_s3_bucket_name: Optional[str] = None, render_file_s3_bucket_region: Optional[str] = None,
+            render_file_s3_item_path: Optional[str] = None
+    ):
         super().__init__()
 
         self._id = str(uuid4())
@@ -29,6 +31,7 @@ class Sound(SoundProps):
         if self.local_filepath is not None and not os.path.exists(self.local_filepath):
             raise Exception(f"No file has not been found at {self.local_filepath}")
         self.file_url = file_url
+        self.file_bytes = file_bytes
         self._volume = volume_gain
 
         self._player_start_time = player_start_time
@@ -43,6 +46,7 @@ class Sound(SoundProps):
     def serialize(self) -> dict:
         return {
             'id': self.id,
+            'fileBytes': self.file_bytes,
             'localFilepath': self.local_filepath,
             'fileUrl': self.file_url,
             'volume': self.volume,
