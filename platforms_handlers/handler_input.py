@@ -590,9 +590,6 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def discord(self):
         return self.discordHandlerInput
 
-    @property
-    def rick_roll(self):
-        return self.call_rick_roll()
 
 class HandlerInputWrapper:
     from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput

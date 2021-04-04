@@ -1,14 +1,13 @@
 import os
+from enum import Enum
 from typing import List, Union, Any, Dict
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
-
-
-OUT_FORMATS_UNION = Union["mp3", "wav"]
+from inoft_vocal_framework.audio_editing.types import OUT_FORMATS_UNION, EXPORT_TARGETS_UNION
 
 
 def render(
     audio_blocks: List[AudioBlock], out_filepath: str, num_channels: int, sample_rate: int, bitrate: int,
-    out_format_type: OUT_FORMATS_UNION, export_target='managed-inoft-vocal-engine'
+    out_format_type: OUT_FORMATS_UNION, export_target: EXPORT_TARGETS_UNION
 ) -> str:
     from inoft_vocal_framework.audio_engine import audio_engine
     audio_blocks_data: List[dict] = list()
@@ -26,8 +25,7 @@ def render(
             'sampleRate': sample_rate,
             'numChannels': num_channels,
             'bitrate': bitrate,
-            'exportTarget': 'managed-inoft-vocal-engine'  # 'local'
-            # todo: add support for local exportTarget
+            'exportTarget': export_target
         },
     }
     return audio_engine.render(data)

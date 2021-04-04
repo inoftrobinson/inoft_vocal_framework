@@ -56,6 +56,7 @@ class Sound(SoundProps):
     def id(self) -> str:
         return self._id
 
+    # todo: deprecate start_time and end_time
     @property
     def start_time(self) -> AudioStartTime:
         return AudioStartTime(sound=self, offset=0)

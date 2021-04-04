@@ -114,93 +114,92 @@ impl Renderer {
     async fn render_to_vec(&mut self, trace: &mut TraceItem, audio_blocks: &Vec<AudioBlock>) {
         // todo: optimize the re-use of the multi file multiple times
         if audio_blocks.len() > 0 {
+            // todo: fix that and support multiple audio blocks instead of just using the first one
             let mut first_audio_block = audio_blocks.get(0).unwrap();
             let borrowed_first_audio_block = first_audio_block.borrow_mut();
-            let mut first_track = borrowed_first_audio_block.tracks.get(0).unwrap();
-            let borrowed_first_track = first_track.borrow_mut();
-            let audio_clips: &Vec<RefCell<AudioClip>> = &borrowed_first_track.clips;
+            for mut track_ref in borrowed_first_audio_block.tracks.iter() {
+                let borrowed_current_track = track_ref.borrow_mut();
+                let track_audio_clips: &Vec<RefCell<AudioClip>> = &borrowed_current_track.clips;
 
-            // todo: fix that and support multiple audio blocks instead of just using the first one
+                for audio_clip_ref in track_audio_clips.iter() {
+                    let mut audio_clip = audio_clip_ref.borrow_mut();
+                    let trace_clip = trace.create_child(String::from(format!("clip_{}", audio_clip.clip_id)));
+                    let cloned_clip_id = audio_clip.clip_id.clone();
 
-            let mut clips_pending_relationships_rendering: HashMap<String, Vec<&RefCell<AudioClip>>> = HashMap::new();
-
-            /*let mut clips_by_file_urls: HashMap<String, Vec<&RefCell<AudioClip>>> = HashMap::new();
-            let mut clips_by_file_paths: HashMap<String, PreAudioClipsContainer> = HashMap::new();
-
-            for audio_clip_ref in audio_clips.iter() {
-                let audio_clip = audio_clip_ref.borrow();
-                if !audio_clip.file_url.is_none() {
-                    let file_url = audio_clip.file_url.as_ref().unwrap();
-                    // clips_by_file_urls.entry(file_url.clone()).or_insert(Vec::new()).push(audio_clip_ref);
-                } else if !audio_clip.filepath.is_none() {
+                    let trace_player_times_rendering = trace_clip.create_child(String::from("player_times_rendering"));
                     let player_start_time = self.render_player_start_time(&audio_clip);
                     let player_end_time = self.render_player_end_time(&audio_clip);
-                    let audio_clip_container = PreAudioClipContainer { audio_clip_ref, player_start_time, player_end_time };
-
-                    let filepath = audio_clip.filepath.as_ref().unwrap();
-                    if clips_by_file_paths.contains_key(filepath) {
-                        let mut container = clips_by_file_paths.get_mut(filepath).unwrap();
-                        container.audio_clips_containers.push(audio_clip_container);
-                        if player_start_time < container.smallest_player_start_time {
-                            container.smallest_player_start_time = player_start_time
+                    let limit_time_to_load: Option<f32> = if !player_end_time.is_none() {
+                        let player_limit_time_to_load = player_end_time.unwrap() - player_start_time;
+                        if audio_clip.file_end_time.is_none() {
+                            Some(player_limit_time_to_load)
+                        } else {
+                            let file_limit_time_to_load = audio_clip.file_end_time.unwrap() - audio_clip.file_start_time;
+                            Some(file_limit_time_to_load.min(player_limit_time_to_load))
                         }
-                        if !container.biggest_player_end_time.is_none() {
-                            if player_end_time.is_none() || player_end_time.unwrap() > container.biggest_player_end_time.unwrap() {
-                                container.biggest_player_end_time = player_end_time;
+                    } else if !audio_clip.file_end_time.is_none() {
+                        Some(audio_clip.file_end_time.unwrap() - audio_clip.file_start_time)
+                    } else { None };
+                    println!("limit_time_to_load: {:?}", limit_time_to_load);
+                    trace_player_times_rendering.close();
+
+                    let trace_resampling = trace_clip.create_child(String::from("resampling"));
+                    audio_clip.resample(trace_resampling, self.target_spec, limit_time_to_load).await;
+                    let audio_clip_resamples = audio_clip.resamples.as_ref().unwrap();
+                    trace_resampling.close();
+
+                    let trace_clip_rendering = trace_clip.create_child(String::from("rendering"));
+                    let render_clips_infos = RenderedClipInfos {
+                        player_start_time,
+                        player_end_time: player_end_time.unwrap_or(
+                            player_start_time + (audio_clip_resamples.len() as f32 / self.target_spec.sample_rate as f32)
+                        )
+                    };
+                    self.render_clip(trace_clip_rendering, audio_clip_resamples, &render_clips_infos).await;
+                    self.rendered_clips_infos.insert(cloned_clip_id, render_clips_infos);
+                    // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
+                    trace_clip_rendering.close();
+                    println!("\nFinished render clip.\n  --execution_time:{}ms", trace_clip_rendering.elapsed);
+
+                    trace_clip.close();
+                }
+
+                let mut clips_pending_relationships_rendering: HashMap<String, Vec<&RefCell<AudioClip>>> = HashMap::new();
+
+                /*let mut clips_by_file_urls: HashMap<String, Vec<&RefCell<AudioClip>>> = HashMap::new();
+                let mut clips_by_file_paths: HashMap<String, PreAudioClipsContainer> = HashMap::new();
+
+                for audio_clip_ref in audio_clips.iter() {
+                    let audio_clip = audio_clip_ref.borrow();
+                    if !audio_clip.file_url.is_none() {
+                        let file_url = audio_clip.file_url.as_ref().unwrap();
+                        // clips_by_file_urls.entry(file_url.clone()).or_insert(Vec::new()).push(audio_clip_ref);
+                    } else if !audio_clip.filepath.is_none() {
+                        let player_start_time = self.render_player_start_time(&audio_clip);
+                        let player_end_time = self.render_player_end_time(&audio_clip);
+                        let audio_clip_container = PreAudioClipContainer { audio_clip_ref, player_start_time, player_end_time };
+
+                        let filepath = audio_clip.filepath.as_ref().unwrap();
+                        if clips_by_file_paths.contains_key(filepath) {
+                            let mut container = clips_by_file_paths.get_mut(filepath).unwrap();
+                            container.audio_clips_containers.push(audio_clip_container);
+                            if player_start_time < container.smallest_player_start_time {
+                                container.smallest_player_start_time = player_start_time
+                            }
+                            if !container.biggest_player_end_time.is_none() {
+                                if player_end_time.is_none() || player_end_time.unwrap() > container.biggest_player_end_time.unwrap() {
+                                    container.biggest_player_end_time = player_end_time;
+                                }
                             }
                         }
+                        // clips_by_file_paths.entry(audio_clip.filepath.unwrap().clone()).or_insert(Vec::new()).push(audio_clip_ref);
                     }
-                    // clips_by_file_paths.entry(audio_clip.filepath.unwrap().clone()).or_insert(Vec::new()).push(audio_clip_ref);
                 }
-            }
-            for container in clips_by_file_paths.values() {
-                println!("biggest_player_end_time {:?}", container.biggest_player_end_time);
-                println!("smallest_player_start_time {}", container.smallest_player_start_time);
-            }
-             */
-
-
-            for audio_clip_ref in audio_clips.iter() {
-                let mut audio_clip = audio_clip_ref.borrow_mut();
-                let trace_clip = trace.create_child(String::from(format!("clip_{}", audio_clip.clip_id)));
-                let cloned_clip_id = audio_clip.clip_id.clone();
-
-                let trace_player_times_rendering = trace_clip.create_child(String::from("player_times_rendering"));
-                let player_start_time = self.render_player_start_time(&audio_clip);
-                let player_end_time = self.render_player_end_time(&audio_clip);
-                let limit_time_to_load: Option<f32> = if !player_end_time.is_none() {
-                    let player_limit_time_to_load = player_end_time.unwrap() - player_start_time;
-                    if audio_clip.file_end_time.is_none() {
-                        Some(player_limit_time_to_load)
-                    } else {
-                        let file_limit_time_to_load = audio_clip.file_end_time.unwrap() - audio_clip.file_start_time;
-                        Some(file_limit_time_to_load.min(player_limit_time_to_load))
-                    }
-                } else if !audio_clip.file_end_time.is_none() {
-                    Some(audio_clip.file_end_time.unwrap() - audio_clip.file_start_time)
-                } else { None };
-                println!("limit_time_to_load: {:?}", limit_time_to_load);
-                trace_player_times_rendering.close();
-
-                let trace_resampling = trace_clip.create_child(String::from("resampling"));
-                audio_clip.resample(trace_resampling, self.target_spec, limit_time_to_load).await;
-                let audio_clip_resamples = audio_clip.resamples.as_ref().unwrap();
-                trace_resampling.close();
-
-                let trace_clip_rendering = trace_clip.create_child(String::from("rendering"));
-                let render_clips_infos = RenderedClipInfos {
-                    player_start_time,
-                    player_end_time: player_end_time.unwrap_or(
-                        player_start_time + (audio_clip_resamples.len() as f32 / self.target_spec.sample_rate as f32)
-                    )
-                };
-                self.render_clip(trace_clip_rendering, audio_clip_resamples, &render_clips_infos).await;
-                self.rendered_clips_infos.insert(cloned_clip_id, render_clips_infos);
-                // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
-                trace_clip_rendering.close();
-                println!("\nFinished render clip.\n  --execution_time:{}ms", trace_clip_rendering.elapsed);
-
-                trace_clip.close();
+                for container in clips_by_file_paths.values() {
+                    println!("biggest_player_end_time {:?}", container.biggest_player_end_time);
+                    println!("smallest_player_start_time {}", container.smallest_player_start_time);
+                }
+                 */
             }
         }
         // todo: handle audio clip being loaded before its relationship parent(s)

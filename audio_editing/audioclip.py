@@ -1,11 +1,14 @@
 import time
 from inoft_vocal_framework.audio_editing.track import Track
 from typing import List, Optional, Dict
-
+from inoft_vocal_framework.audio_editing.types import FORMAT_TYPE_WAV, FORMAT_TYPE_MP3, OUT_FORMATS_UNION, \
+    EXPORT_TARGET_MANAGED_ENGINE, EXPORT_TARGET_LOCAL, EXPORT_TARGETS_UNION
 
 class AudioBlock:
-    FORMAT_TYPE_WAV = 'wav'
-    FORMAT_TYPE_MP3 = 'mp3'
+    FORMAT_TYPE_WAV = FORMAT_TYPE_WAV
+    FORMAT_TYPE_MP3 = FORMAT_TYPE_MP3
+    EXPORT_TARGET_MANAGED_ENGINE = EXPORT_TARGET_MANAGED_ENGINE
+    EXPORT_TARGET_LOCAL = EXPORT_TARGET_LOCAL
 
     def __init__(self):
         self.tracks: List[Track] = list()
@@ -17,14 +20,15 @@ class AudioBlock:
         return {'tracks': serialized_tracks}
 
     def manual_render(
-            self, num_channels: int, sample_rate: int, bitrate: int,
-            out_filepath: str, format_type: FORMAT_TYPE_MP3 or FORMAT_TYPE_WAV = FORMAT_TYPE_MP3
+            self, num_channels: int, sample_rate: int, bitrate: int, out_filepath: str,
+            format_type: OUT_FORMATS_UNION = FORMAT_TYPE_MP3,
+            export_target: EXPORT_TARGETS_UNION = EXPORT_TARGET_MANAGED_ENGINE
     ) -> str:
         from inoft_vocal_framework.audio_engine.audio_engine_wrapper import render
         return render(
             audio_blocks=[self],
             num_channels=num_channels, sample_rate=sample_rate, bitrate=bitrate,
-            out_filepath=out_filepath, out_format_type=format_type
+            out_filepath=out_filepath, out_format_type=format_type, export_target=export_target
         )
 
     def create_track(self, primary: bool = True, loop: bool = False) -> Track:

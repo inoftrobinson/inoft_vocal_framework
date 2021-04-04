@@ -1,12 +1,12 @@
 from typing import Optional
 
-from inoft_vocal_framework import AudioBlock
 from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayerWrapper
 from inoft_vocal_framework.platforms_handlers.alexa.context import Context
 from inoft_vocal_framework.platforms_handlers.alexa.request import Request
 from inoft_vocal_framework.platforms_handlers.alexa.response.response import Response
 from inoft_vocal_framework.platforms_handlers.alexa.session import Session
 from inoft_vocal_framework.safe_dict import SafeDict
+from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 
 
 class AlexaHandlerInput:
@@ -54,6 +54,7 @@ class AlexaHandlerInput:
             num_channels=num_channels, sample_rate=sample_rate, bitrate=48,
             out_filepath="null", format_type="mp3"
         )
+        # todo: make out_filepath argument optional
         self.say_ssml(f'<audio src="{file_url}" />')
         return True  # todo: return False is rendering failed
 

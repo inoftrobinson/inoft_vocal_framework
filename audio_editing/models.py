@@ -23,6 +23,11 @@ class Time:
         new_instance.offset += offset
         return new_instance
 
+    def __sub__(self, offset: int or float):
+        new_instance = Time(**self.__dict__)
+        new_instance.offset -= offset
+        return new_instance
+
     def serialize(self) -> dict:
         # return {'type': 'until-self-end', 'relationship_parent_id': "", 'offset': 0}
         # todo: add support for different time relation in the rust client

@@ -53,7 +53,7 @@ class Track:
             player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
             file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
             file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
-            stretch_method: Sound.STRETCH_LOOP = Sound.STRETCH_LOOP, speech: bool = False
+            stretch_method: Sound.STRETCH_LOOP = Sound.STRETCH_LOOP, volume: int = 50
     ) -> Sound:
 
         if engine_file_key is not None:
@@ -70,7 +70,7 @@ class Track:
             local_filepath=local_filepath, file_url=file_url,
             player_start_time=player_start_time, player_end_time=player_end_time,
             file_start_time=file_start_time, file_end_time=file_end_time,
-            stretch_method=stretch_method
+            stretch_method=stretch_method, volume_gain=volume
         )
         self.add_sound(sound=sound)
         return sound
