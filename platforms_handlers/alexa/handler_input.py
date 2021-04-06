@@ -49,7 +49,7 @@ class AlexaHandlerInput:
         # todo: fix reprompt (for alexa and dialogflow)
         self.response.say_reprompt(text_or_ssml=text_or_ssml)
 
-    def play_audio_block(self, audio_block: AudioBlock, num_channels: Union[1, 2] = 1, sample_rate: Union[24000, 22050, 16000] = 24000) -> bool:
+    def play_audio_block(self, audio_block: AudioBlock, num_channels: 1 or 2 = 1, sample_rate: 24000 or 22050 or 16000 = 24000) -> bool:
         file_url = audio_block.manual_render(
             num_channels=num_channels, sample_rate=sample_rate, bitrate=48,
             out_filepath="null", format_type="mp3"

@@ -1,7 +1,5 @@
 from typing import Optional, Dict, List
 from uuid import uuid4
-
-from inoft_vocal_engine.practical_logger import message_with_vars
 from inoft_vocal_framework.audio_editing.models import TrackStartTime
 from inoft_vocal_framework.audio_editing.sound import Sound, AudioStartTime
 
@@ -83,32 +81,13 @@ class Track:
             player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
             volume: int = 50
     ) -> Sound:
+        from inoft_vocal_framework.audio_editing import speech_synthesis
         base_sound_kwargs = {
             'player_start_time': player_start_time,
             'player_end_time': player_end_time,
             'volume_gain': volume
         }
-
-        # todo: allow a method to use boto3 instead of the engine API
-        # todo: stop using a static account and stop using an hardcoded local version of the engine
-
-        import requests
-        response = requests.post(
-            url="http://127.0.0.1:5000/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/synthesise-get-dialogue",
-            json={'text': text, 'metadata': {'voiceKey': voice_key}}
-        )
-        data = response.json()
-        if data['protocol'] == 'bytes':
-            from base64 import b64decode
-            decoded_bytes = b64decode(data['bytes'])
-            sound = Sound(file_bytes=decoded_bytes, **base_sound_kwargs)
-            self.add_sound(sound)
-            return sound
-        elif data['protocol'] == 'url':
-            file_url = data['url']
-            sound = Sound(file_url=file_url, **base_sound_kwargs)
-            self.add_sound(sound)
-            return sound
-        else:
-            raise Exception(message_with_vars(message="Protocol not supported", vars_dict={'protocol': data['protocol']}))
-
+        handler = speech_synthesis.get_handler()
+        created_sound = handler(text, voice_key, base_sound_kwargs)
+        self.add_sound(created_sound)
+        return created_sound
