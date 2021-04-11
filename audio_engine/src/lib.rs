@@ -81,24 +81,7 @@ pub fn resample_save_file_from_local_file(_py: Python, data: PyObject) -> PyResu
 pub fn resample_save_file_from_url(_py: Python, data: PyObject) -> PyResult<PyDict> {
     let parsed_data = parser::parse_python_resample_from_file_url_call(_py, data);
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
-    println!("test print");
-    /*let result = runtime.block_on(async {
-        panic::catch_unwind(|| async {
-            execute_resample_save_file_from_url(parsed_data).await
-        }.await)
-    });*/
-
     let result = runtime.block_on(execute_resample_save_file_from_url(parsed_data));
-
-    /*let result = panic::catch_unwind(|| { runtime.block_on(
-        execute_resample_save_file_from_url(parsed_data)
-    )});*/
-
-    /*let result = runtime.block_on(async move {
-        let e = panic::catch_unwind(|| {
-            execute_resample_save_file_from_url(parsed_data)
-        })
-    }.await);*/
 
     let dict = PyDict::new(_py);
     match &result {

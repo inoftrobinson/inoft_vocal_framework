@@ -35,7 +35,7 @@ class Sound(SoundProps):
         self._volume = volume_gain
 
         self._player_start_time = player_start_time
-        self._player_end_time = player_end_time or UntilSelfEnd()
+        self._player_end_time = player_end_time or UntilSelfEnd(sound=self)
         self._file_start_time = max(file_start_time, 0) if file_start_time is not None else 0
         self._file_end_time = file_end_time
         self._stretch_method = stretch_method

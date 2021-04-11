@@ -72,6 +72,7 @@ class Track:
             file_start_time=file_start_time, file_end_time=file_end_time,
             stretch_method=stretch_method, volume_gain=volume
         )
+
         self.add_sound(sound=sound)
         return sound
 
