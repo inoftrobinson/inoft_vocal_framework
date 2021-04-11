@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 import click
 
@@ -13,17 +13,29 @@ from inoft_vocal_framework.skill_settings.settings_components.plugins import Plu
 
 
 def prompt_database_warning_message(variable_name: str, instance_type: type):
-    click.echo(click.style(f"\nWarning ! The variable {variable_name} for the {instance_type.__name__} instance was not properly set.\n"
-                           f"If you do not need this database client, please set the disable_database variable to True on this instance.",
-                           fg="yellow"))
+    click.echo(click.style(
+        f"\nWarning ! The variable {variable_name} for the {instance_type.__name__} instance was not properly set.\n"
+        f"If you do not need this database client, please set the disable_database variable to True on this instance.",
+        fg='yellow'
+    ))
 
 
 class Settings:
-    def __init__(self, characters_voices: Optional[dict] = None, deployment: Optional[Deployment] = None,
-                 database_sessions_users_data: DatabaseSessionsUsersData = DatabaseSessionsUsersData(),
-                 database_messages_content: DatabaseMessagesContent = DatabaseMessagesContent(),
-                 database_users_notifications_subscriptions: DatabaseUsersNotificationsSubscriptions = DatabaseUsersNotificationsSubscriptions(),
-                 plugins: Plugins = Plugins()):
+    INFRASTRUCTURE_ENGINE = 'engine'
+    INFRASTRUCTURE_NEXT_ENGINE = 'next-engine'
+    INFRASTRUCTURE_LOCAL_ENGINE = 'local-engine'
+    INFRASTRUCTURE_PROVIDED_AWS = 'provided-aws'
+    _INFRASTRUCTURE_TYPES_UNION = Union[INFRASTRUCTURE_ENGINE, INFRASTRUCTURE_NEXT_ENGINE, INFRASTRUCTURE_LOCAL_ENGINE, INFRASTRUCTURE_PROVIDED_AWS]
+
+    def __init__(
+            self, infrastructure_speech_synthesis: _INFRASTRUCTURE_TYPES_UNION = INFRASTRUCTURE_ENGINE,
+            characters_voices: Optional[dict] = None, deployment: Optional[Deployment] = None,
+            database_sessions_users_data: DatabaseSessionsUsersData = DatabaseSessionsUsersData(),
+            database_messages_content: DatabaseMessagesContent = DatabaseMessagesContent(),
+            database_users_notifications_subscriptions: DatabaseUsersNotificationsSubscriptions = DatabaseUsersNotificationsSubscriptions(),
+            plugins: Plugins = Plugins()
+    ):
+        self.infrastructure_speech_synthesis = infrastructure_speech_synthesis
         self.characters_voices = characters_voices
         self.deployment = deployment
         self.database_sessions_users_data = database_sessions_users_data

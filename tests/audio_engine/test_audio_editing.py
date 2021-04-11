@@ -8,6 +8,7 @@ class MyTestCase(unittest.TestCase):
     def test_something(self):
         start = time.time()
         audio_block_1 = AudioBlock()
+        audio_block_1.create_track()
 
         """river_track = Track(is_primary=False, loop_until_primary_tracks_finish=True)
         river_background = Sound(local_filepath="F:/Sons utiles/2009/LucasFilm Sound Effects Library/LucasFilm Sound Effects Library CD2 - Elements/track 43.mp3")

@@ -80,9 +80,27 @@ impl Renderer {
         }
     }
 
+    fn handle_until_self_end_relation(&self, time: &Time) -> f32 {
+        panic!("Not yet implemented");
+        if time.relationship_parent_id.is_none() {
+            panic!("A relation was audio-clip_end-time but had no relationship_parent_id");
+        } else {
+            let relationship_parent_id = time.relationship_parent_id.as_ref().unwrap();
+            if self.rendered_clips_infos.contains_key(relationship_parent_id) {
+                let relation_ship_clip_infos = self.rendered_clips_infos.get(relationship_parent_id).unwrap();
+                relation_ship_clip_infos.player_end_time + time.offset.unwrap_or(0.0)
+            } else {
+                panic!("wrong order !");
+                // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
+            }
+        }
+    }
+
     fn render_player_start_time(&mut self, audio_clip: &AudioClip) -> f32 {
         let type_key = &*audio_clip.player_start_time.type_key;
+        // until-self-end should not be acceptable and generable by the Python audio editing
         match type_key {
+            "until-self-end" => self.handle_audio_clip_end_time_relation(&audio_clip.player_start_time),
             "track_start-time" => self.handle_track_start_time_relation(&audio_clip.player_start_time),
             "audio-clip_start-time" => self.handle_audio_clip_start_time_relation(&audio_clip.player_start_time),
             "audio-clip_end-time" => self.handle_audio_clip_end_time_relation(&audio_clip.player_start_time),

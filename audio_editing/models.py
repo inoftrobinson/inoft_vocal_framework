@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -65,8 +64,9 @@ class AudioEndTime(Time):
         return (self.relationship_parent.player_start_time.absolute() + self.relationship_parent.duration_seconds) + self.offset
 
 
+# todo: does the UntilSelfEnd needs to exist ? Compared to an AudioEndTime pointing to itself ?
 class UntilSelfEnd(Time):
-    def __init__(self):
-        super().__init__(type_key='until-self-end', relationship_parent=None)
+    def __init__(self, sound: Any, offset: Optional[int or float] = None):
+        super().__init__(type_key='until-self-end', relationship_parent=sound, offset=offset)
 
 

@@ -7,15 +7,15 @@ class StartRequestHandler(InoftRequestHandler):
 
     def handle(self):
         audio_block = AudioBlock()
-        """track1 = audio_block.create_track(primary=True)
+        track1 = audio_block.create_track(primary=True)
         track1_speech1 = track1.create_speech(
-            text="Alors cher ami :) ", voice_key="Lea", player_start_time=track1.player_start
-        )"""
+            text="Alors cher ami, dis moi tout sur ce que tu vas manger ce soir !", voice_key="Lea", player_start_time=track1.player_start_time
+        )
         track2 = audio_block.create_track(primary=True)
         track2_sound1 = track2.create_sound(
             file_url="https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/b1fe5939-032b-462d-92e0-a942cd445096/22ac1d08-292d-4f2e-a9e3-20d181f1f58f/files/сплинпрочьизмоейголовы.mp3",
-            player_start_time=track2.player_start,
-            player_end_time=track2.player_start + 15,
+            player_start_time=track2.player_start_time,
+            player_end_time=track2.player_start_time + 15,
         )
         """track3 = audio_block.create_track(primary=True)
         track3_sound1 = track3.create_sound(

@@ -72,14 +72,23 @@ class Track:
             file_start_time=file_start_time, file_end_time=file_end_time,
             stretch_method=stretch_method, volume_gain=volume
         )
+
         self.add_sound(sound=sound)
         return sound
 
     def create_speech(
             self, text: str, voice_key: str,
             player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
-            player_end_time: Optional[AudioStartTime or TrackStartTime] = None
-    ):
-        # todo: implement create_speech
-        print(f"Should create speech for {text}")
-
+            player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
+            volume: int = 50
+    ) -> Sound:
+        from inoft_vocal_framework.audio_editing import speech_synthesis
+        base_sound_kwargs = {
+            'player_start_time': player_start_time,
+            'player_end_time': player_end_time,
+            'volume_gain': volume
+        }
+        handler = speech_synthesis.get_handler()
+        created_sound = handler(text, voice_key, base_sound_kwargs)
+        self.add_sound(created_sound)
+        return created_sound

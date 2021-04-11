@@ -129,10 +129,13 @@ class InoftHandlersGroup:
 
 
 class InoftSkill:
+    APP_SETTINGS: Settings
+
     def __init__(self, settings_instance: Settings = None):
         self.settings = settings_instance
         self.plugins = plugins_load(settings=self.settings)
         # todo: reactivate plugins
+        InoftSkill.APP_SETTINGS = self.settings
 
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()

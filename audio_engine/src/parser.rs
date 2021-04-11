@@ -1,4 +1,4 @@
-use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject};
+use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject, PyBytes};
 use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData};
 use std::collections::HashMap;
 use std::cell::RefCell;
@@ -52,6 +52,19 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
                     Ok(item) => { if item != _py.None() { Some(item.extract::<u8>(_py).unwrap()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
+                let file_bytes: Option<Vec<u8>> = match clip_data.get_item(_py, "fileBytes") {
+                    Ok(item) => { if item != _py.None() {
+                        match item.extract::<PyBytes>(_py) {
+                            Ok(bytes_object) => {
+                                let bytes_data: &[u8] = bytes_object.data(_py);
+                                Some(bytes_data.to_vec())
+                                // We convert our array of bytes to a Vec, in order have a variable to which the Strict size at
+                                // compile time does not apply to, and still be able to send back higher the ownership of the data.
+                            } Err(err) => { None }
+                        }
+                    } else { None } },
+                    Err(err) => { println!("{:?}", err); None }
+                };
                 let local_filepath = match clip_data.get_item(_py, "localFilepath") {
                     Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
@@ -70,7 +83,7 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
                 };
 
                 current_track_clips.push(AudioClip::new(
-                    clip_id, local_filepath, file_url, volume,
+                    clip_id, file_bytes, local_filepath, file_url, volume,
                     parse_time_object(_py, clip_data.get_item(_py, "playerStartTime").unwrap()),
                     parse_time_object(_py, clip_data.get_item(_py, "playerEndTime").unwrap()),
                     file_start_time, file_end_time,

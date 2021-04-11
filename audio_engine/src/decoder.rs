@@ -18,6 +18,42 @@ use crate::loader::get_file_bytes_from_url;
 use crate::tracer::TraceItem;
 
 
+pub fn decode_from_bytes(
+    trace: &mut TraceItem, bytes: Box<[u8]>, file_extension: String,
+    file_start_time: f32, limit_time_to_load: Option<f32>
+) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+
+    let mut hint = Hint::new();
+    hint.with_extension(&*file_extension);
+    let trace_file_loading = trace.create_child(String::from("File bytes loading"));
+    let media_source_cursor = Cursor::new(bytes);
+    let media_source_stream = MediaSourceStream::new(Box::new(media_source_cursor));
+    trace_file_loading.close();
+
+    decode(trace, media_source_stream, hint, file_start_time, limit_time_to_load)
+}
+
+
+pub fn decode_from_local_filepath(
+    trace: &mut TraceItem, filepath: &str,
+    file_start_time: f32, limit_time_to_load: Option<f32>
+) -> (Option<Vec<i16>>, Option<CodecParameters>) {
+
+    let mut hint = Hint::new();
+    let path = Path::new(filepath);
+    if let Some(extension) = path.extension() {
+        if let Some(extension_str) = extension.to_str() {
+            hint.with_extension(extension_str);
+        }
+    }
+    let trace_file_opening = trace.create_child(String::from("File opening"));
+    let file_source = Box::new(File::open(path).unwrap());
+    let media_source_stream = MediaSourceStream::new(file_source);
+    trace_file_opening.close();
+
+    decode(trace, media_source_stream, hint, file_start_time, limit_time_to_load)
+}
+
 pub fn get_file_extension_from_file_url(file_url: &str) -> Option<&str> {
     file_url.split(".").last()
 }
@@ -33,6 +69,7 @@ pub async fn decode_from_file_url(
     /* if false && expected_efs_path.exists() {
         decode_from_local_filepath(trace, &*expected_efs_filepath, file_start_time, limit_time_to_load)
     } else {*/
+    // todo: try to find the file from the efs drive, otherwise write it to it
     let mut hint = Hint::new();
     let file_extension = get_file_extension_from_file_url(file_url).expect("No file extension found");
     hint.with_extension(file_extension);
@@ -56,26 +93,6 @@ pub async fn decode_from_file_url(
     let media_source_cursor = Cursor::new(boxed_file_bytes.clone());
     let media_source_stream = MediaSourceStream::new(Box::new(media_source_cursor));
     trace_bytes_conversion_to_stream.close();
-
-    decode(trace, media_source_stream, hint, file_start_time, limit_time_to_load)
-}
-
-pub fn decode_from_local_filepath(
-    trace: &mut TraceItem, filepath: &str,
-    file_start_time: f32, limit_time_to_load: Option<f32>
-) -> (Option<Vec<i16>>, Option<CodecParameters>) {
-
-    let mut hint = Hint::new();
-    let path = Path::new(filepath);
-    if let Some(extension) = path.extension() {
-        if let Some(extension_str) = extension.to_str() {
-            hint.with_extension(extension_str);
-        }
-    }
-    let trace_file_opening = trace.create_child(String::from("File opening"));
-    let file_source = Box::new(File::open(path).unwrap());
-    let media_source_stream = MediaSourceStream::new(file_source);
-    trace_file_opening.close();
 
     decode(trace, media_source_stream, hint, file_start_time, limit_time_to_load)
 }
