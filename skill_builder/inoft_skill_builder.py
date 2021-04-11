@@ -2,7 +2,7 @@ import logging
 from abc import abstractmethod
 from json import dumps as json_dumps
 
-from typing import List, Callable, Any
+from typing import List, Callable, Any, Optional
 
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
@@ -242,7 +242,8 @@ class InoftSkill:
         # First, if the request is an interactive option made by the user
         if self.handler_input.need_to_be_handled_by_callback():
             infos_callback_function_to_use = self.handler_input.interactivity_callback_functions.get(
-                self.handler_input.selected_option_identifier).to_safedict(default=None)
+                self.handler_input.selected_option_identifier
+            ).to_safedict(default=None)
 
             if infos_callback_function_to_use is not None:
                 from inoft_vocal_framework.skill_builder import get_function_or_class_from_file_and_path
@@ -287,7 +288,7 @@ class InoftSkill:
 
         # Third, if the invocation is a new session, and a session can be resumed, we resume the last intent of the previous session
         if self.handler_input.is_invocation_new_session is True and self.handler_input.session_been_resumed is True:
-            last_intent_handler_class_key_name = self.handler_input.session_remember("lastIntentHandler")
+            last_intent_handler_class_key_name: Optional[str] = self.handler_input.user_data.get_field(field_path='lastIntentHandler')
             if last_intent_handler_class_key_name in self.request_handlers_chain.keys():
                 handler_to_use = self.request_handlers_chain[last_intent_handler_class_key_name]
             elif last_intent_handler_class_key_name in self.state_handlers_chain.keys():
@@ -406,6 +407,8 @@ class InoftSkill:
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)
 
         self.handler_input.load_event(event=event)
+        from inoft_vocal_framework.user_data.user_data import UserData
+        self.handler_input._user_data = UserData(user_id=self.handler_input.persistent_user_id)
         return self.process_request()
 
     @property

@@ -23,6 +23,7 @@ class StartRequestHandler(InoftRequestHandler):
             voice_key="Mathieu", player_start_time=track2_speech3.player_end_time
         )
         self.play_audio_block(audio_block)
+        self.memorize_session_then_state(f4fbStateHandler)
         return self.to_platform_dict()
 
         audio_block = AudioBlock()
@@ -46,7 +47,7 @@ class StartRequestHandler(InoftRequestHandler):
 
 class f4fbStateHandler(InoftStateHandler):
     def handle(self):
-        if self.is_in_intent_names('Intention non trouvée'):
+        if self.is_in_intent_names('stay'):
             audio_block = AudioBlock()
             track1 = audio_block.create_track(primary=True)
             track1_speech2 = track1.create_speech(
@@ -77,7 +78,7 @@ class f4fbStateHandler(InoftStateHandler):
             track1_speech1 = track1.create_speech(
                 text="Hhm...", voice_key="Lea", player_start_time=track1_speech3.player_end_time
             )
-        if self.is_in_intent_names('Intention non trouvée'):
+        if self.is_in_intent_names('leave'):
             audio_block = AudioBlock()
             track1 = audio_block.create_track(primary=True)
             track1_speech1 = track1.create_speech(
@@ -273,5 +274,9 @@ def lambda_handler(event, context):
 
 if __name__ == "__main__":
     from inoft_vocal_framework import Simulator
-    event_, context_ = Simulator(platform=Simulator.PLATFORM_ALEXA, event_type="launch").get_event_and_context()
-    print(f"\n\nFinal Output : {lambda_handler(event=event_, context=context_)}")
+
+    event1_, context1_ = Simulator(platform=Simulator.PLATFORM_ALEXA, event_type="launch").get_event_and_context()
+    print(f"\n\nFinal Output : {lambda_handler(event=event1_, context=context1_)}")
+
+    event2_, context2_ = Simulator(platform=Simulator.PLATFORM_ALEXA, event_type="say_i_stay").get_event_and_context()
+    print(f"\n\nFinal Output : {lambda_handler(event=event2_, context=context2_)}")

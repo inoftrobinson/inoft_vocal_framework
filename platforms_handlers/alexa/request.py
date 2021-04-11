@@ -1,3 +1,5 @@
+from typing import List
+
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 
@@ -74,17 +76,18 @@ class Request:
         else:
             return False
 
-    def is_in_intent_names(self, intent_names_list) -> bool:
+    def is_in_intent_names(self, intent_names_list: List[str] or str) -> bool:
         if self.type == self.IntentRequestKeyName:
+            formatted_intent_name = self.intent.name.lower()
             if isinstance(intent_names_list, list):
-                if self.intent.name.lower() in [name.lower() for name in intent_names_list]:
-                    return True
+                return formatted_intent_name in [name.lower() for name in intent_names_list]
             elif isinstance(intent_names_list, str):
-                if self.intent.name.lower() == [name.lower() for name in intent_names_list]:
-                    return True
+                return formatted_intent_name == intent_names_list.lower()
             else:
-                raise Exception(f"The intent_names_list must be a list or a str, but it was"
-                                f" a {type(intent_names_list)} object : {intent_names_list}")
+                raise Exception(
+                    f"The intent_names_list must be a list or a str, but it was"
+                    f" a {type(intent_names_list)} object : {intent_names_list}"
+                )
         return False
 
     def is_in_request_types(self, request_types_list) -> bool:

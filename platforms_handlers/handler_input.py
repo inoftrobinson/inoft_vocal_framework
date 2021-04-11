@@ -1,6 +1,6 @@
 import logging
 from collections import Callable
-from typing import Optional
+from typing import Optional, Any
 
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.dummy_object import DummyObject
@@ -44,6 +44,8 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
         self._notifications_subscribers = None
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput, self._discordHandlerInput = None, None, None, None
+
+        self._user_data = None
 
     @property
     def _settings(self) -> Settings:
@@ -140,6 +142,10 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._simple_session_user_data
 
     @property
+    def user_data(self) -> UserData:
+        return self._user_data
+
+    @property
     def smart_session_user_data(self) -> SafeDict:
         return DummyObject()
         if self._smart_session_user_data is None:
@@ -169,7 +175,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         if not isinstance(self._persistent_user_id, str) or (self._persistent_user_id.replace(" ", "") == ""):
             user_id: Optional[str] = None
             if self.is_alexa is True:
-                user_id = SafeDict(self.alexaHandlerInput.session.user).get("userId").to_str(default=None)
+                user_id = SafeDict(self.alexaHandlerInput.session.user).get('userId').to_str(default=None)
             elif self.is_dialogflow is True:
                 user_id = self.dialogFlowHandlerInput.get_user_id()
             elif self.is_bixby is True:
@@ -266,11 +272,13 @@ class HandlerInput(CurrentUsedPlatformInfo):
         # No matter if we already have functions for the different ids in the same key name, we remember the dict of all the
         # callback functions of the key name (will be an empty dict if was not present), then we add the callback for the
         # current specified identifier. Finally, we can memorize this new updated list.
-        callback_functions_dict = self.session_remember(data_key=callback_functions_key_name, specific_object_type=dict)
+        callback_functions_dict: Optional[dict] = self.user_data.get_field(field_path=callback_functions_key_name)
         from inspect import getfile
 
-        item_dict = {"file_filepath_containing_callback": getfile(callback_function),
-                     "callback_function_path": callback_function.__qualname__}
+        item_dict = {
+            'file_filepath_containing_callback': getfile(callback_function),
+            'callback_function_path': callback_function.__qualname__
+        }
 
         if identifier_key is not None:
             callback_functions_dict[identifier_key] = item_dict
@@ -380,10 +388,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def simple_session_forget(self, data_key: str) -> None:
         self.simple_session_user_data.pop(dict_key=data_key)
 
-    def session_memorize(self, data_key: str, data_value=None) -> None:
+    def session_memorize(self, data_key: str, data_value: Any, query_kwargs: Optional[dict] = None) -> bool:
         if data_value is not None and isinstance(data_key, str) and data_key != "":
             self.data_for_database_has_been_modified = True
-            self.smart_session_user_data.put(dict_key=data_key, value_to_put=data_value)
+            return self.user_data.update_field(field_path=data_key, value_to_set=data_value, query_kwargs=query_kwargs)
+        return False
 
     def session_batch_memorize(self, data_dict: dict) -> None:
         if not isinstance(data_dict, dict):
@@ -454,27 +463,24 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 then_state_class_name = state_handler_class_type_or_name
 
             if then_state_class_name is not None:
-                self.session_memorize(data_key="thenState", data_value=then_state_class_name)
+                self.session_memorize(data_key='thenState', data_value=then_state_class_name)
         else:
             raise Exception(f"state_handler_class_type_or_name must be an class type or str but was {state_handler_class_type_or_name}")
 
     def remember_session_then_state(self):
-        last_session_then_state = self.session_remember("thenState", str)
-        if last_session_then_state.replace(" ", "") != "":
+        last_session_then_state: Optional[str] = self.user_data.get_field(field_path='thenState')
+        if last_session_then_state is not None and last_session_then_state.replace(" ", "") != "":
             return last_session_then_state
         else:
             return None
 
-    def forget_session_then_state(self) -> None:
-        self.session_forget("thenState")
+    def forget_session_then_state(self) -> bool:
+        return self.user_data.delete_field(field_path='thenState')
 
     def play_audio_block(self, audio_block: AudioBlock) -> bool:
         if self.is_alexa is True:
             return self.alexaHandlerInput.play_audio_block(audio_block=audio_block)
         return False
-
-    def user_data(self) -> UserData:
-        return self._user_data
 
     def memorize_session_last_intent_handler(self, handler_class_type_instance_name) -> None:
         from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftRequestHandler, InoftStateHandler
@@ -502,9 +508,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
         else:
             raise Exception(f"handler_class_type_or_name must be an class type or str but was {handler_class_type_instance_name}")
 
-    def remember_session_last_intent_handler(self):
-        last_intent_handler_class_name = self.session_remember("lastIntentHandler", str)
-        if last_intent_handler_class_name.replace(" ", "") != "":
+    def remember_session_last_intent_handler(self) -> Optional[str]:
+        last_intent_handler_class_name: Optional[str] = self.user_data.get_field(field_path='lastIntentHandler')
+        if last_intent_handler_class_name is not None and last_intent_handler_class_name.replace(" ", "") != "":
             return last_intent_handler_class_name
         else:
             return None
@@ -513,11 +519,16 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self.session_forget("lastIntentHandler")
 
     def save_attributes_if_need_to(self):
+        self.user_data.table.commit_operations()
+
+        # todo: deprecate code bellow and the entire attributes_dynamodb_adapter
         if self.data_for_database_has_been_modified is True:
             if self.settings.database_sessions_users_data.disable_database is not True:
-                self._attributes_dynamodb_adapter.save_attributes(user_id=self.persistent_user_id, session_id=self.session_id,
-                                                                  smart_session_attributes=self.smart_session_user_data.to_dict(),
-                                                                  persistent_attributes=self.persistent_user_data.to_dict())
+                self._attributes_dynamodb_adapter.save_attributes(
+                    user_id=self.persistent_user_id, session_id=self.session_id,
+                    smart_session_attributes=self.smart_session_user_data.to_dict(),
+                    persistent_attributes=self.persistent_user_data.to_dict()
+                )
 
     def to_platform_dict(self) -> dict:
         output_response_dict = None
