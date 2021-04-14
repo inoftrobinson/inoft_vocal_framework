@@ -214,9 +214,12 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def load_event(self, event: dict) -> None:
         if self.is_alexa is True:
             from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
-            self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
-            NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.alexaHandlerInput,
-                request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
+            self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self, **event)
+            """try:
+                NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.alexaHandlerInput,
+                    request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
+            except Exception as e:
+                print(e)"""
 
         elif self.is_dialogflow is True:
             from inoft_vocal_framework.platforms_handlers.dialogflow import DialogFlowHandlerInput
@@ -537,7 +540,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             output_response_dict = {
                 "version": "1.0",
                 "sessionAttributes": self.simple_session_user_data.to_dict(),
-                "response": self.alexaHandlerInput.response.to_dict()["response"]  # todo: fix the need to enter with response key
+                "response": self.alexaHandlerInput._response.to_dict()["response"]  # todo: fix the need to enter with response key
             }
         elif self.is_dialogflow is True:
             data_dict_to_store = {"userId": self.persistent_user_id}
