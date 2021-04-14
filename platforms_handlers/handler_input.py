@@ -542,7 +542,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         from inoft_vocal_framework.platforms_handlers.dialogflow.response import OutputContextItem
         session_user_data_context_item = OutputContextItem(
             session_id=self.dialogFlowHandlerInput.session_id,
-            name=OutputContextItem.session_data_name
+            name=OutputContextItem._SESSION_DATA_NAME
         )
 
         for key_item_saved_data, value_item_saved_data in self.simple_session_user_data.to_dict().items():
