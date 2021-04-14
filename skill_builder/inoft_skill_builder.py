@@ -409,7 +409,13 @@ class InoftSkill:
             from inoft_vocal_framework.messages import ERROR_PLATFORM_NOT_SUPPORTED
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)
 
-        self.handler_input.load_event(event=event)
+        import time
+        start_event_load = time.time()
+        for i in range(1000):
+            self.handler_input.load_event(event=event)
+        elapsed_event_load = time.time() - start_event_load
+        print(f"Took {elapsed_event_load}s to load the event 1000 times")
+
         from inoft_vocal_framework.user_data.user_data import UserData
         self.handler_input._user_data = UserData(user_id=self.handler_input.persistent_user_id)
         return self.process_request()
