@@ -1,6 +1,9 @@
 from json import dumps as json_dumps
 from typing import Optional
 
+from pydantic import Field, PrivateAttr
+from pydantic.main import BaseModel
+
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 
@@ -698,51 +701,19 @@ class SystemIntent:
     def data(self) -> Data:
         return self._data
 
-class SimpleResponse:
-    json_key = "simpleResponse"
-
-    def __init__(self):
-        self._textToSpeech = str()
-        self._displayText = str()
-
-    @property
-    def textToSpeech(self):
-        return self._textToSpeech
-
-    @textToSpeech.setter
-    def textToSpeech(self, text: str) -> None:
-        if isinstance(text, str):
-            self._textToSpeech = text
-        else:
-            raise Exception(f"The text was not a string object : {text}")
-
-    @property
-    def displayText(self):
-        return self._textToSpeech
-
-    @displayText.setter
-    def displayText(self, text: str) -> None:
-        if isinstance(text, str):
-            self._displayText = text
-        else:
-            raise Exception(f"The text was not a string object : {text}")
+class SimpleResponse(BaseModel):
+    textToSpeech: str = ""
+    displayText: str = ""
 
 
-class RichResponseInPayload:
-    json_key = "richResponse"
-
-    def __init__(self):
-        self._items = list()
-        self.suggestions = list()
-
-    @property
-    def items(self):
-        return self._items
+class RichResponseInPayload(BaseModel):
+    items: list = Field(default_factory=list)
+    suggestions: list = Field(default_factory=list)
 
     def add_response_item(self, response_item_object) -> int:
         """:return Length of the list containing all the response items"""
-        self._items.append(response_item_object)
-        return len(self._items) - 1
+        self.items.append(response_item_object)
+        return len(self.items) - 1
 
     def add_suggestion_chip(self, title: str):
         # todo: add external link suggestion chip (cannot be used on platforms without the actions.capability.WEB_BROWSER capability
@@ -755,48 +726,22 @@ class RichResponseInPayload:
 
     def return_transformations(self):
         for i in range(len(self.items)):
-            self.items[i] = NestedObjectToDict.get_dict_from_nested_object(object_to_process=self.items[i],
-                                                                           key_names_identifier_objects_to_go_into=["json_key"])
+            self.items[i] = NestedObjectToDict.get_dict_from_nested_object(
+                object_to_process=self.items[i], key_names_identifier_objects_to_go_into=["json_key"]
+            )
 
 
-class GoogleInPayload:
-    json_key = "google"
+class GoogleInPayload(BaseModel):
+    expectUserResponse: bool = True
+    richResponse: RichResponseInPayload = Field(default_factory=RichResponseInPayload)
+    userStorage: str = ""
+    systemIntent: Optional[SystemIntent] = None
 
-    def __init__(self):
-        self._expectUserResponse = True
-        self.richResponse = RichResponseInPayload()
-        self._userStorage = str()
 
-    @property
-    def expectUserResponse(self):
-        return self._expectUserResponse
+class Payload(BaseModel):
+    google: GoogleInPayload = Field(default_factory=GoogleInPayload)
 
-    @expectUserResponse.setter
-    def expectUserResponse(self, expectUserResponse) -> None:
-        raise_if_variable_not_expected_type(value=expectUserResponse, expected_type=bool, variable_name="expectUserResponse")
-        self._expectUserResponse = expectUserResponse
-
-    @property
-    def userStorage(self) -> str:
-        return self._userStorage
-
-    @userStorage.setter
-    def userStorage(self, userStorage: str) -> None:
-        raise_if_variable_not_expected_type(value=userStorage, expected_type=str, variable_name="userStorage")
-        self._userStorage = userStorage
-
-class Payload:
-    json_key = "payload"
-
-    def __init__(self):
-        self.google = GoogleInPayload()
-
-    def to_dict(self) -> dict:
-        return NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,
-                                                              key_names_identifier_objects_to_go_into=["json_key"])
-
-class OutputContextItem:
-    json_key = None
+class OutputContextItem(BaseModel):
     session_data_name = "sessionData"
 
     def __init__(self, session_id: str, name: str, lifespanCount=999):
@@ -836,14 +781,11 @@ class OutputContextItem:
             raise Exception(f"parameters was type {type(parameters)} which is not valid value for his parameter.")
         self._parameters = parameters
 
-class Response:
-    json_key = "response"
-
-    def __init__(self):
-        self.payload = Payload()
-        self.outputContexts = list()
-        self._first_say_rich_response_list_id = None
-        self._second_say_rich_response_list_id = None
+class Response(BaseModel):
+    payload: Payload = Field(default_factory=Payload)
+    outputContexts: list = Field(default_factory=list)
+    _first_say_rich_response_list_id: Optional[int] = PrivateAttr(default=None)
+    _second_say_rich_response_list_id: Optional[int] = PrivateAttr(default=None)
 
     def say(self, text_or_ssml: str) -> None:
         # todo: allow to have 2 differents response in the same one, not just one (the textToSpeech and the displayText)
@@ -870,7 +812,7 @@ class Response:
         output_response.textToSpeech = text_or_ssml
         self.payload.google.richResponse.add_response_item(output_response)
 
-    def end_session(self, should_end: bool = True):
+    def end_session(self, should_end: bool = True) -> None:
         self.payload.google.expectUserResponse = False if should_end is True else True
 
     def add_output_context_item(self, output_context_item: OutputContextItem) -> None:
@@ -893,9 +835,10 @@ class Response:
         elif isinstance(chips_titles, str):
             self.payload.google.richResponse.add_suggestion_chip(title=chips_titles)
 
-    def add_item_to_browse_carousel(self, title: str,  url_to_open_on_click: str, description: str = None,
-                                    image_url: str = None, image_accessibility_text: str = None, footer: str = None):
-
+    def add_item_to_browse_carousel(
+            self, title: str,  url_to_open_on_click: str, description: str = None,
+            image_url: str = None, image_accessibility_text: str = None, footer: str = None
+    ) -> None:
         carousel_instance = None
         # todo: improve this loop so that we do not need to loop every time we add an item
         for response_item in self.payload.google.richResponse.items:
@@ -905,13 +848,16 @@ class Response:
         if carousel_instance is None:
             carousel_instance = BrowseCarousel()
             self.payload.google.richResponse.items.append(carousel_instance)
-        carousel_instance.add_item(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
-                                   image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
+        carousel_instance.add_item(
+            title=title, url_to_open_on_click=url_to_open_on_click, description=description,
+            image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer
+        )
 
-    def add_interactive_list_item_to_system_intent(self, identifier_key: str, item_title: str, item_description: str = None,
-                                                   item_image_url: str = None, item_image_accessibility_text: str = None) -> bool:
-
-        if "systemIntent" not in vars(self.payload.google):
+    def add_interactive_list_item_to_system_intent(
+            self, identifier_key: str, item_title: str, item_description: str = None,
+            item_image_url: str = None, item_image_accessibility_text: str = None
+    ) -> None:
+        if 'systemIntent' not in vars(self.payload.google):
             self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_list_select)
         elif self.payload.google.systemIntent.data.listSelect is None:
             # If the listSelect variable is None, it means that the SystemIntent do not represent a ListSelect,
@@ -919,15 +865,19 @@ class Response:
             raise Exception(f"A systemIntent as already been created. Make sure that you do not tried to show"
                             f"another interactive (or static element) that use a systemIntent somewhere else.")
 
-        self.payload.google.systemIntent.data.listSelect.add_item(identifier_key=identifier_key, title=item_title, description=item_description,
-                                                                  image_url=item_image_url, image_accessibility_text=item_image_accessibility_text)
+        self.payload.google.systemIntent.data.listSelect.add_item(
+            identifier_key=identifier_key, title=item_title, description=item_description,
+            image_url=item_image_url, image_accessibility_text=item_image_accessibility_text
+        )
 
-    def add_interactive_carousel_item_to_system_intent(self, identifier_key: str, item_title: str, item_description: str,
-                                                       item_image_url: str = None, item_image_accessibility_text: str = None) -> bool:
+    def add_interactive_carousel_item_to_system_intent(
+            self, identifier_key: str, item_title: str, item_description: str,
+            item_image_url: str = None, item_image_accessibility_text: str = None
+    ) -> bool:
         """
-        :return bool: True if the SystemIntent has been created and so we just set the first interactive element in the invocation and False otherwise
+        :return bool: True if the SystemIntent has been created and so we just set
+        the first interactive element in the invocation and False otherwise
         """
-
         is_first_interactive_element_of_invocation = False
         if "systemIntent" not in vars(self.payload.google):
             self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_carousel_select)
@@ -938,13 +888,16 @@ class Response:
             raise Exception(f"A systemIntent as already been created. Make sure that you do not tried to show"
                             f"another interactive (or static element) that use a systemIntent somewhere else.")
 
-        self.payload.google.systemIntent.data.carouselSelect.add_item(identifier_key=identifier_key, title=item_title, description=item_description,
-                                                                      image_url=item_image_url, image_accessibility_text=item_image_accessibility_text)
+        self.payload.google.systemIntent.data.carouselSelect.add_item(
+            identifier_key=identifier_key, title=item_title, description=item_description,
+            image_url=item_image_url, image_accessibility_text=item_image_accessibility_text
+        )
         return is_first_interactive_element_of_invocation
 
-    def add_item_to_audio_media_response(self, mp3_file_url: str, name: str, description: str = None,
-                                         icon_image_url: str = None, icon_accessibility_text: str = None):
-
+    def add_item_to_audio_media_response(
+            self, mp3_file_url: str, name: str, description: str = None,
+            icon_image_url: str = None, icon_accessibility_text: str = None
+    ) -> None:
         media_response_instance = None
         # todo: improve this loop so that we do not need to loop every time we add an item
         for response_item in self.payload.google.richResponse.items:
@@ -954,16 +907,20 @@ class Response:
         if media_response_instance is None:
             media_response_instance = MediaResponse()
             self.payload.google.richResponse.items.append(media_response_instance)
-        media_response_instance.add_audio_content(mp3_file_url=mp3_file_url, name=name, description=description,
-                                                  icon_image_url=icon_image_url, icon_accessibility_text=icon_accessibility_text)
+        media_response_instance.add_audio_content(
+            mp3_file_url=mp3_file_url, name=name, description=description,
+            icon_image_url=icon_image_url, icon_accessibility_text=icon_accessibility_text
+        )
 
     def request_push_notifications_permission(self, intent_name: str) -> None:
-        self.payload.google.systemIntent = SystemIntent(element_type=SystemIntent.element_type_ask_permission, permissions_update_intent_name=intent_name)
+        self.payload.google.systemIntent = SystemIntent(
+            element_type=SystemIntent.element_type_ask_permission,
+            permissions_update_intent_name=intent_name
+        )
 
 
     def to_dict(self) -> dict:
-        return NestedObjectToDict.get_dict_from_nested_object(object_to_process=self,
-                                                              key_names_identifier_objects_to_go_into=["json_key"])[self.json_key]
+        return self.dict()
 
 
 if __name__ == "__main__":

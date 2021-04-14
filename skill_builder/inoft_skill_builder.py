@@ -1,3 +1,4 @@
+import json
 import logging
 from abc import abstractmethod
 from json import dumps as json_dumps
@@ -8,8 +9,6 @@ from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
 from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
 from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput, HandlerInputWrapper
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.plugins.loader import plugins_load
 
 # todo: Add a prod and dev production mode, so that optisionnal status (like loading of plugins) is done only in developpement
@@ -365,44 +364,57 @@ class InoftSkill:
         if self.default_fallback_handler is None:
             raise Exception(f"A skill must have a {InoftDefaultFallback} handler set with the {self.set_default_fallback_handler} function.")
 
+    @staticmethod
+    def _get_alexa_application_id_from_event(event: dict) -> Optional[str]:
+        # return SafeDict(event).get("context").get("System").get("application").get("applicationId").to_str()
+        context: Optional[dict] = event.get('context', None)
+        if context is not None:
+            system: Optional[dict] = context.get('system', None)
+            if system is not None:
+                application: Optional[dict] = system.get('application', None)
+                if application is not None:
+                    return application.get('applicationId', None)
+        return None
+
     def handle_any_platform(self, event: dict, context: dict):
         from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
 
         print(f"Crude event = {event if not isinstance(event, dict) else json_dumps(event)}\nCrude context = {context}")
         self.check_everything_implemented()
-        event_safedict = SafeDict(classic_dict=event)
 
         # The 'rawPath' is for ApiGatewayV2, use the key 'resource' (without the comma) if using ApiGatewayV1
-        if event_safedict.get("rawPath").to_str() == "/googleAssistantDialogflowV1":
+        event_raw_path: Optional[str] = event.get('rawPath', None)
+
+        if event_raw_path == '/googleAssistantDialogflowV1':
             # A google-assistant or dialogflow request always pass trough an API gateway
-            self.handler_input.is_dialogflow = True
-            body = event_safedict.get("body").to_any()
-
-            if isinstance(body, str):
-                event = NestedObjectToDict.get_dict_from_json(body)
-            elif isinstance(body, dict):
-                event = body
-            else:
-                raise Exception(f"The body object of the request, must be of type str or dict, but was of type : {type(body)} : {body}")
-
+            self.handler_input.set_platform_to_dialogflow()
+            event_body: Optional[dict or str] = event.get('body', None)
+            if event_body is None:
+                raise Exception("Event body not found")
+            event: dict = event_body if isinstance(event_body, dict) else json.loads(event_body)
             print(f"Event body for Google Assistant = {json_dumps(event)}")
 
-        elif event_safedict.get("rawPath").to_str() == "/samsungBixbyV1":
+        elif event_raw_path == "/samsungBixbyV1":
             # A samsung bixby request always pass trough an API gateway
-            self.handler_input.is_bixby = True
+            self.handler_input.set_platform_to_bixby()
+            event_body: Optional[dict] = event.get('body', None)
+            if event_body is None:
+                raise Exception("Event body not found")
+
             from urllib import parse
-            event = {"context": NestedObjectToDict.get_dict_from_json(stringed_json_dict=event_safedict.get("body").to_any())["$vivContext"],
-                     "parameters": dict(parse.parse_qsl(event_safedict.get("rawQueryString").to_any()))}
+            event_raw_query_string: Optional[str] = event.get('rawQueryString', None)
+            parameters: dict = dict(parse.parse_qsl(event_raw_query_string)) if event_raw_query_string is not None else {}
+
+            event = {'context': event_body.get('$vivContext'), 'parameters': parameters}
             print(f"Event body for Samsung Bixby = {json_dumps(event)}")
 
-
-        elif "amzn1." in event_safedict.get("context").get("System").get("application").get("applicationId").to_str():
+        elif "amzn1." in (self._get_alexa_application_id_from_event(event=event) or ""):
             # Alexa always go last, since it do not pass trough an api resource, its a less robust identification than the other platforms.
-            self.handler_input.is_alexa = True
+            self.handler_input.set_platform_to_alexa()
             print(f"Event body do not need processing for Alexa : {event}")
 
         elif DiscordHandlerInput.SHOULD_BE_USED is True:
-            self.handler_input.is_discord = True
+            self.handler_input.set_platform_to_discord()
             print(f"Event body do not need processing for Discord : {event}")
 
         else:
