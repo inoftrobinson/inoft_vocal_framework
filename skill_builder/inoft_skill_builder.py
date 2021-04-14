@@ -256,7 +256,10 @@ class InoftSkill:
 
         # Second, Alexa Audio Player
         if self.handler_input.is_alexa:
-            if self.handler_input.alexaHandlerInput.context.audioPlayer.token is not None:
+            if (
+                    self.handler_input.alexaHandlerInput.context.audioPlayer is not None and
+                    self.handler_input.alexaHandlerInput.context.audioPlayer.token is not None
+            ):
                 last_used_audioplayer_handlers_group_infos = self.handler_input.alexaHandlerInput.get_last_used_audioplayer_handlers_group()
                 from inoft_vocal_framework.skill_builder import get_function_or_class_from_file_and_path
                 audioplayer_handlers_group_class_type = get_function_or_class_from_file_and_path(
@@ -407,6 +410,7 @@ class InoftSkill:
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)
 
         self.handler_input.load_event(event=event)
+
         from inoft_vocal_framework.user_data.user_data import UserData
         self.handler_input._user_data = UserData(user_id=self.handler_input.persistent_user_id)
         return self.process_request()
