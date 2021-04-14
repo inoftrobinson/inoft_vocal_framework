@@ -4,6 +4,8 @@ from StructNoSQL import CachingTable, PrimaryIndex, FieldSetter, FieldGetter, Fi
 
 class BaseDataModel(TableDataModel):
     userId = BaseField(name='userId', field_type=str, required=True)
+    thenState = BaseField(name='thenState', field_type=str, required=False)
+    lastIntentHandler = BaseField(name='lastIntentHandler', field_type=str, required=False)
 
 class UserDataTableClient(CachingTable):
     def __init__(self, table_name: str, region_name: str):
@@ -12,12 +14,16 @@ class UserDataTableClient(CachingTable):
             table_name=table_name, region_name=region_name,
             data_model=BaseDataModel(),
             primary_index=primary_index,
-            auto_create_table=True
+            auto_create_table=False
+            # We set auto_create_table to False, because in a deployment on the inoft-vocal-engine,
+            # the application will not have the required permissions to create a table. Its better to
+            # get a simple Error from StructNoSQL if the table is missing, than a ClientError from AWS.
         )
 
 class UserData:
     def __init__(self, user_id: str):
         self.table = UserDataTableClient(table_name="user_data_sandbox", region_name="eu-west-3")
+        # todo: do not run the try to create table
         self.user_id = user_id
         self._cached_data = dict()
 

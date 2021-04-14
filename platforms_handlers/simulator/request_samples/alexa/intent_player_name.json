@@ -4,22 +4,22 @@
 		"new": false,
 		"sessionId": "amzn1.echo-api.session.75326148-6181-44cc-ab79-d1c9efef9313",
 		"application": {
-			"applicationId": "amzn1.ask.skill.5249028b-e871-4d86-b77a-d44bf0611bac"
+			"applicationId": "amzn1.ask.skill.SampleSkillId"
 		},
 		"user": {
-			"userId": "amzn1.ask.account.AFB2RVEUXPJAYNG2EEVI2CUC5WTKGI77U5ELTR4JNYX5AUVO7VRZM2255HSOWNRDCEV4BXIDGHKTMPPOCXGCEYJDY3KHAD37UIHXZGMYROYWFK2WPHG6EVSO4AHLHYIHVIS2EKSRUA2OCXO6QQOI2EUFRJCR6XTQMPXQWDTKKERDUGCX6VXQCRGJLPA77IWSR45W3ZZCRBRWEGQ"
+			"userId": "amzn1.ask.account.SampleAccountId"
 		}
 	},
 	"context": {
 		"System": {
 			"application": {
-				"applicationId": "amzn1.ask.skill.5249028b-e871-4d86-b77a-d44bf0611bac"
+				"applicationId": "amzn1.ask.skill.SampleSkillId"
 			},
 			"user": {
-				"userId": "amzn1.ask.account.AFB2RVEUXPJAYNG2EEVI2CUC5WTKGI77U5ELTR4JNYX5AUVO7VRZM2255HSOWNRDCEV4BXIDGHKTMPPOCXGCEYJDY3KHAD37UIHXZGMYROYWFK2WPHG6EVSO4AHLHYIHVIS2EKSRUA2OCXO6QQOI2EUFRJCR6XTQMPXQWDTKKERDUGCX6VXQCRGJLPA77IWSR45W3ZZCRBRWEGQ"
+				"userId": "amzn1.ask.account.SampleAccountId"
 			},
 			"device": {
-				"deviceId": "amzn1.ask.device.AHV4HJIV66Q3M7OF6UNAOZ7BZJFQ7NHQVERJ4H4SM55FR55UKHTKZYOZ46XCXXQCXXMWSKZUW3P7N34AEXN7JS3AF77IJNXQUKCXQGWKDYR25U7REPA6FNZDQ4E7FHYCVSHDAT5HE43OUKFXGJJEY7GGQYLIREFJYLOL2LNW4MSJJW5EFXQH4",
+				"deviceId": "amzn1.ask.device.SampleDeviceId",
 				"supportedInterfaces": {}
 			},
 			"apiEndpoint": "https://api.eu.amazonalexa.com",
