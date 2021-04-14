@@ -1,4 +1,8 @@
 from collections import Callable
+from typing import Optional
+
+from pydantic import PrivateAttr, Field
+from pydantic.main import BaseModel
 
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.dialogflow.request import Request
@@ -23,19 +27,22 @@ class SurfaceCapabilities:
     ]
 
 
-class DialogFlowHandlerInput(SurfaceCapabilities):
+class DialogFlowHandlerInput(BaseModel, SurfaceCapabilities):
     from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput
 
-    def __init__(self, parent_handler_input: HandlerInput):
-        self.parent_handler_input = parent_handler_input
-        self.request = Request()
-        self.response = Response()
+    request: Request
 
-        self._user_persistent_stored_data = None
-        self._user_id = None
-        self._session_id = None
-        self._is_new_session = None
-        self._simple_session_user_data = None
+    _response: Response = PrivateAttr(default_factory=Response)
+    _parent_handler_input: HandlerInput = PrivateAttr()
+    _user_persistent_stored_data: Optional[dict] = PrivateAttr(default=None)
+    _user_id: Optional[str] = PrivateAttr(default=None)
+    _session_id: Optional[str] = PrivateAttr(default=None)
+    _is_new_session: Optional[bool] = PrivateAttr(default=None)
+    _simple_session_user_data: Optional[dict] = PrivateAttr(default=None)
+
+    def __init__(self, parent_handler_input: HandlerInput, **kwargs):
+        super().__init__(**kwargs)
+        self._parent_handler_input = parent_handler_input
 
     @property
     def user_persistent_stored_data(self) -> dict:
@@ -54,17 +61,11 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
                     print(f"Error while processing the user_persistent_data. Non-crashing but returning None : {e}")
         return self._user_persistent_stored_data
 
-    def get_user_id(self):
-        if self.user_persistent_stored_data is not None and "userId" in self.user_persistent_stored_data.keys():
-            return self.user_persistent_stored_data["userId"]
-        else:
-            return None
+    def get_user_id(self) -> Optional[str]:
+        return self.user_persistent_stored_data.get('userId', None) if self.user_persistent_stored_data is not None else None
 
-    def get_updates_user_id(self):
-        if self.user_persistent_stored_data is not None and "updatesUserId" in self.user_persistent_stored_data.keys():
-            return self.user_persistent_stored_data["updatesUserId"]
-        else:
-            return None
+    def get_updates_user_id(self) -> Optional[str]:
+        return self.user_persistent_stored_data.get('updatesUserId', None) if self.user_persistent_stored_data is not None else None
 
     @property
     def session_id(self) -> str:
@@ -79,35 +80,35 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
         return self._is_new_session
 
     @property
-    def simple_session_user_data(self) -> SafeDict:
+    def simple_session_user_data(self) -> dict:
         for output_context in self.request.queryResult.outputContexts:
-            if isinstance(output_context, dict) and "name" in output_context.keys() and "parameters" in output_context.keys():
-                all_texts_after_slash = output_context["name"].split("/")
+            if isinstance(output_context, dict) and 'name' in output_context.keys() and 'parameters' in output_context.keys():
+                all_texts_after_slash = output_context['name'].split("/")
                 last_text_after_slash = all_texts_after_slash[len(all_texts_after_slash) - 1]
-                if str(last_text_after_slash).lower() == "sessiondata":
+                if str(last_text_after_slash).lower() == 'sessiondata':
                     # We lower the text, to make sure that it will work even if the cases have been lowered. Because for some reasons,
                     # google is lowering the keys, so even if the key in the framework os sessionData, google might return sessiondata.
-                    parameters_stringed_dict_or_dict = output_context["parameters"]
+                    parameters_stringed_dict_or_dict = output_context['parameters']
                     if parameters_stringed_dict_or_dict is not None:
                         if isinstance(parameters_stringed_dict_or_dict, str):
                             parameters_stringed_dict_or_dict = json_loads(parameters_stringed_dict_or_dict)
                         if isinstance(parameters_stringed_dict_or_dict, dict):
                             # The data key contains an stringed dictionary of the data we are interested by.
-                            if "data" in parameters_stringed_dict_or_dict.keys():
-                                parameters_stringed_dict_or_dict = parameters_stringed_dict_or_dict["data"]
+                            if 'data' in parameters_stringed_dict_or_dict.keys():
+                                parameters_stringed_dict_or_dict = parameters_stringed_dict_or_dict['data']
 
                             if isinstance(parameters_stringed_dict_or_dict, str):
                                 parameters_stringed_dict_or_dict = json_loads(parameters_stringed_dict_or_dict)
                             if isinstance(parameters_stringed_dict_or_dict, dict):
-                                self._simple_session_user_data = SafeDict(parameters_stringed_dict_or_dict)
+                                self._simple_session_user_data = parameters_stringed_dict_or_dict
                             else:
-                                self._simple_session_user_data = SafeDict()
+                                self._simple_session_user_data = {}
                         else:
                             raise Exception(f"parameters_stringed_dict_or_dict was nto None, not a str, dict and could"
                                             f"not be json converted to a dict : {parameters_stringed_dict_or_dict}")
 
-        if not isinstance(self._simple_session_user_data, SafeDict):
-            self._simple_session_user_data = SafeDict()
+        if not isinstance(self._simple_session_user_data, dict):
+            self._simple_session_user_data = {}
         return self._simple_session_user_data
 
     def need_capabilities(self, capability_item_or_list):
@@ -154,78 +155,96 @@ class DialogFlowHandlerInput(SurfaceCapabilities):
         return self.request.is_in_intent_names(intent_names_list=intent_names_list)
 
     def say(self, text_or_ssml: str) -> None:
-        self.response.say(text_or_ssml=text_or_ssml)
+        self._response.say(text_or_ssml=text_or_ssml)
 
     def reprompt(self, text_or_ssml: str) -> None:
-        self.response.say_reprompt(text_or_ssml=text_or_ssml)
+        self._response.say_reprompt(text_or_ssml=text_or_ssml)
 
     def show_suggestion_chips(self, chips_titles: list):
-        self.response.add_suggestions_chips(chips_titles=chips_titles)
+        self._response.add_suggestions_chips(chips_titles=chips_titles)
 
-    def show_basic_card(self, title: str = None, subtitle: str = None, content_formatted_text: str = None,
-                        image: Image = None, image_display_options: ImageDisplayOptions = None, buttons: list = None) -> None:
-
+    def show_basic_card(
+            self, title: str = None, subtitle: str = None, content_formatted_text: str = None,
+            image: Image = None, image_display_options: ImageDisplayOptions = None, buttons: list = None
+    ) -> None:
         if content_formatted_text is None and image is None:
             raise Exception("A google assistant basic card cannot have both the content_formatted_text and the image variable as None")
 
         from inoft_vocal_framework.platforms_handlers.dialogflow import BasicCard
-        basic_card_object = BasicCard(title=title, subtitle=subtitle, formatted_text=content_formatted_text,
-                                      image=image, image_display_options=image_display_options, buttons=buttons)
-        self.response.add_response_item_to_show(item_object=basic_card_object)
+        basic_card_object = BasicCard(
+            title=title, subtitle=subtitle, formatted_text=content_formatted_text,
+            image=image, image_display_options=image_display_options, buttons=buttons
+        )
+        self._response.add_response_item_to_show(item_object=basic_card_object)
 
-    def show_browse_carousel_item(self, title: str, url_to_open_on_click: str, description: str = None,
-                                  image_url: str = None, image_accessibility_text: str = None, footer: str = None):
-
-        self.response.add_item_to_browse_carousel(title=title, url_to_open_on_click=url_to_open_on_click, description=description,
-                                                  image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer)
+    def show_browse_carousel_item(
+            self, title: str, url_to_open_on_click: str, description: str = None,
+            image_url: str = None, image_accessibility_text: str = None, footer: str = None
+    ):
+        self._response.add_item_to_browse_carousel(
+            title=title, url_to_open_on_click=url_to_open_on_click, description=description,
+            image_url=image_url, image_accessibility_text=image_accessibility_text, footer=footer
+        )
 
     def _save_interaction_options_callback_function(self, on_select_callback_function: Callable, identifier_key: str):
-        self.parent_handler_input.save_callback_function_to_database(callback_functions_key_name="interactivityCallbackFunctions",
-            callback_function=on_select_callback_function, identifier_key=identifier_key)
+        self._parent_handler_input.save_callback_function_to_database(
+            callback_functions_key_name='interactivityCallbackFunctions',
+            callback_function=on_select_callback_function, identifier_key=identifier_key
+        )
 
-    def show_interactive_list_item(self, identifier_key: str, on_select_callback: Callable, title: str, description: str = None,
-                                   image_url: str = None, image_accessibility_text: str = None):
-
-        self.response.add_interactive_list_item_to_system_intent(identifier_key=identifier_key, item_title=title, item_description=description,
-                                                                 item_image_url=image_url, item_image_accessibility_text=image_accessibility_text)
+    def show_interactive_list_item(
+            self, identifier_key: str, on_select_callback: Callable, title: str, description: str = None,
+            image_url: str = None, image_accessibility_text: str = None
+    ):
+        self._response.add_interactive_list_item_to_system_intent(
+            identifier_key=identifier_key, item_title=title, item_description=description,
+            item_image_url=image_url, item_image_accessibility_text=image_accessibility_text
+        )
         self._save_interaction_options_callback_function(on_select_callback_function=on_select_callback, identifier_key=identifier_key)
 
-    def show_interactive_carousel_item(self, identifier_key: str, on_select_callback: Callable, title: str, description: str,
-                                       image_url: str = None, image_accessibility_text: str = None):
-
-        is_first_interactive_element = self.response.add_interactive_carousel_item_to_system_intent(identifier_key=identifier_key,
-            item_title=title, item_description=description, item_image_url=image_url, item_image_accessibility_text=image_accessibility_text)
+    def show_interactive_carousel_item(
+            self, identifier_key: str, on_select_callback: Callable, title: str, description: str,
+            image_url: str = None, image_accessibility_text: str = None
+    ):
+        is_first_interactive_element = self._response.add_interactive_carousel_item_to_system_intent(
+            identifier_key=identifier_key, item_title=title, item_description=description,
+            item_image_url=image_url, item_image_accessibility_text=image_accessibility_text
+        )
         self._save_interaction_options_callback_function(on_select_callback_function=on_select_callback, identifier_key=identifier_key)
 
 
-    def play_audio(self, mp3_file_url: str, name: str, description: str = None,
-                   icon_image_url: str = None, icon_accessibility_text: str = None,
-                   override_default_end_session: bool = False):
+    def play_audio(
+            self, mp3_file_url: str, name: str, description: str = None,
+            icon_image_url: str = None, icon_accessibility_text: str = None,
+            override_default_end_session: bool = False
+    ):
 
-        self.response.add_item_to_audio_media_response(mp3_file_url=mp3_file_url, name=name, description=description,
-           icon_image_url=icon_image_url, icon_accessibility_text=icon_accessibility_text)
-
+        self._response.add_item_to_audio_media_response(
+            mp3_file_url=mp3_file_url, name=name, description=description,
+            icon_image_url=icon_image_url, icon_accessibility_text=icon_accessibility_text
+        )
         if override_default_end_session is False:
-            self.parent_handler_input.end_session()
+            self._parent_handler_input.end_session()
 
     def has_user_granted_push_notifications_permission(self) -> bool:
         user_permissions = self.request.originalDetectIntentRequest.payload.user.permissions
-        if user_permissions is None or self.request.originalDetectIntentRequest.payload.user.PERMISSION_UPDATE_TYPE not in user_permissions:
+        if user_permissions is None or self.request.originalDetectIntentRequest.payload.user._PERMISSION_UPDATE_TYPE not in user_permissions:
             return False
         else:
             return True
 
     def request_push_notifications_permission_if_missing(self, intent_name: str) -> None:
         if not self.has_user_granted_push_notifications_permission():
-            self.response.request_push_notifications_permission(intent_name=intent_name)
+            self._response.request_push_notifications_permission(intent_name=intent_name)
 
     def subscribe_current_user_to_notifications_group(self, group_key: str) -> bool:
         """:return True if the user has been able to be subscribed, False otherwise"""
 
         updates_user_id = self.get_updates_user_id()
         if updates_user_id is not None and self.has_user_granted_push_notifications_permission():
-            self.parent_handler_input._notifications_subscribers_dynamodb_adapter.add_new_subscribed_group_to_user(
-                updates_user_id=self.get_updates_user_id(), group_key=group_key)
+            self._parent_handler_input._notifications_subscribers_dynamodb_adapter.add_new_subscribed_group_to_user(
+                updates_user_id=self.get_updates_user_id(), group_key=group_key
+            )
             return True
         else:
             return False

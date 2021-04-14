@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional
 
 from pydantic import PrivateAttr
 from pydantic.main import BaseModel

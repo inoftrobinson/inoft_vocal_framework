@@ -215,26 +215,25 @@ class HandlerInput(CurrentUsedPlatformInfo):
         if self.is_alexa is True:
             from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
             self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self, **event)
-            """try:
-                NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.alexaHandlerInput,
-                    request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
-            except Exception as e:
-                print(e)"""
 
         elif self.is_dialogflow is True:
-            from inoft_vocal_framework.platforms_handlers.dialogflow import DialogFlowHandlerInput
-            self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
-            NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.dialogFlowHandlerInput.request,
-                request_json_dict_stringed_dict_or_list=event, key_names_identifier_objects_to_go_into=["json_key"])
+            from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
+            self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self, request=event)
 
         elif self.is_bixby is True:
             from inoft_vocal_framework.platforms_handlers.samsungbixby import BixbyHandlerInput
             self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
-            NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request.context,
-                request_json_dict_stringed_dict_or_list=event["context"], key_names_identifier_objects_to_go_into=["json_key"])
-            NestedObjectToDict.process_and_set_json_to_object(object_class_to_set_to=self.bixbyHandlerInput.request,
-                request_json_dict_stringed_dict_or_list=event["parameters"], key_names_identifier_objects_to_go_into=["json_key"])
+            NestedObjectToDict.process_and_set_json_to_object(
+                object_class_to_set_to=self.bixbyHandlerInput.request.context,
+                request_json_dict_stringed_dict_or_list=event["context"],
+                key_names_identifier_objects_to_go_into=["json_key"]
+            )
+            NestedObjectToDict.process_and_set_json_to_object(
+                object_class_to_set_to=self.bixbyHandlerInput.request,
+                request_json_dict_stringed_dict_or_list=event["parameters"],
+                key_names_identifier_objects_to_go_into=["json_key"]
+            )
 
         elif self.is_discord is True:
             from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
@@ -535,30 +534,32 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def to_platform_dict(self) -> dict:
         output_response_dict = None
-        # todo: improve this code, i found it dirty...
+        # todo: improve this code, i found it dirty... (move to a switch)
         if self.is_alexa is True:
             output_response_dict = {
                 "version": "1.0",
                 "sessionAttributes": self.simple_session_user_data.to_dict(),
-                "response": self.alexaHandlerInput._response.to_dict()["response"]  # todo: fix the need to enter with response key
+                "response": self.alexaHandlerInput._response.to_dict()
             }
         elif self.is_dialogflow is True:
-            data_dict_to_store = {"userId": self.persistent_user_id}
+            data_dict_to_store = {'userId': self.persistent_user_id}
             updates_user_id = self.dialogFlowHandlerInput.get_updates_user_id()
             if updates_user_id is not None:
-                data_dict_to_store["updatesUserId"] = updates_user_id
+                data_dict_to_store['updatesUserId'] = updates_user_id
 
-            self.dialogFlowHandlerInput.response.payload.google.userStorage = str(data_dict_to_store)
+            self.dialogFlowHandlerInput._response.payload.google.userStorage = str(data_dict_to_store)
 
-            from inoft_vocal_framework.platforms_handlers.dialogflow import OutputContextItem
-            session_user_data_context_item = OutputContextItem(session_id=self.dialogFlowHandlerInput.session_id,
-                                                               name=OutputContextItem.session_data_name)
+            from inoft_vocal_framework.platforms_handlers.dialogflow.response import OutputContextItem
+            session_user_data_context_item = OutputContextItem(
+                session_id=self.dialogFlowHandlerInput.session_id,
+                name=OutputContextItem.session_data_name
+            )
 
             for key_item_saved_data, value_item_saved_data in self.simple_session_user_data.to_dict().items():
                 session_user_data_context_item.add_set_session_attribute(key_item_saved_data, value_item_saved_data)
-            self.dialogFlowHandlerInput.response.add_output_context_item(session_user_data_context_item)
+            self.dialogFlowHandlerInput._response.add_output_context_item(session_user_data_context_item)
 
-            output_response_dict = self.dialogFlowHandlerInput.response.to_dict()
+            output_response_dict = self.dialogFlowHandlerInput._response.to_dict()
         elif self.is_bixby is True:
             output_response_dict = self.bixbyHandlerInput.response.to_dict()
         elif self.is_discord is True:
