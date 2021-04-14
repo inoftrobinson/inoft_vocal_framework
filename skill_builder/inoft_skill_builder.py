@@ -369,7 +369,7 @@ class InoftSkill:
         # return SafeDict(event).get("context").get("System").get("application").get("applicationId").to_str()
         context: Optional[dict] = event.get('context', None)
         if context is not None:
-            system: Optional[dict] = context.get('system', None)
+            system: Optional[dict] = context.get('System', None)
             if system is not None:
                 application: Optional[dict] = system.get('application', None)
                 if application is not None:

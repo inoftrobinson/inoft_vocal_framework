@@ -156,5 +156,5 @@ if __name__ == "__main__":
     """from inoft_vocal_engine import start_discord_listening
     from inoft_vocal_engine.platforms_handlers.discord.static_token import token
     start_discord_listening(token=token, lambda_handler_function=lambda_handler)"""
-    event_, context_ = Simulator(platform=Simulator.PLATFORM_GOOGLE, event_type="launch").get_event_and_context()
+    event_, context_ = Simulator(platform=Simulator.PLATFORM_ALEXA, event_type="launch_2").get_event_and_context()
     print(f"\n\nFinal Output : {lambda_handler(event=event_, context=context_)}")

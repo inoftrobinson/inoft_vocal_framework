@@ -66,8 +66,3 @@ class Request(BaseModel):
             raise Exception(f"The request type '{self.type}' is not None or any of the supported types.")
         return False
 
-    def to_dict(self) -> dict:
-        dict_object = self.to_dict()
-        dict_object['version'] = "1.0"
-        dict_object['sessionAttributes'] = dict()
-        return dict_object

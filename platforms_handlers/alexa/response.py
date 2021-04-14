@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import Field
 from pydantic.main import BaseModel
@@ -39,7 +39,9 @@ class Card(BaseModel):
             self._image = Image()
         return self._image
 
-class Directives(list):
+class Directives(BaseModel):
+    __root__: List[str] = Field(default_factory=list)
+
     @property
     def audioPlayer(self):
         from inoft_vocal_framework.platforms_handlers.alexa.audioplayer import AudioPlayer
@@ -52,12 +54,14 @@ class Directives(list):
             raise Exception(f"AudioPlayer has already been set and cannot be set twice")
 
         from inoft_vocal_framework.platforms_handlers.alexa.audioplayer import AudioPlayer
-        self.append(AudioPlayer(played_type=played_type, play_behavior=play_behavior,
-                                token_identifier=token_identifier, url=url,
-                                offsetInMilliseconds=offsetInMilliseconds))
+        self.__root__.append(AudioPlayer(
+            played_type=played_type, play_behavior=play_behavior,
+            token_identifier=token_identifier, url=url,
+            offsetInMilliseconds=offsetInMilliseconds
+        ))
 
     def do_not_include(self) -> bool:
-        return True if len(self) == 0 else False
+        return True if len(self.__root__) == 0 else False
 
 
 class OutputSpeech(BaseModel):
@@ -69,9 +73,9 @@ class OutputSpeech(BaseModel):
     ssml: Optional[str] = None
 
     def is_speech_empty(self):
-        if self._type == self._TYPE_KEY_TEXT:
+        if self.type == self._TYPE_KEY_TEXT:
             return True if self.text is None else False
-        elif self._type == self._TYPE_KEY_SSML:
+        elif self.type == self._TYPE_KEY_SSML:
             return True if self.ssml is None else False
         else:
             return True
@@ -80,9 +84,19 @@ class OutputSpeech(BaseModel):
         self.text = None
         self.ssml = None
 
+    def set_ssml(self, ssml: str):
+        self.type = self._TYPE_KEY_SSML
+        self.ssml = ssml
+        self.text = None
+
+    def set_text(self, text: str):
+        self.type = self._TYPE_KEY_TEXT
+        self.text = text
+        self.ssml = None
+
     def set_based_on_type(self, value_to_set: str, type_key: str):
         if type_key == self._TYPE_KEY_SSML:
-            self.ssml = value_to_set
+            self.set_ssml(ssml=value_to_set)
         elif type_key == self._TYPE_KEY_TEXT:
             self.text = value_to_set
         else:
@@ -92,9 +106,11 @@ class OutputSpeech(BaseModel):
     def do_not_include(self):
         return self.is_speech_empty()
 
-    def return_transformations(self):
+    def dict(self, **kwargs):
+        data = super().dict(**kwargs)
         if self.ssml is not None and not is_text_ssml(self.ssml):
-            self.ssml = f"<speak>{self.ssml}</speak>"
+            data['ssml'] = f"<speak>{self.ssml}</speak>"
+        return data
 
 class Reprompt(BaseModel):
     outputSpeech: OutputSpeech = Field(default_factory=OutputSpeech)
@@ -110,23 +126,33 @@ class Response(BaseModel):
     card: Optional[Card] = None
     shouldEndSession: bool = False
 
+    def dict(self, **kwargs):
+        data = super().dict(**kwargs)
+        if self.directives.do_not_include():
+            del data['directives']
+        if self.outputSpeech.do_not_include():
+            del data['outputSpeech']
+        if self.reprompt.do_not_include():
+            del data['reprompt']
+        return data
+
     def say(self, text_or_ssml: str):
         if is_text_ssml(text_or_ssml=text_or_ssml) is True:
             self.say_ssml(ssml=text_or_ssml)
         else:
-            self.outputSpeech.text = f'{self.outputSpeech.text}\n{text_or_ssml}' if self.outputSpeech.text is not None else text_or_ssml
+            self.outputSpeech.set_text(text=f'{self.outputSpeech.text}\n{text_or_ssml}' if self.outputSpeech.text is not None else text_or_ssml)
 
     def say_ssml(self, ssml: str):
-        self.outputSpeech.ssml = f'{self.outputSpeech.ssml}\n{ssml}' if self.outputSpeech.ssml is not None else ssml
+        self.outputSpeech.set_ssml(ssml=f'{self.outputSpeech.ssml}\n{ssml}' if self.outputSpeech.ssml is not None else ssml)
 
     def clear_speech(self):
         self.outputSpeech.reset()
 
     def say_reprompt(self, text_or_ssml: str):
         if is_text_ssml(text_or_ssml=text_or_ssml) is True:
-            self.reprompt.outputSpeech.ssml = f'{self.reprompt.outputSpeech.ssml}\n{text_or_ssml}' if self.reprompt.outputSpeech.ssml is not None else text_or_ssml
+            self.reprompt.outputSpeech.set_ssml(ssml=f'{self.reprompt.outputSpeech.ssml}\n{text_or_ssml}' if self.reprompt.outputSpeech.ssml is not None else text_or_ssml)
         else:
-            self.reprompt.outputSpeech.text = f'{self.reprompt.outputSpeech.text}\n{text_or_ssml}' if self.reprompt.outputSpeech.text is not None else text_or_ssml
+            self.reprompt.outputSpeech.set_text(text=f'{self.reprompt.outputSpeech.text}\n{text_or_ssml}' if self.reprompt.outputSpeech.text is not None else text_or_ssml)
 
     def clear_reprompt_speech(self):
         self.reprompt.outputSpeech.reset()
@@ -167,10 +193,7 @@ class Response(BaseModel):
         self.shouldEndSession = should_end
 
     def to_dict(self) -> dict:
-        dict_object = self.dict()
-        dict_object['version'] = "1.0"
-        dict_object['sessionAttributes'] = dict()
-        return dict_object
+        return self.dict(exclude_none=True)
 
 if __name__ == "__main__":
     NestedObjectToDict.get_dict_from_nested_object(Response(), ["json_key"])

@@ -526,9 +526,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def _alexa_to_platform_dict(self) -> dict:
         return {
-            "version": "1.0",
-            "sessionAttributes": self.simple_session_user_data.to_dict(),
-            "response": self.alexaHandlerInput._response.to_dict()
+            'version': "1.0",
+            'sessionAttributes': self.simple_session_user_data.to_dict(),
+            'response': self.alexaHandlerInput._response.to_dict()
         }
 
     def _dialogflow_to_platform_dict(self) -> dict:

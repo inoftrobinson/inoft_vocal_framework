@@ -6,7 +6,7 @@ from pydantic.main import BaseModel
 from inoft_vocal_framework.platforms_handlers.alexa.audioplayer.audioplayer_directives import AudioPlayerWrapper
 from inoft_vocal_framework.platforms_handlers.alexa.context import Context
 from inoft_vocal_framework.platforms_handlers.alexa.request import Request
-from inoft_vocal_framework.platforms_handlers.alexa.response.response import Response
+from inoft_vocal_framework.platforms_handlers.alexa.response import Response
 from inoft_vocal_framework.platforms_handlers.alexa.session import Session
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
