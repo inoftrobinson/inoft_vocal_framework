@@ -7,7 +7,6 @@ from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
 from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
 from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
 from inoft_vocal_framework.user_data.user_data import UserData
@@ -224,7 +223,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             from inoft_vocal_framework.platforms_handlers.samsungbixby import BixbyHandlerInput
             self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
-            NestedObjectToDict.process_and_set_json_to_object(
+            """NestedObjectToDict.process_and_set_json_to_object(
                 object_class_to_set_to=self.bixbyHandlerInput.request.context,
                 request_json_dict_stringed_dict_or_list=event["context"],
                 key_names_identifier_objects_to_go_into=["json_key"]
@@ -233,7 +232,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 object_class_to_set_to=self.bixbyHandlerInput.request,
                 request_json_dict_stringed_dict_or_list=event["parameters"],
                 key_names_identifier_objects_to_go_into=["json_key"]
-            )
+            )"""
+            # todo: re-activate without using the removed NestedObjectToDict class
+            raise Exception("Bixby integration temporarily deactivated")
 
         elif self.is_discord is True:
             from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput

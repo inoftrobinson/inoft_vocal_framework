@@ -3,7 +3,6 @@ from typing import Optional, List
 from pydantic import Field
 from pydantic.main import BaseModel
 
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 from inoft_vocal_framework.utils.general import is_text_ssml
 
 
@@ -194,6 +193,3 @@ class Response(BaseModel):
 
     def to_dict(self) -> dict:
         return self.dict(exclude_none=True)
-
-if __name__ == "__main__":
-    NestedObjectToDict.get_dict_from_nested_object(Response(), ["json_key"])

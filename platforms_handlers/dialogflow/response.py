@@ -4,8 +4,6 @@ from typing import Optional, List
 from pydantic import Field, PrivateAttr
 from pydantic.main import BaseModel
 
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
-
 # todo: add select carousel
 # todo: add select list
 
@@ -311,12 +309,6 @@ class RichResponseInPayload(BaseModel):
             raise Exception(f"A suggestion chip title can have a maximum of 25 chars but {title} was {len(title)} chars")
 
         self.suggestions.append({"title": title})
-
-    def return_transformations(self):
-        for i in range(len(self.items)):
-            self.items[i] = NestedObjectToDict.get_dict_from_nested_object(
-                object_to_process=self.items[i], key_names_identifier_objects_to_go_into=["json_key"]
-            )
 
 
 class GoogleInPayload(BaseModel):

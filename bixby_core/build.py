@@ -77,11 +77,11 @@ class ActionEndpoints:
         self.action_endpoints = self.NestedActionEndpoints()
 
 
-from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
+"""from inoft_vocal_framework.platforms_handlers.nested_object_to_dict import NestedObjectToDict
 endpoints = ActionEndpoints()
 dict_object = NestedObjectToDict.get_dict_from_nested_object(object_to_process=ActionEndpoints(),
                                                              key_names_identifier_objects_to_go_into=["json_key"])
-print(dict_object)
+print(dict_object)"""
 
 def build_endpoints():
     endpoints = SafeDict()
