@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use crate::tracer::TraceItem;
 use std::cmp::{min};
 use hound::WavSpec;
+use crate::transformers::audio_compressor::{AudioCompressor};
 
 
 pub struct RenderedClipInfos {
@@ -18,44 +19,10 @@ pub struct RenderedClipInfos {
     player_end_time: f32
 }
 
-pub struct CompressorSettings {
-    compression_ratio: f32,
-    attack_time_in_ms: f64,
-    hold_time_in_ms: f64,
-    release_time_in_ms: f64,
-    decibels_threshold: f32,
-    attack_time_in_samples: usize,
-    hold_time_in_samples: usize,
-    release_time_in_samples: usize,
-    max_value_negative_threshold: f32,
-    max_value_positive_threshold: f32,
-}
-
-impl CompressorSettings {
-    pub fn new(
-        parent_renderer_target_wav_spec: &WavSpec, compression_ratio: f32, attack_time_in_ms: f64,
-        hold_time_in_ms: f64, release_time_in_ms: f64, decibels_threshold: f32
-    ) -> CompressorSettings {
-        let sample_rate = parent_renderer_target_wav_spec.sample_rate as f64;
-
-        let amplitude_threshold =  (-decibels_threshold) / 90.0;
-        let max_value_negative_threshold = i16::MAX as f32 - (amplitude_threshold * i16::MAX as f32);
-
-        CompressorSettings {
-            compression_ratio, attack_time_in_ms, hold_time_in_ms, release_time_in_ms, decibels_threshold,
-            attack_time_in_samples: (sample_rate * (attack_time_in_ms / 1000.0)) as usize,
-            hold_time_in_samples: (sample_rate * (hold_time_in_ms / 1000.0)) as usize,
-            release_time_in_samples: (sample_rate * (release_time_in_ms / 1000.0)) as usize,
-            max_value_negative_threshold, max_value_positive_threshold: -max_value_negative_threshold,
-        }
-    }
-}
-
 pub struct Renderer {
     out_samples: Vec<i16>,
     target_spec: hound::WavSpec,
     rendered_clips_infos: HashMap<String, RenderedClipInfos>,
-    compressor_settings: CompressorSettings
 }
 
 struct PreAudioClipContainer<'a> {
@@ -78,14 +45,6 @@ impl Renderer {
             out_samples: Vec::new(),
             target_spec: target_wav_spec,
             rendered_clips_infos: HashMap::new(),
-            compressor_settings: CompressorSettings::new(
-                &target_wav_spec,
-                2.0,
-                82.0,
-                1000.0,
-                1400.0,
-                -110.0
-            )
         };
         renderer.render_to_vec(trace, &data.blocks).await;
         renderer.out_samples
@@ -270,50 +229,10 @@ impl Renderer {
             }
         }
 
-        /*if current_sample_value > 1500 {
-            let above_threshold = current_sample_value - 2000;
-            current_sample_value -= (above_threshold as f32 / 1.25) as i16;
-        }*/
 
-        let mut active_peak_index: usize = 0;
-        let mut active_peak_value: f32 = f32::MIN;
-
+        let mut compressor = AudioCompressor::new(&self.target_spec);
         for i_sample in 0..self.out_samples.len() {
-            let mut current_sample_value = self.out_samples[i_sample] as f32;
-            if current_sample_value > active_peak_value {
-                active_peak_index = i_sample;
-                active_peak_value = current_sample_value;
-            } else {
-                if i_sample > (active_peak_index + (self.compressor_settings.attack_time_in_samples + self.compressor_settings.hold_time_in_samples)) {
-                    active_peak_index = i_sample;
-                    active_peak_value = current_sample_value;
-                }
-            }
-
-            let num_samples_since_reached_peaked = i_sample - active_peak_index;
-            println!("num_samples_since_reached_peaked : {}", num_samples_since_reached_peaked);
-            println!("max_value_negative_threshold : {}", self.compressor_settings.max_value_negative_threshold);
-
-
-            let current_value_threshold = self.calculate_max_value_threshold(
-                self.compressor_settings.max_value_negative_threshold,
-                active_peak_value, num_samples_since_reached_peaked,
-            );
-            println!("current_value_threshold : {}", current_value_threshold);
-            if current_sample_value > 0.0 {
-                if current_sample_value > current_value_threshold {
-                    let value_above_threshold = current_sample_value - current_value_threshold;
-                    println!("value_above_threshold : {}", value_above_threshold);
-                    self.out_samples[i_sample] -= (value_above_threshold / self.compressor_settings.compression_ratio) as i16;
-                }
-            } else {
-                let current_value_negative_threshold = -current_value_threshold;
-                if current_sample_value < current_value_negative_threshold {
-                    let value_below_threshold = current_value_negative_threshold - current_sample_value;
-                    println!("value_below_threshold : {}", value_below_threshold);
-                    self.out_samples[i_sample] += (value_below_threshold / self.compressor_settings.compression_ratio) as i16;
-                }
-            }
+            self.out_samples[i_sample] = compressor.alter_sample(self.out_samples[i_sample], i_sample);
         }
 
         let mut sum: f64 = 0.0;
@@ -331,28 +250,6 @@ impl Renderer {
         // todo: handle audio clip being loaded before its relationship parent(s)
         trace.close();
         // trace.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/json/trace.json");
-    }
-
-    fn calculate_max_value_threshold(&self, base_max_value_threshold: f32, active_peak_value: f32, num_samples_since_reached_peaked: usize) -> f32 {
-        if self.compressor_settings.attack_time_in_samples >= num_samples_since_reached_peaked {
-            // Attack is in progress
-            let attack_position = num_samples_since_reached_peaked as f32 / self.compressor_settings.attack_time_in_samples as f32;
-            (base_max_value_threshold * attack_position) + (active_peak_value * (1.0 - attack_position))
-            // We weight more the max_value_threshold more and more the oldest the peak becomes, and we we
-            // weight more the active_peak_value the more recent it is. This will create a linear curve
-            // behavior, where we will gradually reduce the gain after a peak, relative to the peak value.
-        } else if (self.compressor_settings.attack_time_in_samples + self.compressor_settings.release_time_in_samples) >= num_samples_since_reached_peaked {
-            // Release is in progress
-            let num_samples_since_start_release = num_samples_since_reached_peaked - self.compressor_settings.attack_time_in_samples;
-            let release_position = num_samples_since_start_release as f32 / self.compressor_settings.release_time_in_samples as f32;
-            (base_max_value_threshold * (1.0 - release_position)) + (active_peak_value * release_position)
-        } else {
-            // Neither attack or release are in progress
-            base_max_value_threshold
-            // When neither attack or the release are in progress, we just return the max_value_threshold as our
-            // current_value_threshold. Computing the value as if the attack was still in progress could result in a
-            // negative value, when doing a (1.0 - attack_position), since the attack position will be greater than 1.
-        }
     }
 
     async fn render_clip(&mut self, trace: &mut TraceItem, volume: u16, audio_clip_resamples: &Vec<i16>, render_clip_infos: &RenderedClipInfos) {

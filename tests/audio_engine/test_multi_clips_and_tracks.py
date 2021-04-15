@@ -22,7 +22,7 @@ class TestInputFormats(unittest.TestCase):
         audio_block = AudioBlock()
         empty_first_track = audio_block.create_track()
         container_track = audio_block.create_track()
-        music_1 = container_track.create_sound(
+        """music_1 = container_track.create_sound(
             # engine_file_key="how_much_you_want_her_20s",
             local_filepath="C:/Users/LABOURDETTE/Downloads/Isaac Delusion — How Much (You Want Her) 2017 (LYRICS VIDEO).mp3",
             file_start_time=20,
@@ -30,13 +30,13 @@ class TestInputFormats(unittest.TestCase):
             player_start_time=container_track.player_start_time,
             player_end_time=container_track.player_start_time + 2,
             volume=400
-        )
+        )"""
 
         music_2 = audio_block.create_track().create_sound(
             local_filepath="C:/Users/LABOURDETTE/Downloads/ANRI - I Can't Stop The Loneliness.mp3",
-            player_start_time=music_1.player_end_time + 2,
-            player_end_time=music_1.player_end_time + 10,
-            volume=100
+            player_start_time=container_track.player_start_time + 2,
+            player_end_time=container_track.player_start_time + 10,
+            volume=300
         )
 
         out_filepath = os.path.join(self.audio_dist_dirpath, f"test_first_track_empty.wav")
