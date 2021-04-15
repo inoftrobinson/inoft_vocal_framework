@@ -8,6 +8,7 @@ use crate::tracer::TraceItem;
 use std::cmp::{min};
 use hound::WavSpec;
 use crate::transformers::audio_compressor::{AudioCompressor};
+use crate::transformers::base_transformer::BaseTransformer;
 
 
 pub struct RenderedClipInfos {

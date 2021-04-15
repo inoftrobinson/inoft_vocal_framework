@@ -1,4 +1,5 @@
 use hound::WavSpec;
+use crate::transformers::base_transformer::BaseTransformer;
 
 
 pub struct AudioCompressorSettings {
@@ -38,7 +39,33 @@ pub struct AudioCompressor {
 }
 
 impl AudioCompressor {
-    pub fn new(parent_renderer_target_wav_spec: &WavSpec) -> AudioCompressor {
+    fn calculate_max_value_threshold(&self, sample_index: usize) -> f32 {
+        let num_samples_since_reached_peaked = sample_index - self.active_peak_index;
+
+        if self.settings.attack_time_in_samples >= num_samples_since_reached_peaked {
+            // Attack is in progress
+            let attack_position = num_samples_since_reached_peaked as f32 / self.settings.attack_time_in_samples as f32;
+            (self.settings.max_value_negative_threshold * attack_position) + (self.active_peak_value * (1.0 - attack_position))
+            // We weight more the max_value_threshold more and more the oldest the peak becomes, and we we
+            // weight more the active_peak_value the more recent it is. This will create a linear curve
+            // behavior, where we will gradually reduce the gain after a peak, relative to the peak value.
+        } else if (self.settings.attack_time_in_samples + self.settings.release_time_in_samples) >= num_samples_since_reached_peaked {
+            // Release is in progress
+            let num_samples_since_start_release = num_samples_since_reached_peaked - self.settings.attack_time_in_samples;
+            let release_position = num_samples_since_start_release as f32 / self.settings.release_time_in_samples as f32;
+            (self.settings.max_value_negative_threshold * (1.0 - release_position)) + (self.active_peak_value * release_position)
+        } else {
+            // Neither attack or release are in progress
+            self.settings.max_value_negative_threshold
+            // When neither attack or the release are in progress, we just return the max_value_threshold as our
+            // current_value_threshold. Computing the value as if the attack was still in progress could result in a
+            // negative value, when doing a (1.0 - attack_position), since the attack position will be greater than 1.
+        }
+    }
+}
+
+impl BaseTransformer for AudioCompressor {
+    fn new(parent_renderer_target_wav_spec: &WavSpec) -> AudioCompressor {
         AudioCompressor {
             active_peak_index: 0,
             active_peak_value: f32::MIN,
@@ -53,7 +80,7 @@ impl AudioCompressor {
         }
     }
 
-    pub fn alter_sample(&mut self, sample_value: i16, sample_index: usize) -> i16 {
+    fn alter_sample(&mut self, sample_value: i16, sample_index: usize) -> i16 {
         let floated_sample_value = sample_value as f32;
         if floated_sample_value > self.active_peak_value {
             self.active_peak_index = sample_index;
@@ -82,30 +109,6 @@ impl AudioCompressor {
             } else {
                 sample_value
             }
-        }
-    }
-
-    fn calculate_max_value_threshold(&self, sample_index: usize) -> f32 {
-        let num_samples_since_reached_peaked = sample_index - self.active_peak_index;
-
-        if self.settings.attack_time_in_samples >= num_samples_since_reached_peaked {
-            // Attack is in progress
-            let attack_position = num_samples_since_reached_peaked as f32 / self.settings.attack_time_in_samples as f32;
-            (self.settings.max_value_negative_threshold * attack_position) + (self.active_peak_value * (1.0 - attack_position))
-            // We weight more the max_value_threshold more and more the oldest the peak becomes, and we we
-            // weight more the active_peak_value the more recent it is. This will create a linear curve
-            // behavior, where we will gradually reduce the gain after a peak, relative to the peak value.
-        } else if (self.settings.attack_time_in_samples + self.settings.release_time_in_samples) >= num_samples_since_reached_peaked {
-            // Release is in progress
-            let num_samples_since_start_release = num_samples_since_reached_peaked - self.settings.attack_time_in_samples;
-            let release_position = num_samples_since_start_release as f32 / self.settings.release_time_in_samples as f32;
-            (self.settings.max_value_negative_threshold * (1.0 - release_position)) + (self.active_peak_value * release_position)
-        } else {
-            // Neither attack or release are in progress
-            self.settings.max_value_negative_threshold
-            // When neither attack or the release are in progress, we just return the max_value_threshold as our
-            // current_value_threshold. Computing the value as if the attack was still in progress could result in a
-            // negative value, when doing a (1.0 - attack_position), since the attack position will be greater than 1.
         }
     }
 }
