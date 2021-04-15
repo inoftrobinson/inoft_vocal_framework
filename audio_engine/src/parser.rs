@@ -49,7 +49,7 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
                 println!("{}", clip_data);
 
                 let volume = match clip_data.get_item(_py, "volume") {
-                    Ok(item) => { if item != _py.None() { Some(item.extract::<u8>(_py).unwrap()) } else { None } },
+                    Ok(item) => { if item != _py.None() { Some(item.extract::<u16>(_py).unwrap()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
                 let file_bytes: Option<Vec<u8>> = match clip_data.get_item(_py, "fileBytes") {

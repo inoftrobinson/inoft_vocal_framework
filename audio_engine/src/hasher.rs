@@ -8,7 +8,7 @@ use serde::{Serialize, Deserialize};
 pub struct ClipWithHashedChildren {
     filepath: Option<String>,
     file_url: Option<String>,
-    volume: Option<u8>,
+    volume: Option<u16>,
     player_start_time: Time,
     player_end_time: Time,
     file_start_time: f32,

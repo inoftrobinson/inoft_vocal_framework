@@ -5,6 +5,7 @@ use crate::audio_clip::AudioClip;
 use std::cell::{RefCell};
 use std::collections::HashMap;
 use crate::tracer::TraceItem;
+use std::cmp::{min};
 
 
 pub struct RenderedClipInfos {
@@ -173,7 +174,11 @@ impl Renderer {
                             player_start_time + (audio_clip_resamples.len() as f32 / self.target_spec.sample_rate as f32)
                         )
                     };
-                    self.render_clip(trace_clip_rendering, audio_clip_resamples, &render_clips_infos).await;
+
+                    let clip_final_volume = audio_clip.volume.unwrap();
+                    // todo: take in consideration the track volume to compute the clip final volume
+
+                    self.render_clip(trace_clip_rendering, clip_final_volume, audio_clip_resamples, &render_clips_infos).await;
                     self.rendered_clips_infos.insert(cloned_clip_id, render_clips_infos);
                     // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
                     trace_clip_rendering.close();
@@ -220,12 +225,56 @@ impl Renderer {
                  */
             }
         }
+
+        /*if current_sample_value > 1500 {
+            let above_threshold = current_sample_value - 2000;
+            current_sample_value -= (above_threshold as f32 / 1.25) as i16;
+        }*/
+
+        let decibels_threshold = -10.0;
+        let amplitude_threshold =  (-decibels_threshold) / 20.0;
+        let value_threshold = i16::MAX as f32 - (amplitude_threshold * i16::MAX as f32);
+        println!("value_threshold : {}", value_threshold);
+
+        for i_sample in 0..self.out_samples.len() {
+            let mut current_sample_value = self.out_samples[i_sample] as f32;
+            if current_sample_value > value_threshold {
+                let value_above_threshold = current_sample_value - value_threshold;
+                // println!("value_above_threshold : {}", value_above_threshold);
+                self.out_samples[i_sample] -= (value_above_threshold as f32 / 2.0) as i16;
+            }
+
+            // let sample_amplitude = current_sample_value as f32 / i16::MAX as f32;
+            // let simple_decibels = 20.0 * (sample_amplitude - 1.0);
+            /* if simple_decibels > -10.0 {
+                println!("simple_decibels : {}", simple_decibels);
+                let decibels_above_threshold = (-10.0) - simple_decibels;
+                // let above_threshold = current_sample_value - 2000;
+                let amplitude_above_threshold = (decibels_above_threshold / 20.0);
+                let value_above_threshold = amplitude_above_threshold * i16::MAX as f32;
+                println!("value_above_threshold : {}", value_above_threshold);
+                self.out_samples[i_sample] = ((current_sample_value as i16) + ((value_above_threshold as f32 / 1.25) as i16));
+            }*/
+        }
+
+        let mut sum: f64 = 0.0;
+        for i_sample in 0..self.out_samples.len() {
+            let sample_value = self.out_samples[i_sample];
+            let sample = sample_value / i16::MAX;
+            sum += (sample * sample) as f64;
+        }
+        let e = sum / ((self.out_samples.len() / 2) as f64);
+        let rms = e.sqrt();
+        println!("rms : {}", rms);
+        let decibels = rms.log10();
+        println!("decibels : {}", decibels);
+
         // todo: handle audio clip being loaded before its relationship parent(s)
         trace.close();
         // trace.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/json/trace.json");
     }
 
-    async fn render_clip(&mut self, trace: &mut TraceItem, audio_clip_resamples: &Vec<i16>, render_clip_infos: &RenderedClipInfos) {
+    async fn render_clip(&mut self, trace: &mut TraceItem, volume: u16, audio_clip_resamples: &Vec<i16>, render_clip_infos: &RenderedClipInfos) {
         // todo: file start time and file end time
 
         let trace_initialization = trace.create_child(String::from("Initialization"));
@@ -250,13 +299,27 @@ impl Renderer {
         }
         trace_populating_with_empty_samples.close();
 
+        let volume_multiplicative = volume as f32 / 100.0;
+
         let trace_writing_samples = trace.create_child(String::from("Writing samples"));
         let mut input_index = 0;
         for i_output_sample in player_start_sample_index..index_last_out_sample_to_write {
-            self.out_samples[i_output_sample] = (
+            let mut current_sample_value = (audio_clip_resamples[input_index] as f32 * volume_multiplicative) as i16;
+
+            /*
+            let raar = (sample as f64 * sample as f64) as f64;
+            let e = (raar / 0.5) as f64;
+            let rms = e.sqrt();
+            println!("rms : {}", rms);
+            let decibels = rms.log10();
+            println!("decibels : {}", decibels);
+             */
+
+            let mut combined_sample_value = ((
                 Wrapping(self.out_samples[i_output_sample]) +
-                Wrapping(audio_clip_resamples[input_index])
-            ).0;
+                Wrapping(current_sample_value)
+            ).0);
+            self.out_samples[i_output_sample] = combined_sample_value;
             input_index += 1;
             if input_index >= index_num_clip_samples {
                 input_index -= index_num_clip_samples;

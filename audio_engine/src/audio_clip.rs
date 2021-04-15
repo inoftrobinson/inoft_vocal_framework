@@ -15,7 +15,7 @@ pub struct AudioClip {
     pub file_bytes: Option<Vec<u8>>,
     pub filepath: Option<String>,
     pub file_url: Option<String>,
-    pub volume: Option<u8>,
+    pub volume: Option<u16>,
     pub player_start_time: Time,
     pub player_end_time: Time,
     pub file_start_time: f32,
@@ -29,7 +29,7 @@ pub struct AudioClip {
 impl AudioClip {
     pub fn new(
         clip_id: String, file_bytes: Option<Vec<u8>>, filepath: Option<String>, file_url: Option<String>,
-        volume: Option<u8>, player_start_time: Time, player_end_time: Time, file_start_time: f32, file_end_time: Option<f32>
+        volume: Option<u16>, player_start_time: Time, player_end_time: Time, file_start_time: f32, file_end_time: Option<f32>
     ) -> RefCell<AudioClip> {
         RefCell::new(AudioClip {
             clip_id, filepath, file_url, file_bytes,

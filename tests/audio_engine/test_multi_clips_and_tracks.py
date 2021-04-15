@@ -28,17 +28,19 @@ class TestInputFormats(unittest.TestCase):
             file_start_time=20,
             file_end_time=25,
             player_start_time=container_track.player_start_time,
-            player_end_time=container_track.player_start_time + 10
+            player_end_time=container_track.player_start_time + 2,
+            volume=400
         )
 
         music_2 = audio_block.create_track().create_sound(
             local_filepath="C:/Users/LABOURDETTE/Downloads/ANRI - I Can't Stop The Loneliness.mp3",
-            player_start_time=music_1.player_end_time - 5,
-            player_end_time=music_1.end_time + 10
+            player_start_time=music_1.player_end_time + 2,
+            player_end_time=music_1.player_end_time + 10,
+            volume=100
         )
 
-        out_filepath = os.path.join(self.audio_dist_dirpath, f"test_first_track_empty.mp3")
-        file_url = audio_block.manual_render(**ALEXA_BASE_MANUAL_RENDER_KWARGS, out_filepath=out_filepath, format_type=AudioBlock.FORMAT_TYPE_MP3)
+        out_filepath = os.path.join(self.audio_dist_dirpath, f"test_first_track_empty.wav")
+        file_url = audio_block.manual_render(**ALEXA_BASE_MANUAL_RENDER_KWARGS, out_filepath=out_filepath, format_type=AudioBlock.FORMAT_TYPE_WAV)
         if click.confirm("Open file ?"):
             os.startfile(out_filepath)
             self.assertTrue(click.confirm(text="Everything's good ?"))

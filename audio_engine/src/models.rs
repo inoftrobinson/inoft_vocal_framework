@@ -14,10 +14,12 @@ pub struct ReceivedTargetSpec {
 
 impl ReceivedTargetSpec {
     pub fn to_wav_spec(&self) -> hound::WavSpec {
+        // The 16 value for the bits_per_sample is hardcoded and cannot be changed. The sample_rate
+        // is only used for mp3 or other files types export, but never for wav exports.
         hound::WavSpec {
             channels: self.num_channels,
             sample_rate: self.sample_rate,
-            bits_per_sample: self.bitrate,
+            bits_per_sample: 16,
             sample_format: hound::SampleFormat::Int
         }
     }

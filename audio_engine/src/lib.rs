@@ -19,18 +19,10 @@
 
 use std::borrow::Borrow;
 use crate::resampler::resample;
-use std::fs::File;
-use std::path::Path;
-use std::io::Write;
 use crate::tracer::TraceItem;
 use cpython::{PyResult, PyDict, Python, py_module_initializer, py_fn, PyObject};
-use crate::models::{ResampleSaveFileFromUrlData, ReceivedParsedData, ResampleSaveFileFromLocalFileData, ReceivedTargetSpec};
+use crate::models::{ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData, ReceivedTargetSpec};
 use symphonia_core::codecs::CodecParameters;
-use hound::WavSpec;
-use std::panic;
-use std::any::Any;
-use serde::ser::Error;
-use serde::Serialize;
 
 
 py_module_initializer!(audio_engine, |py, m| {
@@ -95,7 +87,7 @@ pub fn resample_save_file_from_url(_py: Python, data: PyObject) -> PyResult<PyDi
 }
 
 
-pub fn render(_py: Python, data: PyObject) -> PyResult<String> {
+pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
     let mut trace = TraceItem::new(String::from("render"));
 
     let trace_initialization = trace.create_child(String::from("Initialization"));
@@ -118,13 +110,24 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<String> {
     let file_exist = runtime.block_on(loader::file_exist_at_url(&*expected_render_url));
     trace_check_matching_file_exist.close();
 
+    let output_dict = PyDict::new(_py);
     if file_exist == true {
         trace.close();
-        Ok(expected_render_url)
+        output_dict.set_item(_py, "success", true);
+        output_dict.set_item(_py, "fileUrl", expected_render_url);
     } else {
-        let file_url = runtime.block_on(append::main(&mut trace, parsed_data, expected_render_file_hash))
-            .expect("Append future did not returned a valid file_url");
+        let result = runtime.block_on(append::main(&mut trace, parsed_data, expected_render_file_hash));
+        match result {
+            Ok(file_url) => {
+                output_dict.set_item(_py, "success", true);
+                output_dict.set_item(_py, "fileUrl", file_url);
+            },
+            Err(err) => {
+                output_dict.set_item(_py, "success", false);
+                output_dict.set_item(_py, "error", err.to_string());
+            }
+        }
         trace.close();
-        Ok(file_url.unwrap_or(String::from("null")))
     }
+    Ok(output_dict)
 }
