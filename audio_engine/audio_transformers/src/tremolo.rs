@@ -25,21 +25,22 @@ pub struct Tremolo {
 }
 
 impl Tremolo {
-    pub fn new(parent_renderer_target_wav_spec: &WavSpec) -> Tremolo {
+    pub fn new(parent_renderer_target_wav_spec: &WavSpec, speed: f32, gain: f32) -> Tremolo {
         Tremolo {
             active_peak_index: 0,
             active_peak_value: f32::MIN,
-            settings: TremoloSettings::new(
-                parent_renderer_target_wav_spec,
-                3.0, 0.9
-            ),
+            settings: TremoloSettings::new(parent_renderer_target_wav_spec, speed, gain),
             // todo: convert speed to a sinewave frequency
-            sinewave_generator: Sinewave::new(44100.0, 20.0)
+            sinewave_generator: Sinewave::new(44100.0, speed)  // 20.0
         }
     }
 }
 
 impl BaseTransformer for Tremolo {
+    fn should_run(&mut self) -> bool {
+        self.settings.gain > 0.0 && self.settings.speed > 0.0
+    }
+
     fn alter_sample(&mut self, sample_value: f32, sample_index: usize) -> f32 {
         let sine_value = self.sinewave_generator.make_sample(sample_index);
         let sine_absolute = (1.0 + sine_value) / 2.0;
