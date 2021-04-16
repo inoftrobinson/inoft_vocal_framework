@@ -9,6 +9,7 @@ use std::cmp::{min};
 use hound::WavSpec;
 use crate::transformers::audio_compressor::{AudioCompressor};
 use crate::transformers::base_transformer::BaseTransformer;
+use crate::transformers::tremolo::Tremolo;
 
 
 pub struct RenderedClipInfos {
@@ -231,9 +232,19 @@ impl Renderer {
         }
 
 
-        let mut compressor = AudioCompressor::new(&self.target_spec);
-        for i_sample in 0..self.out_samples.len() {
-            self.out_samples[i_sample] = compressor.alter_sample(self.out_samples[i_sample], i_sample);
+        let mut transformers: Vec<Box<dyn BaseTransformer>> = vec![
+            // Box::new(AudioCompressor::new(&self.target_spec))
+            Box::new(Tremolo::new(&self.target_spec))
+        ];
+
+        if transformers.len() > 0 {
+            for i_sample in 0..self.out_samples.len() {
+                let mut sample_value = self.out_samples[i_sample];
+                for i_transformer in 0..transformers.len() {
+                    sample_value = transformers[i_transformer].alter_sample(sample_value, i_sample);
+                }
+                self.out_samples[i_sample] = sample_value;
+            }
         }
 
         let mut sum: f64 = 0.0;

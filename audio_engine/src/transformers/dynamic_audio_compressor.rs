@@ -23,8 +23,8 @@ pub struct DynamicAudioCompressor {
     settings: DynamicAudioCompressorSettings,
 }
 
-impl BaseTransformer for DynamicAudioCompressor {
-    fn new(parent_renderer_target_wav_spec: &WavSpec) -> DynamicAudioCompressor {
+impl DynamicAudioCompressor {
+    pub fn new(parent_renderer_target_wav_spec: &WavSpec) -> DynamicAudioCompressor {
         DynamicAudioCompressor {
             active_peak_index: 0,
             active_peak_value: f32::MIN,
@@ -33,7 +33,9 @@ impl BaseTransformer for DynamicAudioCompressor {
             )
         }
     }
+}
 
+impl BaseTransformer for DynamicAudioCompressor {
     fn alter_sample(&mut self, sample_value: i16, sample_index: usize) -> i16 {
         sample_value
         /*let floated_sample_value = sample_value as f32;

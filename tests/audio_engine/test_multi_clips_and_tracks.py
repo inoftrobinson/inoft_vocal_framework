@@ -36,7 +36,7 @@ class TestInputFormats(unittest.TestCase):
             local_filepath="C:/Users/LABOURDETTE/Downloads/ANRI - I Can't Stop The Loneliness.mp3",
             player_start_time=container_track.player_start_time + 2,
             player_end_time=container_track.player_start_time + 10,
-            volume=300
+            volume=100
         )
 
         out_filepath = os.path.join(self.audio_dist_dirpath, f"test_first_track_empty.wav")

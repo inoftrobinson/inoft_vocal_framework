@@ -39,6 +39,21 @@ pub struct AudioCompressor {
 }
 
 impl AudioCompressor {
+    pub fn new(parent_renderer_target_wav_spec: &WavSpec) -> AudioCompressor {
+        AudioCompressor {
+            active_peak_index: 0,
+            active_peak_value: f32::MIN,
+            settings: AudioCompressorSettings::new(
+                parent_renderer_target_wav_spec,
+                2.0,
+                82.0,
+                1000.0,
+                1400.0,
+                -25.0
+            )
+        }
+    }
+
     fn calculate_max_value_threshold(&self, sample_index: usize) -> f32 {
         let num_samples_since_reached_peaked = sample_index - self.active_peak_index;
 
@@ -65,21 +80,6 @@ impl AudioCompressor {
 }
 
 impl BaseTransformer for AudioCompressor {
-    fn new(parent_renderer_target_wav_spec: &WavSpec) -> AudioCompressor {
-        AudioCompressor {
-            active_peak_index: 0,
-            active_peak_value: f32::MIN,
-            settings: AudioCompressorSettings::new(
-                parent_renderer_target_wav_spec,
-                2.0,
-                82.0,
-                1000.0,
-                1400.0,
-                -25.0
-            )
-        }
-    }
-
     fn alter_sample(&mut self, sample_value: i16, sample_index: usize) -> i16 {
         let floated_sample_value = sample_value as f32;
         if floated_sample_value > self.active_peak_value {
