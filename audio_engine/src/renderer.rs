@@ -7,9 +7,9 @@ use std::collections::HashMap;
 use crate::tracer::TraceItem;
 use std::cmp::{min};
 use hound::WavSpec;
-use audio_transformers::audio_compressor::{AudioCompressor};
-use audio_transformers::base_transformer::BaseTransformer;
-use audio_transformers::tremolo::Tremolo;
+use audio_effects::audio_compressor::{AudioCompressor};
+use audio_effects::base_transformer::BaseTransformer;
+use audio_effects::tremolo::Tremolo;
 
 
 pub struct RenderedClipInfos {

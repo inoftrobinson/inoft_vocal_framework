@@ -5,7 +5,7 @@ use crate::models::Time;
 use crate::decoder;
 use crate::tracer::TraceItem;
 use std::borrow::Borrow;
-use audio_transformers::base_transformer::BaseTransformer;
+use audio_effects::base_transformer::BaseTransformer;
 
 // todo: do a benchmark comparison between WavHound and symphonia for opening WavFiles
 

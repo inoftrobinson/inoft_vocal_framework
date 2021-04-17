@@ -9,7 +9,7 @@ name = "audio_effects_wasm_api"
 crate-type = ["cdylib"]
 
 [dependencies]
-audio_transformers = { path = "../audio_transformers" }
+audio_effects = { path = "../audio_effects" }
 hound = { version = "3.4.0" }
 wasm-bindgen = "0.2"
 js-sys = "0.3.50"

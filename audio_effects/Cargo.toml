@@ -1,11 +1,11 @@
 [package]
-name = "audio_transformers"
+name = "audio_effects"
 version = "0.1.0"
 authors = ["Robinson Labourdette <robinson@inoft.com>"]
 edition = "2018"
 
 [lib]
-name = "audio_transformers"
+name = "audio_effects"
 crate-type = ["lib"]
 
 [dependencies]

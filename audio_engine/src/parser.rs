@@ -2,8 +2,8 @@ use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString,
 use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData};
 use std::collections::HashMap;
 use std::cell::RefCell;
-use audio_transformers::base_transformer::BaseTransformer;
-use audio_transformers::tremolo::Tremolo;
+use audio_effects::base_transformer::BaseTransformer;
+use audio_effects::tremolo::Tremolo;
 
 
 fn parse_time_object(_py: Python, object_item: PyObject) -> Time {

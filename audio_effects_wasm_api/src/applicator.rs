@@ -1,4 +1,4 @@
-use audio_transformers::base_transformer::BaseTransformer;
+use audio_effects::base_transformer::BaseTransformer;
 use hound::{WavSpec, SampleFormat};
 use web_sys::AudioBuffer;
 use wasm_bindgen::JsValue;

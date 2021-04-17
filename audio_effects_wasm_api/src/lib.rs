@@ -2,7 +2,7 @@ mod applicator;
 
 use wasm_bindgen::prelude::*;
 use web_sys::AudioBuffer;
-use audio_transformers::tremolo::Tremolo;
+use audio_effects::tremolo::Tremolo;
 use crate::applicator::{apply_effect, make_wave_spec_from_audio_buffer};
 
 
