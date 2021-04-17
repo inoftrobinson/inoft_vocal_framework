@@ -32,6 +32,7 @@ fn main() {
         .collect::<Vec<_>>()
         ;
     let windows = ndarray::stack(Axis(0), &windows).unwrap();
+    println!("shape : {:?}", windows.shape());
 
     // So to perform the FFT on each window we need a Complex<f32>, and right now we have i16s, so first let's convert
     let mut windows = windows.map(|i| Complex::from(*i as f32));

@@ -1005,6 +1005,7 @@ dependencies = [
  "ndarray-stats",
  "plotters",
  "rb",
+ "realfft",
  "reqwest",
  "rusoto_core",
  "rusoto_s3",
@@ -1876,6 +1877,15 @@ name = "rb"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a27f4c5756bd2bfb5942758d8168805655c62388eef0544e581a2bfa5b532f15"
+
+[[package]]
+name = "realfft"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb61e802343636312308954db207ed31d6e513dbc2c6f18c5dc122e3a4a1b676"
+dependencies = [
+ "rustfft",
+]
 
 [[package]]
 name = "redox_syscall"

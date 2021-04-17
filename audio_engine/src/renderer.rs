@@ -16,6 +16,8 @@ use ndarray_stats::QuantileExt;
 use plotters::prelude::{BitMapBackend, RGBColor};
 use plotters::drawing::IntoDrawingArea;
 use rustfft::num_traits::ToPrimitive;
+use realfft::RealFftPlanner;
+use realfft::num_traits::real::Real;
 
 
 pub struct RenderedClipInfos {
@@ -264,37 +266,83 @@ impl Renderer {
         let mut sampl = self.out_samples.clone();
         // sampl.split_off(4000);
 
-        let samples_array = Array::from(sampl);
+        let length = self.out_samples.len();
+        // make a planner
+        let mut real_planner = RealFftPlanner::<f64>::new();
+        let r2c = real_planner.plan_fft_forward(length);
+        let c2r = real_planner.plan_fft_inverse(length);
+
+        let mut indata: Vec<f64> = self.out_samples.iter().map(|s| *s as f64).collect();
+
+        // output vector
+        let mut spectrum = r2c.make_output_vec();
+        // Forward transform the input data
+        r2c.process(indata.as_mut_slice(), &mut spectrum).unwrap();
+        println!("len spectrum : {:?}", spectrum);
+
+        // create an output vector
+        let mut outdata = c2r.make_output_vec();
+        // Backward transform of the spectrum data
+        c2r.process(&mut spectrum, &mut outdata).unwrap();
+        // Normalize
+        for i in &mut outdata {
+            *i /= length as f64;
+        }
+        println!("len outdata : {}", outdata.len());
+
+        match hound::WavWriter::create(
+            String::from("F:/Inoft/anvers_1944_project/inoft_vocal_framework/tests/audio_engine/output.wav"), self.target_spec
+        ) {
+            Ok(mut writer) => {
+                for sample in outdata.iter() {
+                    writer.write_sample(*sample as i16).unwrap();
+                }
+            },
+            Err(err) => {
+                println!("Wav writer error : {}", err);
+            }
+        }
+
+        /*let samples_array = Array::from(sampl);
         let windows = samples_array
             .windows(ndarray::Dim(WINDOW_SIZE))
             .into_iter()
             .step_by(SKIP_SIZE)
             .collect::<Vec<_>>();
         println!("windows len 1 : {}", windows.len());
-        let windows = ndarray::stack(Axis(0), &windows).unwrap();
+        let windows = ndarray::stack(Axis(0), &windows).unwrap();*/
 
         // So to perform the FFT on each window we need a Complex<f32>, and right now we have i16s, so first let's convert
-        let mut windows = windows.map(|i| Complex::from(*i as f32));
-        println!("len windows : {}", windows.len());
+        // let mut windows = windows.map(|i| Complex::from(*i as f32));
+        let mut windows = Array::from(spectrum.clone());
+        let windows = windows
+            .windows(ndarray::Dim(WINDOW_SIZE))
+            .into_iter()
+            .step_by(SKIP_SIZE)
+            .collect::<Vec<_>>()
+            ;
+        let windows = ndarray::stack(Axis(0), &windows).unwrap();
+        println!("shape : {:?}", windows.shape());
 
         // get the FFT up and running
         // let mut planner = FftPlanner::new();
         // let fft = planner.plan_fft_forward(WINDOW_SIZE);
 
-        let mut planner2 = FftPlanner::new();
-        let duration = self.out_samples.len() / self.target_spec.sample_rate as usize;
-        let fft2 = planner2.plan_fft_forward(WINDOW_SIZE);  // duration * 100);
+        // let mut planner2 = FftPlanner::new();
+        // let duration = self.out_samples.len() / self.target_spec.sample_rate as usize;
+        // let fft2 = planner2.plan_fft_forward(WINDOW_SIZE);  // duration * 100);
         // fft2.process(windows.as_slice_mut().unwrap());
 
         // Since we have a 2-D array of our windows with shape [WINDOW_SIZE, (num_samples / WINDOW_SIZE) - 1], we can run an FFT on every row.
         // Next step is to do something multithreaded with Rayon, but we're not cool enough for that yet.
-        windows.axis_iter_mut(Axis(0))
+        /*windows.axis_iter_mut(Axis(0))
             .for_each(|mut frame| {
                 fft2.process(frame.as_slice_mut().unwrap());
             });
+         */
 
 
-        let mut planner = FftPlanner::<f32>::new();
+        /*let mut planner = FftPlanner::<f32>::new();
         let ifft = planner.plan_fft_inverse(windows.len());
 
         let mut buf = windows.iter().copied().collect::<Vec<_>>();
@@ -314,11 +362,13 @@ impl Renderer {
             .for_each(|mut frame| {
                 inversed_fft.process(frame.as_slice_mut().unwrap());
             });
+        */
 
         // Get the real component of those complex numbers we get back from the FFT
         // let items = windows.map(|i| i.re.to_i16().unwrap());
         // println!("items : {:?}", items);
         let windows = windows.map(|i| i.re);
+        println!("windows shape : {:?}", windows.shape());
 
         // And finally, only look at the first half of the spectrogram - the first (n/2)+1 points of each FFT
         // https://dsp.stackexchange.com/questions/4825/why-is-the-fft-mirrored
@@ -327,6 +377,7 @@ impl Renderer {
             "windows len total : {} & len-dim1 : {} & len-dim2 : {}",
             windows.len(), windows.len_of(Axis(0)), windows.len_of(Axis(1))
         );
+        /*
         let sums = windows.sum_axis(Axis(0));
         println!("sums : {}", sums);
 
@@ -336,8 +387,9 @@ impl Renderer {
 
         let intend_sums = adjusted_sums.map(|v| v.to_i16().unwrap());
         println!("intend_sums: {} & len : {}", intend_sums, intend_sums.len());
+        */
 
-        match hound::WavWriter::create(
+        /*match hound::WavWriter::create(
             String::from("F:/Inoft/anvers_1944_project/inoft_vocal_framework/tests/audio_engine/output.wav"), self.target_spec
         ) {
             Ok(mut writer) => {
@@ -348,7 +400,7 @@ impl Renderer {
             Err(err) => {
                 println!("Wav writer error : {}", err);
             }
-        }
+        }*/
 
         // get some dimensions for drawing
         // The shape is in [nrows, ncols], but we want to transpose this.
@@ -370,12 +422,12 @@ impl Renderer {
         let spectrogram_cells = root_drawing_area.split_evenly((height, width));
 
         println!("max val : {}", windows.max_skipnan());
-        let windows_scaled = windows.map(|i| i.abs()/(WINDOW_SIZE as f32));
+        let windows_scaled = windows.map(|i| i.abs()/(WINDOW_SIZE as f64));
         let highest_spectral_density = windows_scaled.max_skipnan();
 
         // transpose and flip around to prepare for graphing
-        let windows_flipped = windows_scaled.slice(ndarray::s![.., ..; -1]); // flips the
-        let windows_flipped = windows_flipped.t();
+        // let windows_flipped = windows_scaled.slice(ndarray::s![.., ..; -1]); // flips the
+        let windows_flipped = windows_scaled.t();
 
         // Finally add a color scale
         let color_scale = colorous::MAGMA;
@@ -385,7 +437,6 @@ impl Renderer {
             let color = color_scale.eval_continuous(spectral_density_scaled as f64);
             cell.fill(&RGBColor(color.r, color.g, color.b)).unwrap();
         };
-
         /*
         let windows = samples_array
             .windows(ndarray::Dim(WINDOW_SIZE))
