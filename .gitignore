@@ -129,17 +129,4 @@ dmypy.json
 =======
 /target
 
-# Added by cargo
-#
-# already existing elements were commented out
-
-#/target
-
-
-# Added by cargo
-#
-# already existing elements were commented out
-
-#/target
-audio_engine/examples.rs
 audio_engine/lame-3.100
