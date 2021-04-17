@@ -2,14 +2,14 @@ use crate::models::{ReceivedParsedData, AudioBlock, Time};
 use std::num::Wrapping;
 use std::borrow::{BorrowMut};
 use crate::audio_clip::AudioClip;
-use std::cell::{RefCell};
+use std::cell::{RefCell, RefMut};
 use std::collections::HashMap;
 use crate::tracer::TraceItem;
 use std::cmp::{min};
 use hound::WavSpec;
-use crate::transformers::audio_compressor::{AudioCompressor};
-use crate::transformers::base_transformer::BaseTransformer;
-use crate::transformers::tremolo::Tremolo;
+use audio_transformers::audio_compressor::{AudioCompressor};
+use audio_transformers::base_transformer::BaseTransformer;
+use audio_transformers::tremolo::Tremolo;
 
 
 pub struct RenderedClipInfos {
@@ -180,10 +180,13 @@ impl Renderer {
                         )
                     };
 
-                    let clip_final_volume = audio_clip.volume.unwrap();
+                    let clip_final_volume = audio_clip.volume.unwrap().clone();
                     // todo: take in consideration the track volume to compute the clip final volume
 
-                    self.render_clip(trace_clip_rendering, clip_final_volume, audio_clip_resamples, &render_clips_infos).await;
+                    self.render_clip(
+                        trace_clip_rendering, clip_final_volume, audio_clip_resamples,
+                        &audio_clip.effects, &render_clips_infos
+                    ).await;
                     self.rendered_clips_infos.insert(cloned_clip_id, render_clips_infos);
                     // clips_pending_relationships_rendering.entry(relationship_parent_id.clone()).or_insert(Vec::new()).push(audio_clip_ref);
                     trace_clip_rendering.close();
@@ -232,7 +235,8 @@ impl Renderer {
         }
 
 
-        let mut transformers: Vec<Box<dyn BaseTransformer>> = vec![
+        // todo: allow to apply effects on tracks or the entire project
+        /*let mut transformers: Vec<Box<dyn BaseTransformer>> = vec![
             // Box::new(AudioCompressor::new(&self.target_spec))
             Box::new(Tremolo::new(&self.target_spec))
         ];
@@ -245,7 +249,7 @@ impl Renderer {
                 }
                 self.out_samples[i_sample] = sample_value;
             }
-        }
+        }*/
 
         let mut sum: f64 = 0.0;
         for i_sample in 0..self.out_samples.len() {
@@ -264,7 +268,10 @@ impl Renderer {
         // trace.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/json/trace.json");
     }
 
-    async fn render_clip(&mut self, trace: &mut TraceItem, volume: u16, audio_clip_resamples: &Vec<i16>, render_clip_infos: &RenderedClipInfos) {
+    async fn render_clip(
+        &mut self, trace: &mut TraceItem, volume: u16, audio_clip_resamples: &Vec<i16>,
+        effects_ref: &RefCell<Vec<Box<dyn BaseTransformer<i16>>>>, render_clip_infos: &RenderedClipInfos
+    ) {
         // todo: file start time and file end time
 
         let trace_initialization = trace.create_child(String::from("Initialization"));
@@ -295,6 +302,10 @@ impl Renderer {
         let mut input_index = 0;
         for i_output_sample in player_start_sample_index..index_last_out_sample_to_write {
             let mut current_sample_value = (audio_clip_resamples[input_index] as f32 * volume_multiplicative) as i16;
+            let mut effects_items = effects_ref.borrow_mut();
+            for i_effect in 0..effects_items.len() {
+                current_sample_value = effects_items[i_effect].alter_sample(current_sample_value, i_output_sample);
+            }
 
             /*
             let raar = (sample as f64 * sample as f64) as f64;

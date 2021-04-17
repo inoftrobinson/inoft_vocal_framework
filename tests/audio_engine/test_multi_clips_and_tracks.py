@@ -35,9 +35,11 @@ class TestInputFormats(unittest.TestCase):
         music_2 = audio_block.create_track().create_sound(
             local_filepath="C:/Users/LABOURDETTE/Downloads/ANRI - I Can't Stop The Loneliness.mp3",
             player_start_time=container_track.player_start_time + 2,
-            player_end_time=container_track.player_start_time + 10,
+            player_end_time=container_track.player_start_time + 20,
             volume=100
         )
+        from inoft_vocal_framework.audio_editing.audio_effects import TremoloEffect
+        music_2.add_effect(TremoloEffect(gain=1, speed=0.3))
 
         out_filepath = os.path.join(self.audio_dist_dirpath, f"test_first_track_empty.wav")
         file_url = audio_block.manual_render(**ALEXA_BASE_MANUAL_RENDER_KWARGS, out_filepath=out_filepath, format_type=AudioBlock.FORMAT_TYPE_WAV)

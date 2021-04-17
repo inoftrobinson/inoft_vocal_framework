@@ -5,6 +5,7 @@ use crate::models::Time;
 use crate::decoder;
 use crate::tracer::TraceItem;
 use std::borrow::Borrow;
+use audio_transformers::base_transformer::BaseTransformer;
 
 // todo: do a benchmark comparison between WavHound and symphonia for opening WavFiles
 
@@ -16,6 +17,7 @@ pub struct AudioClip {
     pub filepath: Option<String>,
     pub file_url: Option<String>,
     pub volume: Option<u16>,
+    pub effects: RefCell<Vec<Box<dyn BaseTransformer<i16>>>>,
     pub player_start_time: Time,
     pub player_end_time: Time,
     pub file_start_time: f32,
@@ -29,11 +31,13 @@ pub struct AudioClip {
 impl AudioClip {
     pub fn new(
         clip_id: String, file_bytes: Option<Vec<u8>>, filepath: Option<String>, file_url: Option<String>,
-        volume: Option<u16>, player_start_time: Time, player_end_time: Time, file_start_time: f32, file_end_time: Option<f32>
+        volume: Option<u16>, effects: Vec<Box<dyn BaseTransformer<i16>>>,
+        player_start_time: Time, player_end_time: Time, file_start_time: f32, file_end_time: Option<f32>
     ) -> RefCell<AudioClip> {
         RefCell::new(AudioClip {
             clip_id, filepath, file_url, file_bytes,
-            volume, player_start_time, player_end_time,
+            volume, effects: RefCell::new(effects),
+            player_start_time, player_end_time,
             file_start_time, file_end_time,
             resamples: None,
             player_start_time_sample_index: None,

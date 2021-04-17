@@ -2,6 +2,8 @@ use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString,
 use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData};
 use std::collections::HashMap;
 use std::cell::RefCell;
+use audio_transformers::base_transformer::BaseTransformer;
+use audio_transformers::tremolo::Tremolo;
 
 
 fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
@@ -45,10 +47,10 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
             let child_clips_data = track_data.get_item(_py, "clips").unwrap().extract::<PyDict>(_py).unwrap();
 
             for (clip_id, clip_data) in child_clips_data.items(_py).iter() {
-                let clip_id = clip_data.get_item(_py, "id").unwrap().to_string();
+                let clip_id: String = clip_data.get_item(_py, "id").unwrap().to_string();
                 println!("{}", clip_data);
 
-                let volume = match clip_data.get_item(_py, "volume") {
+                let volume: Option<u16> = match clip_data.get_item(_py, "volume") {
                     Ok(item) => { if item != _py.None() { Some(item.extract::<u16>(_py).unwrap()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
@@ -65,25 +67,48 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
                     } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
-                let local_filepath = match clip_data.get_item(_py, "localFilepath") {
+                let local_filepath: Option<String> = match clip_data.get_item(_py, "localFilepath") {
                     Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
-                let file_url = match clip_data.get_item(_py, "fileUrl") {
+                let file_url: Option<String> = match clip_data.get_item(_py, "fileUrl") {
                     Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
-                let file_start_time = match clip_data.get_item(_py, "fileStartTime") {
+                let file_start_time: f32 = match clip_data.get_item(_py, "fileStartTime") {
                     Ok(item) => { if item != _py.None() { item.extract::<f32>(_py).unwrap() } else { 0.0 } },
                     Err(err) => { println!("{:?}", err); 0.0 }
                 };
-                let file_end_time = match clip_data.get_item(_py, "fileEndTime") {
+                let file_end_time: Option<f32> = match clip_data.get_item(_py, "fileEndTime") {
                     Ok(item) => { if item != _py.None() { Some(item.extract::<f32>(_py).unwrap()) } else { None } },
                     Err(err) => { println!("{:?}", err); None }
                 };
+                let effects: Option<PyList> = match clip_data.get_item(_py, "effects") {
+                    Ok(item) => { if item != _py.None() { Some(item.extract::<PyList>(_py).unwrap()) } else { None } },
+                    Err(err) => { println!("{:?}", err); None }
+                };
+
+                let mut effects_instances: Vec<Box<dyn BaseTransformer<i16>>> = vec![];
+                if !effects.is_none() {
+                    for effect_data in effects.unwrap().iter(_py) {
+                        let effect_key: String = effect_data.get_item(_py, "key").unwrap().to_string();
+                        let effect_parameters: PyDict = match effect_data.get_item(_py, "parameters") {
+                            Ok(item) => { if item != _py.None() { item.extract::<PyDict>(_py).unwrap() } else { PyDict::new(_py) } },
+                            Err(err) => { println!("{:?}", err); PyDict::new(_py) }
+                        };
+                        match effect_key.as_str() {
+                            "tremolo" => {
+                                let speed_parameter: f32 = effect_parameters.get_item(_py, "speed").unwrap().extract::<f32>(_py).unwrap();
+                                let gain_parameter: f32 = effect_parameters.get_item(_py, "gain").unwrap().extract::<f32>(_py).unwrap();
+                                effects_instances.push(Box::new(Tremolo::new(speed_parameter, gain_parameter)));
+                            }
+                            _ => { println!("Effect {} not supported", effect_key); }
+                        }
+                    }
+                }
 
                 current_track_clips.push(AudioClip::new(
-                    clip_id, file_bytes, local_filepath, file_url, volume,
+                    clip_id, file_bytes, local_filepath, file_url, volume, effects_instances,
                     parse_time_object(_py, clip_data.get_item(_py, "playerStartTime").unwrap()),
                     parse_time_object(_py, clip_data.get_item(_py, "playerEndTime").unwrap()),
                     file_start_time, file_end_time,

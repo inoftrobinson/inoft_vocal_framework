@@ -1,6 +1,8 @@
 import os
 from typing import Optional
 from uuid import uuid4
+
+from inoft_vocal_framework.audio_editing.base_audio_effect import BaseAudioEffect
 from inoft_vocal_framework.audio_editing.models import TrackStartTime, AudioStartTime, AudioEndTime, UntilSelfEnd
 
 
@@ -40,6 +42,8 @@ class Sound(SoundProps):
         self._file_end_time = file_end_time
         self._stretch_method = stretch_method
 
+        self._effects: list = []
+
         self._in_use = False
         self._append_sound_after_last_one = True
 
@@ -54,6 +58,7 @@ class Sound(SoundProps):
             'playerEndTime': self._player_end_time.serialize(),
             'fileStartTime': self._file_start_time,
             'fileEndTime': self._file_end_time,
+            'effects': [effect.serialize() for effect in self._effects]
         }
 
     @property
@@ -126,6 +131,9 @@ class Sound(SoundProps):
     def duration_seconds(self):
         raise Exception("Not implemented")
         # return self._audio_segment.duration_seconds
+
+    def add_effect(self, effect: BaseAudioEffect):
+        self._effects.append(effect)
 
     def get_dc_offset(self, channel=1):
         raise Exception("Not implemented")

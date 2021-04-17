@@ -10,7 +10,6 @@ mod exporter;
 #[path="hasher.rs"] pub mod hasher;
 #[path="tracer.rs"] pub mod tracer;
 #[path="saver.rs"] pub mod saver;
-#[path="transformers/mod.rs"] pub mod transformers;
 #[path="generators/mod.rs"] pub mod generators;
 #[path="tests/mod.rs"] pub mod tests;
 use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};

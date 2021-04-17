@@ -11,6 +11,7 @@ name = "audio_engine"
 crate-type = ["cdylib"]
 
 [dependencies]
+audio_transformers = { path = "audio_transformers" }
 hound = { version = "3.4.0" }
 minimp3 = "0.5.1"
 symphonia = { version = "0.1", features = [ "mp3", "wav", "flac", "ogg", "pcm" ] }

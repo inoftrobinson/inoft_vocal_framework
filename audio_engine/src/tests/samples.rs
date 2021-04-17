@@ -14,6 +14,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                 Some("F:/Sons utiles/Musics/Vintage (1940s) French Music/La Vie en Rose - Edith Piaf - Louiguy - Luypaerts.mp3".to_string()),
                                 None,
                                 Some(100),
+                                vec![],
                                 Time {
                                     type_key: String::from("parent_start-time"),
                                     relationship_parent_id: Some(String::from("track-1")),
@@ -33,6 +34,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                 Some("F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string()),
                                 None,
                                 Some(100),
+                                vec![],
                                 Time {
                                     type_key: String::from("parent_start-time"),
                                     relationship_parent_id: Some(String::from("track-1")),
@@ -52,6 +54,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                                 Some("F:/Sons utiles/70_Cm_ArpLoop_01_SP.wav".to_string()),
                                 None,
                                 Some(100),
+                                vec![],
                                 Time {
                                     type_key: String::from("parent_start-time"),
                                     relationship_parent_id: Some(String::from("track-1")),
