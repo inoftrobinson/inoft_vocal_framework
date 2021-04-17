@@ -4,3 +4,4 @@ pub mod tremolo;
 pub mod audio_limitor;
 pub mod audio_compressor;
 pub mod dynamic_audio_compressor;
+pub mod equalizer;

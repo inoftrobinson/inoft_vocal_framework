@@ -37,7 +37,7 @@ pub async fn save_samples(trace: &mut TraceItem, samples: Vec<i16>, target_spec:
         },
         "wav" => {
             let wav_target_spec = target_spec.to_wav_spec();
-            let e = match hound::WavWriter::create(&target_spec.filepath, wav_target_spec) {
+            match hound::WavWriter::create(&target_spec.filepath, wav_target_spec) {
                 Ok(mut writer) => {
                     for sample in samples {
                         writer.write_sample(sample).unwrap();
@@ -48,8 +48,7 @@ pub async fn save_samples(trace: &mut TraceItem, samples: Vec<i16>, target_spec:
                     println!("Wav writer error : {}", err);
                     Err(err)
                 }
-            };
-            e
+            }
         },
         _ => {
             panic!(

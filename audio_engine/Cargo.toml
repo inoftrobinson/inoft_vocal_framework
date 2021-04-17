@@ -12,6 +12,13 @@ crate-type = ["cdylib"]
 
 [dependencies]
 audio_effects = { path = "../audio_effects" }
+rustfft = "6.0.0"
+plotters = "0.3.0"
+ndarray = "0.14.0"
+ndarray-stats = "0.4.0"
+colorous = "1.0.3"
+
+
 hound = { version = "3.4.0" }
 minimp3 = "0.5.1"
 symphonia = { version = "0.1", features = [ "mp3", "wav", "flac", "ogg", "pcm" ] }
