@@ -5,9 +5,5 @@ from dataclasses import dataclass
 @dataclass
 class TremoloEffect(BaseAudioEffect):
     _KEY = 'tremolo'
-
     gain: float
     speed: float
-
-
-print(TremoloEffect(gain=0.3, speed=1).serialize())

@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::cell::RefCell;
 use audio_effects::base_transformer::BaseTransformer;
 use audio_effects::tremolo::Tremolo;
+use audio_effects::equalizer::EqualizerTransformer;
 
 
 fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
@@ -101,6 +102,9 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
                                 let speed_parameter: f32 = effect_parameters.get_item(_py, "speed").unwrap().extract::<f32>(_py).unwrap();
                                 let gain_parameter: f32 = effect_parameters.get_item(_py, "gain").unwrap().extract::<f32>(_py).unwrap();
                                 effects_instances.push(Box::new(Tremolo::new(speed_parameter, gain_parameter)));
+                            },
+                            "equalizer" => {
+                                effects_instances.push(Box::new(EqualizerTransformer::new()));
                             }
                             _ => { println!("Effect {} not supported", effect_key); }
                         }
