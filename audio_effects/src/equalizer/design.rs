@@ -2,6 +2,7 @@
 
 use nalgebra::{convert as _c, Matrix3, RealField as Real, Vector3 as Vec3};
 use std::convert::From;
+use std::str::FromStr;
 
 
 #[derive(Copy, Clone, Debug)]
@@ -25,7 +26,24 @@ impl From<i32> for Curve {
             4 => Curve::Peak,
             5 => Curve::Lowpass,
             6 => Curve::Highpass,
-            _ => panic!("invalid argument"),
+            _ => panic!("invalid curve index : {}", i),
+        }
+    }
+}
+
+impl FromStr for Curve {
+    type Err = ();
+
+    fn from_str(input: &str) -> Result<Curve, Self::Err> {
+        match input {
+            "Lowpass" => Ok(Curve::Lowpass),
+            "Highpass" => Ok(Curve::Highpass),
+            "Bandpass" => Ok(Curve::Bandpass),
+            "Notch" => Ok(Curve::Notch),
+            "Peak" => Ok(Curve::Peak),
+            "Lowshelf" => Ok(Curve::Lowshelf),
+            "Highshelf" => Ok(Curve::Highshelf),
+            _      => Err(())
         }
     }
 }

@@ -3,6 +3,7 @@ use crate::generators::sinewave::Sinewave;
 use crate::equalizer::equalizer::Equalizer;
 use crate::equalizer::design::Curve;
 use serde::{Serialize, Deserialize};
+use std::str::FromStr;
 
 
 #[derive(Serialize, Deserialize)]
@@ -32,11 +33,27 @@ pub struct EqualizerTransformer {
 }
 
 impl EqualizerTransformer {
-    pub fn new(curves: Vec<CurveItemData>) -> EqualizerTransformer {
+    pub fn new(curves: Vec<CurveItemData>) -> Result<EqualizerTransformer, ()> {
         let mut equalizer = Equalizer::new(48.0e3);
-        equalizer.set(0, Curve::Highpass, 100.0, 0.5f64.sqrt(), -10.0);
-        equalizer.set(1, Curve::Lowpass, 20000.0, 10.0, -12.0);
-        EqualizerTransformer { settings: EqualizerSettings::new(), equalizer }
+        for (i, curve_item) in curves.iter().enumerate() {
+            match Curve::from_str(&curve_item.curve) {
+                Ok(curve_type) => {
+                    equalizer.set(
+                        i, curve_type, curve_item.frequency as f64,
+                        curve_item.resonance as f64, curve_item.gain as f64
+                    );
+                },
+                Err(err) => {
+                    println!("Curve type of {} was not valid for curve of index {}", curve_item.curve, i);
+                    // If any curve is invalid, we break the loop immediately and return the error.
+                    return Err(err);
+                }
+            };
+        }
+
+        /*equalizer.set(0, Curve::Highpass, 100.0, 0.5f64.sqrt(), -10.0);
+        equalizer.set(1, Curve::Lowpass, 20000.0, 10.0, -12.0);*/
+        Ok(EqualizerTransformer { settings: EqualizerSettings::new(), equalizer })
     }
 }
 

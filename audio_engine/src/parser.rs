@@ -105,6 +105,7 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
                             },
                             "equalizer" => {
                                 effects_instances.push(Box::new(EqualizerTransformer::new()));
+                                // todo: pass curves
                             }
                             _ => { println!("Effect {} not supported", effect_key); }
                         }
