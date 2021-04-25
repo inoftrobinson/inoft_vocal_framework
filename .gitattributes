@@ -2,3 +2,5 @@
 * text=auto
 
 audio_engine/src/libs/* linguist-vendored
+*.c linguist-vendored
+*.h linguist-vendored
