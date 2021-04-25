@@ -2,3 +2,4 @@
 * text=auto
 
 audio_engine/src/libs/** linguist-vendored
+bixby_core/source.js
