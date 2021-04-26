@@ -11,7 +11,7 @@ use audio_effects::audio_compressor::{AudioCompressor};
 use audio_effects::base_transformer::BaseTransformer;
 use audio_effects::tremolo::Tremolo;
 use rustfft::{FftPlanner, num_complex::Complex};
-use ndarray::{Array, Axis};
+use ndarray::{Array, Axis, OwnedRepr, ArrayBase};
 use ndarray_stats::QuantileExt;
 use plotters::prelude::{BitMapBackend, RGBColor};
 use plotters::drawing::IntoDrawingArea;
@@ -314,7 +314,12 @@ impl Renderer {
 
         // So to perform the FFT on each window we need a Complex<f32>, and right now we have i16s, so first let's convert
         // let mut windows = windows.map(|i| Complex::from(*i as f32));
-        let mut windows = Array::from(spectrum.clone());
+
+        // self.out_samples.clone().iter().map(|s| *s as f64).collect()
+
+        let windows: ArrayBase<OwnedRepr<Complex<f64>>, _> = self.out_samples.clone().iter().map(|s| Complex::from(*s as f64)).collect();
+        // let mut windows = Array::from(samples);
+        // let mut windows = Array::from(spectrum.clone());
         let windows = windows
             .windows(ndarray::Dim(WINDOW_SIZE))
             .into_iter()
@@ -426,8 +431,8 @@ impl Renderer {
         let highest_spectral_density = windows_scaled.max_skipnan();
 
         // transpose and flip around to prepare for graphing
-        // let windows_flipped = windows_scaled.slice(ndarray::s![.., ..; -1]); // flips the
-        let windows_flipped = windows_scaled.t();
+        let windows_flipped = windows_scaled.slice(ndarray::s![.., ..; -1]); // flips the
+        let windows_flipped = windows_flipped.t();
 
         // Finally add a color scale
         let color_scale = colorous::MAGMA;

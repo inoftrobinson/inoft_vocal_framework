@@ -38,8 +38,10 @@ class TestInputFormats(unittest.TestCase):
             player_end_time=container_track.player_start_time + 20,
             volume=100
         )
-        from inoft_vocal_framework.audio_editing.audio_effects import TremoloEffect
-        music_2.add_effect(TremoloEffect(gain=1, speed=0.3))
+        from inoft_vocal_framework.audio_editing.audio_effects import EqualizerEffect
+        # music_2.add_effect(EqualizerEffect())
+        """from inoft_vocal_framework.audio_editing.audio_effects import TremoloEffect
+        music_2.add_effect(TremoloEffect(gain=1, speed=0.3))"""
         """audio_block.create_track().create_sound(
             local_filepath="F:\Inoft/anvers_1944_project\inoft_vocal_framework\plotters-spectrogram-main/example.wav",
             player_start_time=container_track.player_start_time

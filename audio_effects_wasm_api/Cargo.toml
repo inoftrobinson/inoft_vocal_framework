@@ -10,8 +10,9 @@ crate-type = ["cdylib"]
 
 [dependencies]
 audio_effects = { path = "../audio_effects" }
-hound = { version = "3.4.0" }
-wasm-bindgen = "0.2"
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 js-sys = "0.3.50"
 web-sys = { version = "0.3.50", features = ["AudioBuffer"] }
+hound = { version = "3.4.0" }
+
 

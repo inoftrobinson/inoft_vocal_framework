@@ -28,7 +28,6 @@ impl Tremolo {
         Tremolo {
             // parent_renderer_target_wav_spec
             settings: TremoloSettings::new(speed, gain),
-            // todo: convert speed to a sinewave frequency
             sinewave_generator: Sinewave::new(44100.0, speed)
         }
     }
