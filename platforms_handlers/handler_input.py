@@ -5,7 +5,6 @@ from typing import Optional, Any
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
-from inoft_vocal_framework.databases.dynamodb.dynamodb import DynamoDbAttributesAdapter, DynamoDbNotificationsSubscribers
 from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
@@ -31,14 +30,12 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._simple_session_user_data = None
         self._smart_session_user_data = None
         self._persistent_user_id = None
-        self._persistent_user_data = None
         self._interactivity_callback_functions = None
         self.data_for_database_has_been_modified = False
 
         self._is_option_select_request = None
         self._selected_option_identifier = None
 
-        self.__attributes_dynamodb_adapter = None
         self.__notifications_subscribers_dynamodb_adapter = None
 
         self._notifications_subscribers = None
@@ -52,16 +49,8 @@ class HandlerInput(CurrentUsedPlatformInfo):
             self.__settings = Settings()
         return self.__settings
 
-    @property
-    def _attributes_dynamodb_adapter(self) -> DynamoDbAttributesAdapter:
-        if self.__attributes_dynamodb_adapter is None:
-            if self.settings.database_sessions_users_data.disable_database is False:
-                self.__attributes_dynamodb_adapter = DynamoDbAttributesAdapter(
-                    table_name=self.settings.database_sessions_users_data.db_table_name,
-                    region_name=self.settings.database_sessions_users_data.db_region_name,
-                    primary_key_name="id", create_table=True)
-        return self.__attributes_dynamodb_adapter
-
+    # todo: remove
+    """
     @property
     def _notifications_subscribers_dynamodb_adapter(self) -> DynamoDbNotificationsSubscribers:
         if self.__notifications_subscribers_dynamodb_adapter is None:
@@ -77,7 +66,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 create_table=True)
 
         return self.__notifications_subscribers_dynamodb_adapter
-
+    """
 
     @property
     def session_id(self):
@@ -195,16 +184,6 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._persistent_user_id
 
     @property
-    def persistent_user_data(self) -> SafeDict:
-        if self._persistent_user_data is None:
-            if self.database_sessions_users_data_disable_database is False:
-                self._persistent_user_data = self._attributes_dynamodb_adapter.get_persistent_attributes(user_id=self.persistent_user_id)
-            if not isinstance(self._persistent_user_data, SafeDict):
-                self._persistent_user_data = SafeDict()
-            logging.debug(f"_persistent_user_data = {self._persistent_user_data}")
-        return self._persistent_user_data
-
-    @property
     def interactivity_callback_functions(self) -> SafeDict:
         if self._interactivity_callback_functions is None:
             self._interactivity_callback_functions = self.smart_session_user_data.get("interactivityCallbackFunctions").to_safedict()
@@ -249,12 +228,12 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def _force_load_dialogflow(self):
         self.set_platform_to_dialogflow()
-        from inoft_vocal_framework.platforms_handlers.dialogflow import DialogFlowHandlerInput
+        from inoft_vocal_framework.platforms_handlers.dialogflow.handler_input import DialogFlowHandlerInput
         self._dialogFlowHandlerInput = DialogFlowHandlerInput(parent_handler_input=self)
 
     def _force_load_bixby(self):
         self.set_platform_to_bixby()
-        from inoft_vocal_framework.platforms_handlers.samsungbixby import BixbyHandlerInput
+        from inoft_vocal_framework.platforms_handlers.samsungbixby.handler_input import BixbyHandlerInput
         self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
     def _force_load_discord(self):
@@ -412,30 +391,6 @@ class HandlerInput(CurrentUsedPlatformInfo):
     def session_forget(self, data_key: str) -> None:
         self.data_for_database_has_been_modified = True
         self.smart_session_user_data.pop(dict_key=data_key)
-
-    def persistent_memorize(self, data_key: str, data_value=None) -> None:
-        if data_value is not None and isinstance(data_key, str) and data_key != "":
-            self.data_for_database_has_been_modified = True
-            self.persistent_user_data.put(dict_key=data_key, value_to_put=data_value)
-
-    def persistent_batch_memorize(self, data_dict: dict) -> None:
-        if not isinstance(data_dict, dict):
-            raise Exception(f"The data_dict must be of type dict but was of type {type(data_dict)}")
-        else:
-            for key_item, value_item in data_dict.items():
-                self.data_for_database_has_been_modified = True
-                self.persistent_user_data.put(dict_key=key_item, value_to_put=value_item)
-
-    def persistent_remember(self, data_key: str, specific_object_type=None):
-        data_object = self.persistent_user_data.get(data_key)
-        if specific_object_type is None:
-            return data_object.to_any()
-        else:
-            return data_object.to_specific_type(type_to_return=specific_object_type)
-
-    def persistent_forget(self, data_key: str) -> None:
-        self.data_for_database_has_been_modified = True
-        self.persistent_user_data.pop(dict_key=data_key)
 
     def memorize_session_then_state(self, state_handler_class_type_or_name) -> None:
         from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftStateHandler

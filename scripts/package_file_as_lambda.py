@@ -7,7 +7,7 @@ from tqdm import tqdm
 root_path = Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
 framework_root_path = os.path.join(root_path, "inoft_vocal_framework")
 
-folders_names_to_excludes = ["__pycache__", ".idea", ".git", "dist", "speech_synthesis", "temp", "tmp", "target", "build_lame", "src", "DOC_BUILD_CARGO"]
+folders_names_to_excludes = ["__pycache__", ".idea", ".git", "dist", "speech_synthesis", "tmp", "target", "build_lame", "src", "DOC_BUILD_CARGO"]
 files_extensions_to_exclude = [".wav", ".mp3"]
 
 @click.command()

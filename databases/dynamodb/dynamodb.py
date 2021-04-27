@@ -1,4 +1,6 @@
-import time
+# todo: this file is deprecated, remove it when the StructNoSQL integration of the smartSessionAttributes is done
+
+"""import time
 from typing import Optional
 from boto3.session import ResourceNotExistsError
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
@@ -94,7 +96,6 @@ class DynamoDbAttributesAdapter(DynamoDbCoreAdapter):
             raise Exception(f"Failed to save attributes to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
     def delete_attributes(self, user_id: str):
-        """ Deletes attributes from table in Dynamodb resource. """
         self.last_user_id = user_id
         try:
             self.dynamodb.delete_item(TableName=self.table_name, Key={self.primary_key_name: user_id})
@@ -201,7 +202,6 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
             raise Exception(f"Failed to save attributes to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
 
     def delete_attributes(self, user_id: str):
-        """ Deletes attributes from table in Dynamodb resource. """
         self.last_user_id = user_id
         try:
             self.dynamodb.delete_item(TableName=self.table_name, Key={self.primary_key_name: user_id})
@@ -272,7 +272,7 @@ if __name__ == "__main__":
     # notifs.add_new_subscribed_group_to_user(updates_user_id="test", group_key="blyat")
     print(notifs.get_user_subscriptions(updates_user_id="test"))
 
-    """""
+    ""
     messages_db = DynamoDbMessagesAdapter(is_admin_mode=True, table_name="test_messages", region_name="eu-west-3")
     INTERACTION_TYPE_QUESTION_DO_YOU_WANT_INFOS_ABOUT_THE_GAME = "question_do-you-want-infos-about-the-game"
     MSGS_DO_YOU_WANT_INFOS_ABOUT_THE_GAME = SpeechsList().types(INTERACTION_TYPE_QUESTION_DO_YOU_WANT_INFOS_ABOUT_THE_GAME).speechs({

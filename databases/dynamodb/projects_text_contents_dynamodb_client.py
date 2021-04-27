@@ -1,4 +1,6 @@
-from typing import Optional, Any, List
+# todo: this file is deprecated, remove it when the StructNoSQL integration of the smartSessionAttributes is done
+
+"""from typing import Optional, Any, List
 from boto3.dynamodb.conditions import Key
 from boto3.exceptions import ResourceNotExistsError
 from pydantic import BaseModel
@@ -18,12 +20,12 @@ class ContentItem(BaseModel):
     dialogueLines: Optional[List[DialogueLine]] = None
 
 class ProjectsTextContentsDynamoDbClient(DynamoDbCoreAdapter):
-    """
+    ""
     State Ids :
     -2 = Deleted but stored
     -1 = Archived, and will not be classically displayed
     0 = Available in the standard interface
-    """
+    ""
 
     def __init__(self, table_name: str, region_name: str):
         primary_index = PrimaryIndex(hash_key_name="elementId", hash_key_variable_python_type=str)
@@ -112,19 +114,6 @@ class ProjectsTextContentsDynamoDbClient(DynamoDbCoreAdapter):
         return self._get_latest(index_name="stateId-lastModificationTimestamp",
                                 num_latest_items=num_latest_items, exclusive_start_key=exclusive_start_key)
 
-    """
-    def put_item(self, project_data: dict) -> bool:
-        try:
-            print(f"Saving project data {project_data}")
-            item = Utils.python_to_dynamodb(project_data)
-            self.dynamodb.put_item(TableName=self.table_name, Item=item)
-            return True
-        except ResourceNotExistsError:
-            raise Exception(f"DynamoDb table {self.table_name} doesn't exist. Failed to save attributes to DynamoDb table.")
-        except Exception as e:
-            raise Exception(f"Failed to save project data to DynamoDb table. Exception of type {type(e).__name__} occurred: {str(e)}")
-    """
-
     def get_by_id(self, project_id: str) -> (dict, bool):
         try:
             table = self.dynamodb.Table(self.table_name)
@@ -146,3 +135,4 @@ if __name__ == "__main__":
         table_name="test-inoft-vocal-engine-project-text-contents", region_name="eu-west-2"
     )
     data = projects_text_contents_dynamodb_static_client.get_latest_updated(num_latest_items=3).items
+"""
