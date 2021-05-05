@@ -5,6 +5,7 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::cell::{Ref, RefCell};
 use std::borrow::Borrow;
+use std::ops::Deref;
 
 
 #[derive(Serialize, Deserialize)]
@@ -23,18 +24,23 @@ pub struct TrackInfos {
     gain: i16,
 }
 
-pub struct AudioBlockContainer {
-    tracks: Vec<TrackContainer>,
+pub struct AudioBlockContainer<'a> {
+    tracks: Vec<TrackContainer<'a>>,
 }
 
-pub struct TrackContainer {
-    track_id: String,
+pub struct TrackContainer<'a> {
+    track: &'a Track,
     clips: Vec<ClipContainer>,
 }
 
 pub struct ClipContainer {
     clip_id: String,
     parent_track_id: String,
+}
+
+pub struct ClipRenderContainer<'a> {
+    clip: &'a RefCell<AudioClip>,
+    requirements_ids: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -55,20 +61,21 @@ pub struct AudioProjectWithHashedChildren {
 }
 
 
-pub struct Hasher {
+
+pub struct Hasher<'a> {
     sha_hasher: Sha512,
-    clips_waiting_by_parent_id: HashMap<Vec<String>, Vec<&'static RefCell<AudioClip>>>,
+    clips_waiting_by_individual_parent_id: HashMap<String, Vec<ClipRenderContainer<'a>>>,
     elements_ids_to_signatures: HashMap<String, String>,
     clips_signatures: Vec<String>,
     tracks_signatures: Vec<String>,
 }
 
-impl Hasher {
-    pub fn hash(data: &ReceivedParsedData) -> String {
+impl<'a> Hasher<'a> {
+    pub fn hash(data: &'a ReceivedParsedData) -> String {
         let start = Instant::now();
         let signature = Hasher {
             sha_hasher: Sha512::new(),
-            clips_waiting_by_parent_id: HashMap::new(),
+            clips_waiting_by_individual_parent_id: HashMap::new(),
             elements_ids_to_signatures: HashMap::new(),
             clips_signatures: Vec::new(),
             tracks_signatures: Vec::new()
@@ -86,6 +93,17 @@ impl Hasher {
             required_parents.push(relationship_parent_id.unwrap());
         }
     }*/
+
+    fn is_time_relationship_parent_ready(&self, time: &Time) -> bool {
+        if !time.relationship_parent_id.is_none() {
+            let relationship_parent_id = time.relationship_parent_id.as_ref().unwrap();
+            let matching_signature = self.elements_ids_to_signatures.get(&*relationship_parent_id);
+            println!("matching_signature : {:?}", matching_signature);
+            !matching_signature.is_none()
+        } else {
+            true
+        }
+    }
 
     fn render_time(&self, time: &Time) -> Time {
         if !time.relationship_parent_id.is_none() {
@@ -133,65 +151,91 @@ impl Hasher {
         self.elements_ids_to_signatures.insert(track.track_id.clone(), track_signature.clone());
         self.tracks_signatures.push(track_signature);
     }
+
+    fn rar(&mut self, clip_id: String) {
+        let mut ready_clips: Vec<&RefCell<AudioClip>> = Vec::new();
+        match self.clips_waiting_by_individual_parent_id.get_mut(&*clip_id) {
+            Some(mut clips) => {
+                for waiting_clip in clips.iter_mut() {
+                    let mut contains_all_requirements = true;
+                    for requirement_id in waiting_clip.requirements_ids.iter() {
+                        if !self.elements_ids_to_signatures.contains_key(requirement_id) {
+                            contains_all_requirements = false;
+                            break;
+                        }
+                    }
+                    if contains_all_requirements == true {
+                        ready_clips.push(waiting_clip.clip);
+                    }
+                }
+            },
+            None => {}
+        }
+        // We render the clip outside of the clips_waiting loop, because clips_waiting_by_individual_parent_id
+        // is assigned to the instance of the class,if would cause a compile error if tried to call the rar
+        // function inside of the loop that is already borrowing self as immutable.
+        for ready_clip in ready_clips.into_iter() {
+            let borrowed = ready_clip.borrow();
+            let clip_id = borrowed.clip_id.clone();
+            self.sign_clip(borrowed);
+            self.rar(clip_id);
+        }
+    }
     
-    fn execute_hash(&mut self, data: &ReceivedParsedData) -> String {
-        let mut audio_blocks_containers: Vec<AudioBlockContainer> = Vec::new();
+    fn execute_hash(&mut self, data: &'a ReceivedParsedData) -> String {
         let mut audio_blocks_signatures: Vec<String> = Vec::new();
-
-        for i_block in 0..data.blocks.len() {
-            let mut audio_block_container = AudioBlockContainer { tracks: Vec::new() };
-            let audio_block = &data.blocks[i_block];
-
+        for audio_block in data.blocks.iter() {
             for track in audio_block.tracks.iter() {
                 self.sign_track(track);
-                let track_id = track.track_id.clone();
-                let mut track_container = TrackContainer { track_id: track_id.clone(), clips: Vec::new() };
+            }
+        }
 
-                for clip_ref in &track.clips {
+        for audio_block in data.blocks.iter() {
+            let mut audio_block_container = AudioBlockContainer { tracks: Vec::new() };
+            let mut root_clips_ids: Vec<String> = Vec::new();
+            let mut clips_waiting_by_grouped_parents_ids: HashMap<Vec<String>, Vec<&RefCell<AudioClip>>> = HashMap::new();
+
+            for track in audio_block.tracks.iter() {
+                let track_id = track.track_id.clone();
+                let mut track_container = TrackContainer { track, clips: Vec::new() };
+
+                for i_clip in 0..track.clips.len() {
+                    let clip_ref = &track.clips[i_clip];
                     let clip = clip_ref.borrow();
                     track_container.clips.push(ClipContainer { clip_id: clip.clip_id.clone(), parent_track_id: track_id.clone() });
 
                     let mut required_parents: Vec<String> = Vec::new();
-                    if !clip.player_start_time.relationship_parent_id.is_none() {
+                    if !self.is_time_relationship_parent_ready(&clip.player_start_time) {
                         required_parents.push(clip.player_start_time.relationship_parent_id.clone().unwrap());
                     }
-                    if !clip.player_end_time.relationship_parent_id.is_none() {
+                    if !self.is_time_relationship_parent_ready(&clip.player_end_time) {
                         required_parents.push(clip.player_end_time.relationship_parent_id.clone().unwrap());
                     }
+                    println!("required_parents len : {}", required_parents.len());
                     if required_parents.len() > 0 {
-                        // self.clips_waiting_by_parent_id.entry(required_parents).or_insert(Vec::new()).push(clip_ref);
+                        clips_waiting_by_grouped_parents_ids.entry(required_parents.clone()).or_insert(Vec::new()).push(clip_ref);
+                        for parent in required_parents.iter() {
+                            self.clips_waiting_by_individual_parent_id.entry(parent.clone()).or_insert(Vec::new())
+                                .push(ClipRenderContainer { clip: &clip_ref, requirements_ids: required_parents.clone() });
+                        }
                     } else {
+                        let clip_id = clip.clip_id.clone();
                         self.sign_clip(clip);
+                        root_clips_ids.push(clip_id);
                     }
                 }
                 audio_block_container.tracks.push(track_container);
             }
-        }
 
-        for (required_parent_ids, mut waiting_clips) in self.clips_waiting_by_parent_id.clone().into_iter() {
-            let mut contains_alls = true;
-            for parent_id in required_parent_ids.iter() {
-                if self.elements_ids_to_signatures.contains_key(parent_id) {
-                    contains_alls = false;
-                    break;
-                }
+            if !(root_clips_ids.len() > 0) {
+                panic!("Seems like you have no root clip :'(");
             }
-            if contains_alls == true {
-                for clip in waiting_clips.iter() {
-                    let b: &RefCell<AudioClip> = clip.borrow();
-                    let c: Ref<AudioClip> = b.borrow();
-                    self.sign_clip(c);
-                }
+            for root_clip_id in root_clips_ids {
+                self.rar(root_clip_id);
             }
-        }
 
-        for audio_block_container in audio_blocks_containers.iter() {
             let mut tracks_signatures: Vec<String> = Vec::new();  // todo: make fixed length
             for track_container in audio_block_container.tracks.iter() {
-                /*let mut clips_signatures: Vec<String> = track_container.clips.iter().map(|item| {
-                    let clip_id = &item.clip_ref.borrow().clip_id;
-                    self.elements_ids_to_signatures.get(clip_id).expect(&*format!("Signature not found for clip {}", clip_id))
-                }).collect();*/
                 let mut clips_signatures: Vec<String> = track_container.clips.iter().map(|item|
                     self.elements_ids_to_signatures.get(&item.clip_id.clone())
                         .expect(&*format!("Signature not found for clip {}", &item.clip_id))
@@ -202,7 +246,7 @@ impl Hasher {
                 let all_sorted_clips_signature = join_signatures(clips_signatures);
                 let track_with_hashed_children = serde_json::to_string(
                     &TrackWithHashedChildren {
-                        gain: 0,  // track_container.track.borrow().gain, todo: re-implement retrieval of gain
+                        gain: track_container.track.gain,  // todo: re-implement retrieval of gain
                         clips_signature: all_sorted_clips_signature
                     }
                 ).unwrap();

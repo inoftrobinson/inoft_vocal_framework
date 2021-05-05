@@ -20,7 +20,7 @@ class AudioBlock:
         return {'tracks': serialized_tracks}
 
     def manual_render(
-            self, num_channels: int, sample_rate: int, bitrate: int, out_filepath: str,
+            self, num_channels: int, sample_rate: int, bitrate: int, out_filepath: Optional[str] = None,
             format_type: OUT_FORMATS_UNION = FORMAT_TYPE_MP3,
             export_target: EXPORT_TARGETS_UNION = EXPORT_TARGET_MANAGED_ENGINE
     ) -> str or dict:

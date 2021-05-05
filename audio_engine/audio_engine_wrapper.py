@@ -1,13 +1,13 @@
 import os
 from enum import Enum
-from typing import List, Union, Any, Dict
+from typing import List, Union, Any, Dict, Optional
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.audio_editing.types import OUT_FORMATS_UNION, EXPORT_TARGETS_UNION
 
 
 def render(
-    audio_blocks: List[AudioBlock], out_filepath: str, num_channels: int, sample_rate: int, bitrate: int,
-    out_format_type: OUT_FORMATS_UNION, export_target: EXPORT_TARGETS_UNION
+    audio_blocks: List[AudioBlock], num_channels: int, sample_rate: int, bitrate: int,
+    out_format_type: OUT_FORMATS_UNION, export_target: EXPORT_TARGETS_UNION, out_filepath: Optional[str] = None
 ) -> str or dict:
     from inoft_vocal_framework.audio_engine import audio_engine
     audio_blocks_data: List[dict] = list()
