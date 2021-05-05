@@ -38,6 +38,8 @@ fn string_sum(py: Python, m: &PyModule) -> PyResult<()> {
     Ok(())
 }
 
+/*
+
 pub fn render(_py: Python, data: PyAny) -> PyResult<String> {
     let parsed_data = parser::parse_python(_py, data);
     let expected_render_file_hash = hasher::hash(&parsed_data);
@@ -62,3 +64,5 @@ pub fn render(_py: Python, data: PyAny) -> PyResult<String> {
         Ok(file_url.unwrap_or(String::from("null")))
     }
 }
+
+ */

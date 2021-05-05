@@ -104,8 +104,11 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
                                 effects_instances.push(Box::new(Tremolo::new(speed_parameter, gain_parameter)));
                             },
                             "equalizer" => {
-                                effects_instances.push(Box::new(EqualizerTransformer::new()));
                                 // todo: pass curves
+                                match EqualizerTransformer::new(Vec::new()) {
+                                    Ok(effect) => { effects_instances.push(Box::new(effect)); },
+                                    Err(err) => { println!("Error while instancing the equalizer transformer"); }
+                                };
                             }
                             _ => { println!("Effect {} not supported", effect_key); }
                         }

@@ -1,16 +1,16 @@
 use std::time::Instant;
 use crate::models::{ReceivedParsedData};
-use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url, post_mp3_buffer_to_s3_with_presigned_url};
+use crate::exporter::{from_samples_to_mono_mp3, write_mp3_buffer_to_file, get_upload_url, post_buffer_to_s3_with_presigned_url};
 use crate::renderer::Renderer;
 use std::mem::{size_of};
 use crate::saver;
 use crate::tracer::TraceItem;
-use self::hound::Error;
+use std::error::Error;
 
 extern crate hound;
 
 
-pub async fn main(trace: &mut TraceItem, data: ReceivedParsedData, expected_render_file_hash: String) -> Result<Option<String>, hound::Error> {
+pub async fn main(trace: &mut TraceItem, data: ReceivedParsedData, expected_render_file_hash: String) -> Result<String, Box<dyn Error>> {
     let trace_rendering_samples = trace.create_child(String::from("Render samples"));
     let rendered_samples = Renderer::render(trace_rendering_samples, &data).await;
     trace_rendering_samples.close();

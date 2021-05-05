@@ -8,7 +8,7 @@ from inoft_vocal_framework.audio_editing.types import OUT_FORMATS_UNION, EXPORT_
 def render(
     audio_blocks: List[AudioBlock], out_filepath: str, num_channels: int, sample_rate: int, bitrate: int,
     out_format_type: OUT_FORMATS_UNION, export_target: EXPORT_TARGETS_UNION
-) -> str:
+) -> str or dict:
     from inoft_vocal_framework.audio_engine import audio_engine
     audio_blocks_data: List[dict] = list()
     for block in audio_blocks:

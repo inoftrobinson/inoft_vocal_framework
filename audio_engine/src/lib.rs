@@ -24,6 +24,7 @@ use crate::tracer::TraceItem;
 use cpython::{PyResult, PyDict, Python, py_module_initializer, py_fn, PyObject};
 use crate::models::{ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData, ReceivedTargetSpec};
 use symphonia_core::codecs::CodecParameters;
+use std::error::Error;
 
 
 py_module_initializer!(audio_engine, |py, m| {
@@ -37,7 +38,7 @@ py_module_initializer!(audio_engine, |py, m| {
 
 async fn execute_resample_save_file_from_vec(
     trace: &mut TraceItem, samples: Vec<i16>, codec_params: CodecParameters, target_spec: &ReceivedTargetSpec
-) -> Result<Option<String>, hound::Error> {
+) -> Result<String, Box<dyn Error>> {
     let resamples = resample(trace, samples, codec_params, target_spec.to_wav_spec());
     saver::save_samples(trace, resamples, target_spec, String::from("desired_filename_example")).await
 }
@@ -52,7 +53,7 @@ async fn execute_resample_save_file_from_local_file(data: ResampleSaveFileFromLo
     true
 }
 
-async fn execute_resample_save_file_from_url(data: ResampleSaveFileFromUrlData) -> Result<Option<String>, hound::Error> {
+async fn execute_resample_save_file_from_url(data: ResampleSaveFileFromUrlData) -> Result<String, Box<dyn Error>> {
     let trace = &mut TraceItem::new(String::from("Resample save file from url"));
     let (samples, codec_params) = decoder::decode_from_file_url(
         trace, &*data.file_url, 0.0, None
@@ -93,7 +94,7 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
 
     let trace_initialization = trace.create_child(String::from("Initialization"));
     let parsed_data = parser::parse_python_render_call(_py, data);
-    let expected_render_file_hash = hasher::hash(&parsed_data);
+    let expected_render_file_hash = hasher::Hasher::hash(&parsed_data);
 
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
 
@@ -125,7 +126,8 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
             },
             Err(err) => {
                 output_dict.set_item(_py, "success", false);
-                output_dict.set_item(_py, "error", err.to_string());
+                // output_dict.set_item(_py, "error", err.to_string());
+                // todo: re-add returning of errors
             }
         }
         trace.close();
