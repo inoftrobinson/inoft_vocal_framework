@@ -8,7 +8,7 @@ from inoft_vocal_framework.audio_editing.types import OUT_FORMATS_UNION, EXPORT_
 def render(
     audio_blocks: List[AudioBlock], num_channels: int, sample_rate: int, bitrate: int,
     out_format_type: OUT_FORMATS_UNION, export_target: EXPORT_TARGETS_UNION, out_filepath: Optional[str] = None
-) -> str or dict:
+) -> Optional[str]:
     from inoft_vocal_framework.audio_engine import audio_engine
     audio_blocks_data: List[dict] = list()
     for block in audio_blocks:
@@ -28,7 +28,11 @@ def render(
             'exportTarget': export_target
         },
     }
-    return audio_engine.render(data)
+    audio_engine_response: Optional[dict] = audio_engine.render(data)
+    if audio_engine_response is not None:
+        success: bool = audio_engine_response.get('success', False)
+        return audio_engine_response.get('fileUrl', None) if success is True else None
+    return None
 
 def resample_save_file_from_url(
     file_url: str, out_filepath: str,

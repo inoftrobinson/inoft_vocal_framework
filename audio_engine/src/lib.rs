@@ -94,7 +94,7 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
 
     let trace_initialization = trace.create_child(String::from("Initialization"));
     let parsed_data = parser::parse_python_render_call(_py, data);
-    let expected_render_file_hash = hasher::Hasher::hash(&parsed_data);
+    let expected_render_file_hash = hasher::AudioProjectHasher::hash(&parsed_data);
 
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
 
@@ -115,18 +115,18 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
     let output_dict = PyDict::new(_py);
     if file_exist == true {
         trace.close();
-        output_dict.set_item(_py, "success", true);
-        output_dict.set_item(_py, "fileUrl", expected_render_url);
+        output_dict.set_item(_py, "success", true).unwrap();
+        output_dict.set_item(_py, "fileUrl", expected_render_url).unwrap();
     } else {
         let result = runtime.block_on(append::main(&mut trace, parsed_data, expected_render_file_hash));
         match result {
             Ok(file_url) => {
-                output_dict.set_item(_py, "success", true);
-                output_dict.set_item(_py, "fileUrl", file_url);
+                output_dict.set_item(_py, "success", true).unwrap();
+                output_dict.set_item(_py, "fileUrl", file_url).unwrap();
             },
             Err(err) => {
-                output_dict.set_item(_py, "success", false);
-                // output_dict.set_item(_py, "error", err.to_string());
+                output_dict.set_item(_py, "success", false).unwrap();
+                // output_dict.set_item(_py, "error", err.to_string()).unwrap();
                 // todo: re-add returning of errors
             }
         }

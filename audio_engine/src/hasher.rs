@@ -1,4 +1,4 @@
-use crate::models::{ReceivedParsedData, Time, AudioClip, Track};
+use crate::models::{ReceivedParsedData, Time, AudioClip, Track, AudioBlock};
 use std::time::Instant;
 use sha2::{Sha512, Digest};
 use serde::{Serialize, Deserialize};
@@ -9,6 +9,11 @@ use std::ops::Deref;
 
 
 #[derive(Serialize, Deserialize)]
+pub struct TrackInfos {
+    gain: i16,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct ClipWithHashedChildren {
     filepath: Option<String>,
     file_url: Option<String>,
@@ -17,30 +22,6 @@ pub struct ClipWithHashedChildren {
     player_end_time: Time,
     file_start_time: f32,
     file_end_time: Option<f32>,
-}
-
-#[derive(Serialize, Deserialize)]
-pub struct TrackInfos {
-    gain: i16,
-}
-
-pub struct AudioBlockContainer<'a> {
-    tracks: Vec<TrackContainer<'a>>,
-}
-
-pub struct TrackContainer<'a> {
-    track: &'a Track,
-    clips: Vec<ClipContainer>,
-}
-
-pub struct ClipContainer {
-    clip_id: String,
-    parent_track_id: String,
-}
-
-pub struct ClipRenderContainer<'a> {
-    clip: &'a RefCell<AudioClip>,
-    requirements_ids: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -60,39 +41,41 @@ pub struct AudioProjectWithHashedChildren {
     audio_blocks_signature: String,
 }
 
-
-
-pub struct Hasher<'a> {
-    sha_hasher: Sha512,
-    clips_waiting_by_individual_parent_id: HashMap<String, Vec<ClipRenderContainer<'a>>>,
-    elements_ids_to_signatures: HashMap<String, String>,
-    clips_signatures: Vec<String>,
-    tracks_signatures: Vec<String>,
+pub struct TrackContainer<'a> {
+    track: &'a Track,
+    clips: Vec<ClipContainer>,
 }
 
-impl<'a> Hasher<'a> {
-    pub fn hash(data: &'a ReceivedParsedData) -> String {
-        let start = Instant::now();
-        let signature = Hasher {
-            sha_hasher: Sha512::new(),
+pub struct ClipContainer {
+    clip_id: String,
+    parent_track_id: String,
+}
+
+pub struct ClipRenderContainer<'a> {
+    clip: &'a RefCell<AudioClip>,
+    requirements_ids: Vec<String>,
+}
+
+
+pub struct AudioBlockHasher<'a> {
+    sha_hasher: &'a mut Sha512,
+    clips_waiting_by_individual_parent_id: HashMap<String, Vec<ClipRenderContainer<'a>>>,
+    elements_ids_to_signatures: HashMap<String, String>,
+}
+
+impl<'a> AudioBlockHasher<'a> {
+    pub fn hash(audio_block: &'a AudioBlock, sha_hasher: &mut Sha512) -> String {
+        AudioBlockHasher {
+            sha_hasher,
             clips_waiting_by_individual_parent_id: HashMap::new(),
             elements_ids_to_signatures: HashMap::new(),
-            clips_signatures: Vec::new(),
-            tracks_signatures: Vec::new()
-        }.execute_hash(data);
-        println!("\nFinished hashing.\n  --execution_time:{}ms", (start.elapsed().as_micros() as f64 / 1000.0));
-        signature
+        }.execute_hash(audio_block)
     }
 
-    fn find_parent_of_relationship(&self, relationship_parent_id: Option<String>) {
-
+    fn sha_hash(&mut self, value: String) -> String {
+        self.sha_hasher.update(value);
+        format!("{:X}", self.sha_hasher.finalize_reset())
     }
-
-    /*fn register_relationship(&mut self, relationship_parent_id: &Option<String>) {
-       if !relationship_parent_id.is_none() {
-            required_parents.push(relationship_parent_id.unwrap());
-        }
-    }*/
 
     fn is_time_relationship_parent_ready(&self, time: &Time) -> bool {
         if !time.relationship_parent_id.is_none() {
@@ -134,10 +117,8 @@ impl<'a> Hasher<'a> {
                 file_end_time: clip.file_end_time
             }
         ).unwrap();
-        self.sha_hasher.update(clip_with_hashed_children);
-        let clip_signature = format!("{:X}", self.sha_hasher.finalize_reset());
+        let clip_signature = self.sha_hash(clip_with_hashed_children);
         self.elements_ids_to_signatures.insert(clip.clip_id.clone(), clip_signature.clone());
-        self.clips_signatures.push(clip_signature);
     }
 
     fn sign_track(&mut self, track: &Track) {
@@ -146,10 +127,8 @@ impl<'a> Hasher<'a> {
                 gain: track.gain,
             }
         ).unwrap();
-        self.sha_hasher.update(track_infos);
-        let track_signature = format!("{:X}", self.sha_hasher.finalize_reset());
+        let track_signature = self.sha_hash(track_infos);
         self.elements_ids_to_signatures.insert(track.track_id.clone(), track_signature.clone());
-        self.tracks_signatures.push(track_signature);
     }
 
     fn rar(&mut self, clip_id: String) {
@@ -182,104 +161,127 @@ impl<'a> Hasher<'a> {
         }
     }
     
-    fn execute_hash(&mut self, data: &'a ReceivedParsedData) -> String {
-        let mut audio_blocks_signatures: Vec<String> = Vec::new();
-        for audio_block in data.blocks.iter() {
-            for track in audio_block.tracks.iter() {
-                self.sign_track(track);
+    fn execute_hash(&mut self, audio_block: &'a AudioBlock) -> String {
+        for track in audio_block.tracks.iter() {
+            // We sign all tracks before starting the rendering of the relations, because the  'root clips' that
+            // can be and need to be considered ready right away in order for their dependant clips to function,
+            // will have relations that based themselves on the tracks. Either their parent track, or any other track.
+            self.sign_track(track);
+        }
+        let mut tracks_containers: Vec<TrackContainer> = Vec::new();
+        let mut root_clips_ids: Vec<String> = Vec::new();
+        let mut clips_waiting_by_grouped_parents_ids: HashMap<Vec<String>, Vec<&RefCell<AudioClip>>> = HashMap::new();
+
+        for track in audio_block.tracks.iter() {
+            let track_id = track.track_id.clone();
+            let mut track_container = TrackContainer { track, clips: Vec::new() };
+
+            for i_clip in 0..track.clips.len() {
+                let clip_ref = &track.clips[i_clip];
+                let clip = clip_ref.borrow();
+                track_container.clips.push(ClipContainer { clip_id: clip.clip_id.clone(), parent_track_id: track_id.clone() });
+
+                let mut required_parents: Vec<String> = Vec::new();
+                if !self.is_time_relationship_parent_ready(&clip.player_start_time) {
+                    required_parents.push(clip.player_start_time.relationship_parent_id.clone().unwrap());
+                }
+                if !self.is_time_relationship_parent_ready(&clip.player_end_time) {
+                    required_parents.push(clip.player_end_time.relationship_parent_id.clone().unwrap());
+                }
+                if required_parents.len() > 0 {
+                    clips_waiting_by_grouped_parents_ids.entry(required_parents.clone()).or_insert(Vec::new()).push(clip_ref);
+                    for parent in required_parents.iter() {
+                        self.clips_waiting_by_individual_parent_id.entry(parent.clone()).or_insert(Vec::new())
+                            .push(ClipRenderContainer { clip: &clip_ref, requirements_ids: required_parents.clone() });
+                    }
+                } else {
+                    let clip_id = clip.clip_id.clone();
+                    self.sign_clip(clip);
+                    root_clips_ids.push(clip_id);
+                }
             }
+            tracks_containers.push(track_container);
         }
 
-        for audio_block in data.blocks.iter() {
-            let mut audio_block_container = AudioBlockContainer { tracks: Vec::new() };
-            let mut root_clips_ids: Vec<String> = Vec::new();
-            let mut clips_waiting_by_grouped_parents_ids: HashMap<Vec<String>, Vec<&RefCell<AudioClip>>> = HashMap::new();
+        if !(root_clips_ids.len() > 0) {
+            panic!("Seems like you have no root clip :'(");
+        }
+        for root_clip_id in root_clips_ids {
+            self.rar(root_clip_id);
+        }
 
-            for track in audio_block.tracks.iter() {
-                let track_id = track.track_id.clone();
-                let mut track_container = TrackContainer { track, clips: Vec::new() };
-
-                for i_clip in 0..track.clips.len() {
-                    let clip_ref = &track.clips[i_clip];
-                    let clip = clip_ref.borrow();
-                    track_container.clips.push(ClipContainer { clip_id: clip.clip_id.clone(), parent_track_id: track_id.clone() });
-
-                    let mut required_parents: Vec<String> = Vec::new();
-                    if !self.is_time_relationship_parent_ready(&clip.player_start_time) {
-                        required_parents.push(clip.player_start_time.relationship_parent_id.clone().unwrap());
-                    }
-                    if !self.is_time_relationship_parent_ready(&clip.player_end_time) {
-                        required_parents.push(clip.player_end_time.relationship_parent_id.clone().unwrap());
-                    }
-                    println!("required_parents len : {}", required_parents.len());
-                    if required_parents.len() > 0 {
-                        clips_waiting_by_grouped_parents_ids.entry(required_parents.clone()).or_insert(Vec::new()).push(clip_ref);
-                        for parent in required_parents.iter() {
-                            self.clips_waiting_by_individual_parent_id.entry(parent.clone()).or_insert(Vec::new())
-                                .push(ClipRenderContainer { clip: &clip_ref, requirements_ids: required_parents.clone() });
-                        }
-                    } else {
-                        let clip_id = clip.clip_id.clone();
-                        self.sign_clip(clip);
-                        root_clips_ids.push(clip_id);
-                    }
-                }
-                audio_block_container.tracks.push(track_container);
-            }
-
-            if !(root_clips_ids.len() > 0) {
-                panic!("Seems like you have no root clip :'(");
-            }
-            for root_clip_id in root_clips_ids {
-                self.rar(root_clip_id);
-            }
-
-            let mut tracks_signatures: Vec<String> = Vec::new();  // todo: make fixed length
-            for track_container in audio_block_container.tracks.iter() {
-                let mut clips_signatures: Vec<String> = track_container.clips.iter().map(|item|
-                    self.elements_ids_to_signatures.get(&item.clip_id.clone())
-                        .expect(&*format!("Signature not found for clip {}", &item.clip_id))
-                        .clone()
+        let mut tracks_signatures: Vec<String> = Vec::new();  // todo: make fixed length
+        for track_container in tracks_containers.iter() {
+            let mut clips_signatures: Vec<String> = track_container.clips.iter()
+                .map(|item| self.elements_ids_to_signatures
+                    .get(&item.clip_id.clone())
+                    .expect(&*format!("Signature not found for clip {}", &item.clip_id))
+                    .clone()
                 ).collect::<Vec<String>>();
-                clips_signatures.sort();  // Sort the clips signatures by alphabetical order
+            clips_signatures.sort();  // Sort the clips signatures by alphabetical order
 
-                let all_sorted_clips_signature = join_signatures(clips_signatures);
-                let track_with_hashed_children = serde_json::to_string(
-                    &TrackWithHashedChildren {
-                        gain: track_container.track.gain,  // todo: re-implement retrieval of gain
-                        clips_signature: all_sorted_clips_signature
-                    }
-                ).unwrap();
-                self.sha_hasher.update(track_with_hashed_children);
-                tracks_signatures.push(format!("{:X}", self.sha_hasher.finalize_reset()));
-            }
-            tracks_signatures.sort();  // Sort the tracks signatures by alphabetical order
-            let all_sorted_tracks_signature = join_signatures(tracks_signatures);
-
-            let audio_block_with_hashed_children = serde_json::to_string(
-                &AudioBlockWithHashedChildren {
-                    tracks_signature: all_sorted_tracks_signature
+            let all_sorted_clips_signature = join_signatures(clips_signatures);
+            let track_with_hashed_children = serde_json::to_string(
+                &TrackWithHashedChildren {
+                    gain: track_container.track.gain,
+                    clips_signature: all_sorted_clips_signature
                 }
             ).unwrap();
-            self.sha_hasher.update(audio_block_with_hashed_children);
-            audio_blocks_signatures.push(format!("{:X}", self.sha_hasher.finalize_reset()));
+            tracks_signatures.push(self.sha_hash(track_with_hashed_children));
         }
+        tracks_signatures.sort();  // Sort the tracks signatures by alphabetical order
+        let all_sorted_tracks_signature = join_signatures(tracks_signatures);
+
+        let audio_block_with_hashed_children = serde_json::to_string(
+            &AudioBlockWithHashedChildren {
+                tracks_signature: all_sorted_tracks_signature
+            }
+        ).unwrap();
+        let audio_block_signature = self.sha_hash(audio_block_with_hashed_children);
+        audio_block_signature
+    }
+}
+
+
+pub struct AudioProjectHasher<'a> {
+    sha_hasher: &'a mut Sha512,
+}
+
+impl<'a> AudioProjectHasher<'a> {
+    pub fn hash(data: &'a ReceivedParsedData) -> String {
+        let start = Instant::now();
+        let signature = AudioProjectHasher {
+            sha_hasher: &mut Sha512::new(),
+        }.execute_hash(data);
+        println!("\nFinished hashing.\n  --execution_time:{}ms", (start.elapsed().as_micros() as f64 / 1000.0));
+        signature
+    }
+
+    fn sha_hash(&mut self, value: String) -> String {
+        self.sha_hasher.update(value);
+        format!("{:X}", self.sha_hasher.finalize_reset())
+    }
+
+    fn execute_hash(&mut self, data: &'a ReceivedParsedData) -> String {
+        let mut audio_blocks_signatures: Vec<String> = data.blocks.iter()
+            .map(|audio_block| AudioBlockHasher::hash(audio_block, self.sha_hasher))
+            .collect();
         audio_blocks_signatures.sort();  // Sort the audio blocks signatures by alphabetical order
         let all_sorted_audio_blocks_signature = join_signatures(audio_blocks_signatures);
-    
+
         let audio_project_with_hashed_children = serde_json::to_string(
             &AudioProjectWithHashedChildren {
                 sample_rate: data.target_spec.sample_rate,
                 audio_blocks_signature: all_sorted_audio_blocks_signature
             }
         ).unwrap();
+
         // Everything that needed sorting has already been sorted at this point
-        self.sha_hasher.update(audio_project_with_hashed_children);
-        let audio_project_signature = format!("{:X}", self.sha_hasher.finalize_reset());
-    
+        let audio_project_signature = self.sha_hash(audio_project_with_hashed_children);
         audio_project_signature
     }
 }
+
 
 fn join_signatures(signatures: Vec<String>) -> String {
     signatures.join("-")

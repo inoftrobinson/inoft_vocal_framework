@@ -64,6 +64,59 @@ class TestRelationships(unittest.TestCase):
             webbrowser.open(response_data['fileUrl'])
             self.assertTrue(click.confirm(text="Everything's good ?"))
 
+    def test_unusual_but_working_relations(self):
+        audio_block = AudioBlock()
+        track1 = audio_block.create_track(primary=True)
+        track2 = audio_block.create_track(primary=True)
+        sound_1 = track2.create_sound(
+            local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_mp3.mp3"),
+            player_start_time=track1.player_start_time,
+            player_end_time=track2.player_start_time + 20
+        )
+
+        # sound_2 is dependant on sound_1.player_start_time
+
+        from inoft_vocal_framework.audio_editing.audio_effects import TremoloEffect
+        sound_2 = track2.create_sound(
+            local_filepath=os.path.join(self.audio_samples_dirpath, "synthchopinfantaisieimpromptu120bpm1.mp3"),
+            player_start_time=sound_1.player_end_time + 5,
+            player_end_time=track2.player_start_time + 25
+        )
+
+        # We force sound_1 to be dependant to sound_2
+        sound_1._player_start_time = sound_2.player_start_time + 3
+
+        out_filepath = os.path.join(self.audio_dist_dirpath, "test_broken_relations")
+        response_data: dict = audio_block.manual_render(**ALEXA_MANUAL_RENDER_CLOUD_KWARGS, out_filepath=out_filepath, format_type=AudioBlock.FORMAT_TYPE_MP3)
+        if click.confirm("Open file ?"):
+            webbrowser.open(response_data['fileUrl'])
+            self.assertTrue(click.confirm(text="Everything's good ?"))
+
+    def test_broken_relation(self):
+        audio_block = AudioBlock()
+        track1 = audio_block.create_track(primary=True)
+        track2 = audio_block.create_track(primary=True)
+        sound_1 = track2.create_sound(
+            local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_mp3.mp3"),
+            player_start_time=track1.player_start_time,
+        )
+
+        # sound_2 is dependant on sound_1.player_start_time
+        sound_2 = track2.create_sound(
+            local_filepath=os.path.join(self.audio_samples_dirpath, "synthchopinfantaisieimpromptu120bpm1.mp3"),
+            player_start_time=sound_1.player_end_time + 5,
+            player_end_time=track2.player_start_time + 25
+        )
+
+        # We force sound_1 to be dependant to sound_2
+        sound_1._player_start_time = sound_2.player_start_time + 3
+
+        out_filepath = os.path.join(self.audio_dist_dirpath, "test_broken_relations")
+        response_data: dict = audio_block.manual_render(**ALEXA_MANUAL_RENDER_CLOUD_KWARGS, out_filepath=out_filepath, format_type=AudioBlock.FORMAT_TYPE_MP3)
+        if click.confirm("Open file ?"):
+            webbrowser.open(response_data['fileUrl'])
+            self.assertTrue(click.confirm(text="Everything's good ?"))
+
 
 if __name__ == '__main__':
     unittest.main()
