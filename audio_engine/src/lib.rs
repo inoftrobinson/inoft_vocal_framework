@@ -98,7 +98,7 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
 
     let mut runtime = tokio::runtime::Runtime::new().unwrap();
 
-    let engine_base_s3_url = "https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com";
+    let engine_base_s3_url = "https://s3.eu-west-3.amazonaws.com/dist.engine.inoft.com";
     let expected_render_url = format!(
         "{}/{}/{}/files/{}.mp3",
         engine_base_s3_url,
@@ -126,7 +126,7 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
             },
             Err(err) => {
                 output_dict.set_item(_py, "success", false).unwrap();
-                // output_dict.set_item(_py, "error", err.to_string()).unwrap();
+                output_dict.set_item(_py, "error", err.to_string()).unwrap();
                 // todo: re-add returning of errors
             }
         }
