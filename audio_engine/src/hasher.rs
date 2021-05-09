@@ -77,7 +77,19 @@ impl<'a> AudioBlockHasher<'a> {
         format!("{:X}", self.sha_hasher.finalize_reset())
     }
 
+    /*fn is_exempted(type_key: &str) -> bool {
+        match type_key {
+            "until-self-end" => true,
+            "track_start-time" => false,
+            "audio-clip_start-time" => false,
+            "audio-clip_end-time" => false,
+            _ => panic!("Unsupported type_key {}", type_key)
+        }
+    }*/
+
     fn is_time_relationship_parent_ready(&self, time: &Time) -> bool {
+        // let is_exempted = AudioBlockHasher::is_exempted(&*time.type_key);
+        // if !is_exempted && !time.relationship_parent_id.is_none() {
         if !time.relationship_parent_id.is_none() {
             let relationship_parent_id = time.relationship_parent_id.as_ref().unwrap();
             let matching_signature = self.elements_ids_to_signatures.get(&*relationship_parent_id);
@@ -221,6 +233,7 @@ impl<'a> AudioBlockHasher<'a> {
             clips_signatures.sort();  // Sort the clips signatures by alphabetical order
 
             let all_sorted_clips_signature = join_signatures(clips_signatures);
+            println!("joined : {}", all_sorted_clips_signature);
             let track_with_hashed_children = serde_json::to_string(
                 &TrackWithHashedChildren {
                     gain: track_container.track.gain,

@@ -28,11 +28,15 @@ def render(
             'exportTarget': export_target
         },
     }
-    audio_engine_response: Optional[dict] = audio_engine.render(data)
-    if audio_engine_response is not None:
-        success: bool = audio_engine_response.get('success', False)
-        return audio_engine_response.get('fileUrl', None) if success is True else None
-    return None
+    try:
+        audio_engine_response: Optional[dict] = audio_engine.render(data)
+        if audio_engine_response is not None:
+            success: bool = audio_engine_response.get('success', False)
+            return audio_engine_response.get('fileUrl', None) if success is True else None
+        return None
+    except Exception as e:
+        print(e)
+        return None
 
 def resample_save_file_from_url(
     file_url: str, out_filepath: str,

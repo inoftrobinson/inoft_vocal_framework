@@ -8,11 +8,14 @@ use audio_effects::equalizer::EqualizerTransformer;
 
 
 fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
-    Time {
-        type_key: object_item.get_item(_py, "type").unwrap().to_string(),
-        relationship_parent_id: Some(object_item.get_item(_py, "relationship_parent_id").unwrap().to_string()),
-        offset: Some(object_item.get_item(_py, "offset").unwrap().extract::<f32>(_py).unwrap()),
-    }
+    let type_key: String = object_item.get_item(_py, "type").unwrap().to_string();
+    let relationship_parent_id: Option<String> = match object_item.get_item(_py, "relationship_parent_id") {
+        Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } }, Err(_) => None
+    };
+    let offset: Option<f32> = match object_item.get_item(_py, "offset") {
+        Ok(item) => { if item != _py.None() { Some(item.extract::<f32>(_py).unwrap()) } else { None } }, Err(_) => None
+    };
+    Time { type_key, relationship_parent_id, offset }
 }
 
 fn parse_target_spec(_py: Python, received_data: PyObject) -> ReceivedTargetSpec {

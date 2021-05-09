@@ -7,7 +7,7 @@ class StartRequestHandler(InoftRequestHandler):
         return self.is_launch_request()
 
     def handle(self):
-        audio_block = AudioBlock()
+        """audio_block = AudioBlock()
         track1 = audio_block.create_track(primary=True)
         track2 = audio_block.create_track(primary=True)
         track2_speech1 = track2.create_speech(
@@ -22,12 +22,16 @@ class StartRequestHandler(InoftRequestHandler):
             text="L'opérateur radio est légèrement en train de bouger sa tête de droite à gauche. Il a toujours les yeux fermés.",
             voice_key="Mathieu", player_start_time=track2_speech3.player_end_time
         )
-        self.play_audio_block(audio_block)
+        self.play_audio_block(audio_block)"""
         audio_block = AudioBlock()
         track1 = audio_block.create_track(primary=True)
-        track1_speech1 = track1.create_speech(
+        """track1_speech1 = track1.create_speech(
             text="Willie à l'air particulièrement tendu. Vous pourriez faire ce qu'il vous demande et trouver de quoi attacher l'opérateur radio, ou alors demander à Willie que ce soit vous qui restiez avec l'opérateur radio. Qu'allez-vous faire, chercher ce qu'il faut ou restez avec l'opérateur ?",
             voice_key="Mathieu", player_start_time=track1.player_start_time
+        )"""
+        track1_speech1 = track1.create_sound(
+            local_filepath="../../samples/audio/hop_short_mp3.mp3",
+            player_start_time=track1.player_start_time
         )
         self.play_audio_block(audio_block)
         self.memorize_session_then_state(f4fbStateHandler)

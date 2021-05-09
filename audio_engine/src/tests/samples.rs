@@ -1,7 +1,7 @@
 use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time};
 
 pub fn make_sample_project_data() -> ReceivedParsedData {
-    let data = ReceivedParsedData {
+    ReceivedParsedData {
         blocks: vec![
             AudioBlock {
                 tracks: vec![
@@ -9,7 +9,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                         track_id: String::from("track-1"),
                         clips: vec![
                              AudioClip::new(
-                                String::from("clip-1"),
+                                String::from("clip-0"),
                                 None,
                                 Some("F:/Sons utiles/Musics/Vintage (1940s) French Music/La Vie en Rose - Edith Piaf - Louiguy - Luypaerts.mp3".to_string()),
                                 None,
@@ -84,6 +84,52 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
         },
         engine_account_id: Some(String::from("b1fe5939-032b-462d-92e0-a942cd445096")),
         engine_project_id: Some(String::from("22ac1d08-292d-4f2e-a9e3-20d181f1f58f"))
-    };
-    data
+    }
+}
+
+pub fn make_sample_project_data_2() -> ReceivedParsedData {
+        ReceivedParsedData {
+        blocks: vec![
+            AudioBlock {
+                tracks: vec![
+                    Track {
+                        track_id: String::from("track-1"),
+                        clips: vec![
+                             AudioClip::new(
+                                String::from("clip-0"),
+                                None,
+                                Some(String::from("../../samples/audio/hop_short_mp3.mp3")),
+                                None,
+                                Some(50),
+                                vec![],
+                                Time {
+                                    type_key: String::from("track_start-time"),
+                                    relationship_parent_id: Some(String::from("track-1")),
+                                    offset: Some(0f32)
+                                },
+                                Time {
+                                    type_key: String::from("until-self-end"),
+                                    relationship_parent_id: Some(String::from("clip-0")),
+                                    offset: None
+                                },
+                                0.0,
+                                None
+                            )
+                        ],
+                        gain: 0,
+                    }
+                ]
+            }
+        ],
+        target_spec: ReceivedTargetSpec {
+            filepath: String::from("F:/Sons utiles/tests/output_1.mp3"),
+            sample_rate: 24000,
+            bitrate: 16,
+            num_channels: 1,
+            format_type: String::from("mp3"),
+            export_target: String::from("managed-inoft-vocal-engine")
+        },
+        engine_account_id: Some(String::from("b1fe5939-032b-462d-92e0-a942cd445096")),
+        engine_project_id: Some(String::from("22ac1d08-292d-4f2e-a9e3-20d181f1f58f"))
+    }
 }

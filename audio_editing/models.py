@@ -67,6 +67,6 @@ class AudioEndTime(Time):
 # todo: does the UntilSelfEnd needs to exist ? Compared to an AudioEndTime pointing to itself ?
 class UntilSelfEnd(Time):
     def __init__(self, sound: Any, offset: Optional[int or float] = None):
-        super().__init__(type_key='until-self-end', relationship_parent=sound, offset=offset)
+        super().__init__(type_key='until-self-end', relationship_parent=None, offset=offset)
 
 

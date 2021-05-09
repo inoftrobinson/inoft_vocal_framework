@@ -1,4 +1,5 @@
 root_file: __init__.py
+project_root_dir: ./
 type: "layer"
 folders_includes:
   audio_engine/libs:
