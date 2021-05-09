@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests_exports {
-    use crate::{append, AudioBlock, Track, AudioClip, Time, exporter};
-    use crate::models::{ReceivedParsedData, ReceivedTargetSpec};
+    use crate::{append, exporter};
+    use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time};
     use std::cell::RefCell;
     use tokio;
     use tokio::prelude::*;

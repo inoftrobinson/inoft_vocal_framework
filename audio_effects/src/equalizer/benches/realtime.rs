@@ -1,3 +1,4 @@
+/*
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rand::Rng;
 use simple_eq::*;
@@ -37,3 +38,4 @@ fn dsp (c: &mut Criterion) {
 
 criterion_group!(benches, dsp);
 criterion_main!(benches);
+ */

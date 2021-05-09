@@ -1027,6 +1027,7 @@ dependencies = [
  "ndarray",
  "ndarray-stats",
  "plotters",
+ "python3-sys",
  "rb",
  "realfft",
  "reqwest",

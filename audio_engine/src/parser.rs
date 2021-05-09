@@ -34,13 +34,11 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
     let mut audio_blocks_items: Vec<AudioBlock> = Vec::new();
     let audio_blocks_data: PyList = received_data.get_item(_py, "blocks").unwrap().extract::<PyList>(_py).unwrap();
 
-    println!("blocks : {:?}", audio_blocks_data.len(_py));
     for i_block in 0..audio_blocks_data.len(_py) {
         let mut current_audio_block_tracks: Vec<Track> = Vec::new();
 
         let audio_block_data: PyObject = audio_blocks_data.get_item(_py, i_block);
         let tracks_data: PyDict = audio_block_data.get_item(_py, "tracks").unwrap().extract::<PyDict>(_py).unwrap();
-        println!("tracks_data : {:?}", tracks_data.len(_py));
 
         for (track_id, track_data) in tracks_data.items(_py).iter() {
             let track_id = track_id.to_string();

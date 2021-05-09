@@ -1,7 +1,5 @@
-#[cfg(feature = "python36")] extern crate cpython36 as cpython;
-#[cfg(feature = "python37")] extern crate cpython37 as cpython;
-#[cfg(feature = "python38")] extern crate cpython38 as cpython;
-#[cfg(feature = "python39")] extern crate cpython39 as cpython;
+extern crate python3_sys;
+extern crate cpython;
 
 #[path="append.rs"] mod append;
 #[path="decoder.rs"] pub mod decoder;
