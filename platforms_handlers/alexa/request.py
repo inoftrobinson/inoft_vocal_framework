@@ -6,11 +6,9 @@ class IntentSlot(BaseModel):
     value: str
 
 class Intent(BaseModel):
-    json_key = "intent"
-
     name: str
     confirmationStatus: str
-    slots: Dict[str, IntentSlot]
+    slots: Optional[Dict[str, IntentSlot]] = None
 
 
 class Request(BaseModel):

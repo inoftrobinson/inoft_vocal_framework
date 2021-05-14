@@ -5,6 +5,8 @@ from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type
 from inoft_vocal_framework.safe_dict import SafeDict
 
 
+# todo: refactor to Pydantic
+
 class AudioPlayer:
     json_key = None
     TYPE_PLAY = "AudioPlayer.Play"
