@@ -3,6 +3,7 @@ name = "inoft_vocal_framework"
 version = "0.1.0"
 authors = ["Robinson Labourdette <robinson@inoft.com>"]
 edition = "2018"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -18,7 +19,6 @@ plotters = "0.3.0"
 ndarray = "0.14.0"
 ndarray-stats = "0.4.0"
 colorous = "1.0.3"
-
 
 hound = { version = "3.4.0" }
 minimp3 = "0.5.1"
@@ -39,10 +39,8 @@ reqwest = { version = "0.10", features = ["json"] }
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = "1.0.48"
 sha2 = "0.9.3"
-cpython36 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-6"] }
-cpython37 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-7"] }
-cpython38 = { package="cpython", optional=true, version="*", default-features=false, features=["python-3-8"] }
-cpython39 = { package="cpython", optional=true, version="*", default-features=false, features=["extension-module"] }
+python3-sys = "0.5.2"
+cpython = { version="0.5.2", default-features=false, features=["python3-sys"] }
 
 [target.'cfg(not(target_os = "linux"))'.dependencies]
 cpal = "0.12.0"
@@ -54,10 +52,10 @@ tokio-test = "*"
 [features]
 default = []
 bundled = ["gcc"]
-python36 = ["cpython36"]
-python37 = ["cpython37"]
-python38 = ["cpython38"]
-python39 = ["cpython39"]
+python36 = ["cpython/python-3-6"]
+python37 = ["cpython/python-3-7"]
+python38 = ["cpython/python-3-8"]
+python39 = ["cpython/extension-module"]
 
 [build-dependencies]
 gcc = { version = "0.3.50", optional = true }

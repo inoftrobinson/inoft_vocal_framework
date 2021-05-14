@@ -1,4 +1,4 @@
-use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PyString, PythonObject, PyBytes};
+use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PythonObject, PyBytes};
 use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData};
 use std::collections::HashMap;
 use std::cell::RefCell;
@@ -8,11 +8,14 @@ use audio_effects::equalizer::EqualizerTransformer;
 
 
 fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
-    Time {
-        type_key: object_item.get_item(_py, "type").unwrap().to_string(),
-        relationship_parent_id: Some(object_item.get_item(_py, "relationship_parent_id").unwrap().to_string()),
-        offset: Some(object_item.get_item(_py, "offset").unwrap().extract::<f32>(_py).unwrap()),
-    }
+    let type_key: String = object_item.get_item(_py, "type").unwrap().to_string();
+    let relationship_parent_id: Option<String> = match object_item.get_item(_py, "relationship_parent_id") {
+        Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } }, Err(_) => None
+    };
+    let offset: Option<f32> = match object_item.get_item(_py, "offset") {
+        Ok(item) => { if item != _py.None() { Some(item.extract::<f32>(_py).unwrap()) } else { None } }, Err(_) => None
+    };
+    Time { type_key, relationship_parent_id, offset }
 }
 
 fn parse_target_spec(_py: Python, received_data: PyObject) -> ReceivedTargetSpec {
@@ -34,13 +37,11 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
     let mut audio_blocks_items: Vec<AudioBlock> = Vec::new();
     let audio_blocks_data: PyList = received_data.get_item(_py, "blocks").unwrap().extract::<PyList>(_py).unwrap();
 
-    println!("blocks : {:?}", audio_blocks_data.len(_py));
     for i_block in 0..audio_blocks_data.len(_py) {
         let mut current_audio_block_tracks: Vec<Track> = Vec::new();
 
         let audio_block_data: PyObject = audio_blocks_data.get_item(_py, i_block);
         let tracks_data: PyDict = audio_block_data.get_item(_py, "tracks").unwrap().extract::<PyDict>(_py).unwrap();
-        println!("tracks_data : {:?}", tracks_data.len(_py));
 
         for (track_id, track_data) in tracks_data.items(_py).iter() {
             let track_id = track_id.to_string();
@@ -104,8 +105,11 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
                                 effects_instances.push(Box::new(Tremolo::new(speed_parameter, gain_parameter)));
                             },
                             "equalizer" => {
-                                effects_instances.push(Box::new(EqualizerTransformer::new()));
                                 // todo: pass curves
+                                match EqualizerTransformer::new(Vec::new()) {
+                                    Ok(effect) => { effects_instances.push(Box::new(effect)); },
+                                    Err(err) => { println!("Error while instancing the equalizer transformer"); }
+                                };
                             }
                             _ => { println!("Effect {} not supported", effect_key); }
                         }

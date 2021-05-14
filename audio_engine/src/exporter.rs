@@ -11,6 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use reqwest::Url;
 use std::cmp::min;
+use hound::WavSpec;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct GeneratePresignedUploadUrlRequestData {
@@ -45,14 +46,14 @@ pub struct GeneratePresignedUploadUrlResponse {
 }
 
 
-pub async fn post_mp3_buffer_to_s3_with_presigned_url(mp3_buffer: Vec<u8>, presigned_url_response_data: GeneratePresignedUploadUrlResponse) -> String {
+pub async fn post_buffer_to_s3_with_presigned_url(buffer: Vec<u8>, presigned_url_response_data: GeneratePresignedUploadUrlResponse) -> String {
     let jsonified_data = presigned_url_response_data.data.expect("Error in retrieving the data item from the response data");
     println!("{:?}", jsonified_data);
     let s3_target_url = jsonified_data.url;
     let s3_fields = jsonified_data.fields.unwrap();
     let expected_file_url = format!("{}{}", s3_target_url, s3_fields.key);
 
-    let mp3_file_part = reqwest::multipart::Part::bytes(mp3_buffer)
+    let mp3_file_part = reqwest::multipart::Part::bytes(buffer)
         .mime_str("application/octet-stream").unwrap();
 
     // todo: instead of parsing and resetting the fields, just populate the request with all the s3_fields
@@ -158,15 +159,30 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
     mp3_buffer
 }
 
-pub fn write_mp3_buffer_to_file(mp3_buffer: Vec<u8>, filepath: &str) {
+pub fn write_mp3_buffer_to_file(mp3_buffer: Vec<u8>, filepath: &str) -> Result<String, Box<dyn Error>> {  // Box<std::io::Error>
     let path = Path::new(filepath);
-    // Open a file in write-only mode, returns `io::Result<File>`
-    let mut file = match File::create(&path) {
-        Err(why) => panic!("couldn't create {:?}: {}", path, why),
-        Ok(file) => file,
-    };
-    match file.write_all(mp3_buffer.as_slice()) {
-        Err(why) => panic!("couldn't write to {:?}: {}", path, why),
-        Ok(_) => println!("successfully wrote to {:?}", path),
+    match File::create(&path) {
+        Err(err) => { println!("couldn't create {:?}: {}", path, err); Err(Box::new(err)) },
+        Ok(mut file) => {
+            match file.write_all(mp3_buffer.as_slice()) {
+                Err(err) => { println!("couldn't write to {:?}: {}", path, err); Err(Box::new(err)) },
+                Ok(_) => Ok(String::from(filepath)),
+            }
+        },
+    }
+}
+
+pub fn write_wav_samples_to_file(wav_samples: Vec<i16>, wav_target_spec: WavSpec, filepath: &str) -> Result<String, Box<Error>> {
+    match hound::WavWriter::create(filepath, wav_target_spec) {
+        Ok(mut writer) => {
+            for sample in wav_samples {
+                writer.write_sample(sample).unwrap();
+            }
+            Ok(String::from(filepath))
+        },
+        Err(err) => {
+            println!("Wav writer error : {}", err);
+            Err(Box::new(err))
+        }
     }
 }
