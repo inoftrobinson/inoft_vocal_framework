@@ -132,5 +132,6 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
         }
         trace.close();
     }
+    trace.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/trace.json");
     Ok(output_dict)
 }

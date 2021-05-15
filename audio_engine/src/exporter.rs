@@ -12,6 +12,7 @@ use serde::Serialize;
 use reqwest::Url;
 use std::cmp::min;
 use hound::WavSpec;
+use crate::tracer::TraceItem;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct GeneratePresignedUploadUrlRequestData {
@@ -125,8 +126,8 @@ pub async fn get_upload_url(
     Ok(jsonified_output_data)
 }
 
-pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetSpec) -> Vec<u8> {
-    let start = Instant::now();
+pub fn from_samples_to_mono_mp3(trace: &mut TraceItem, samples: Vec<i16>, target_spec: &ReceivedTargetSpec) -> Vec<u8> {
+    let trace_mp3_conversion = trace.create_child(String::from("Samples to MP3 conversion with Lame"));
 
     let mut lame = Lame::new().expect("Coudn't create Lame");
     lame.set_channels(target_spec.num_channels as u8).expect("Couldn't set num channels");
@@ -158,7 +159,7 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
         "\nRemoving trailing empty data from the mp3_buffer.\
         \n  --precision_samples_step:{}", precision_10ms_samples_step
     );
-    let start_removing_trailing_empty_data = Instant::now();
+    let trace_removing_trailing_empty_data = trace_mp3_conversion.create_child(String::from("Removing trailing empty data"));
     let mut mp3_buffer_inverted_index = mp3_buffer.len() - 1;
     while mp3_buffer_inverted_index > 0 {
         if mp3_buffer.get(mp3_buffer_inverted_index).unwrap() > &u8::MIN {
@@ -169,8 +170,8 @@ pub fn from_samples_to_mono_mp3(samples: Vec<i16>, target_spec: &ReceivedTargetS
         // We use a min operation, to avoid index overflow if the inverted index is superior to zero, but removing the
         // samples_step from it would make its value go below zero. If this happened, the index would jump to usize::MAX
     }
-    println!("Finished removing of trailing empty data from the mp3_buffer.\n  --execution_time:{}ms", start_removing_trailing_empty_data.elapsed().as_millis());
-    println!("\nFinished MP3 conversion using Lame.\n  --execution_time:{}ms", start.elapsed().as_millis());
+    trace_removing_trailing_empty_data.close();
+    trace_mp3_conversion.close();
     mp3_buffer
 }
 

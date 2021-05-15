@@ -16,14 +16,20 @@ pub async fn save_samples(
 
     match &*target_spec.format_type {
         "mp3" => {
-            let mp3_buffer = from_samples_to_mono_mp3(samples, target_spec);
+            let mp3_buffer = from_samples_to_mono_mp3(trace, samples, target_spec);
             match &*target_spec.export_target {
                 "local" => {
                     println!("Writing mp3_buffer to file...");
-                    write_mp3_buffer_to_file(mp3_buffer, &*target_spec.filepath)
+                    let trace_write_mp3_buffer_to_file = trace.create_child(String::from("Write MP3 buffer to file"));
+                    let writing_result = write_mp3_buffer_to_file(mp3_buffer, &*target_spec.filepath);
+                    trace_write_mp3_buffer_to_file.close();
+                    writing_result
                 },
                 "managed-inoft-vocal-engine" => {
                     println!("Uploading mp3_buffer to managed inoft-vocal-engine....");
+                    let trace_upload_mp3_buffer_to_inoft_vocal_engine = trace.create_child(
+                        String::from("Upload MP3 buffer to Inoft Vocal Engine")
+                    );
                     let mp3_buffer_expected_bytes_size = mp3_buffer.len() * size_of::<u8>();
                     let upload_url_data = get_upload_url(
                         engine_api_data,
@@ -32,7 +38,9 @@ pub async fn save_samples(
                     ).await
                         .expect("Error connecting to engine API")
                         .expect("Error connecting to engine API");
-                    Ok(post_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await)
+                    let result = Ok(post_buffer_to_s3_with_presigned_url(mp3_buffer, upload_url_data).await);
+                    trace_upload_mp3_buffer_to_inoft_vocal_engine.close();
+                    result
                 }
                 _ => {
                     panic!("Export target not supported");
@@ -44,7 +52,11 @@ pub async fn save_samples(
             let wav_target_spec = target_spec.to_wav_spec();
             match &*target_spec.export_target {
                 "local" => {
-                    write_wav_samples_to_file(samples, wav_target_spec, &target_spec.filepath)
+                    println!("Writing wav samples to file....");
+                    let trace_write_wav_samples_to_file = trace.create_child(String::from("Write WAV samples to file"));
+                    let result = write_wav_samples_to_file(samples, wav_target_spec, &target_spec.filepath);
+                    trace_write_wav_samples_to_file.close();
+                    result
                 },
                 "managed-inoft-vocal-engine" => {
                     println!("Uploading wav_buffer to managed inoft-vocal-engine....");
