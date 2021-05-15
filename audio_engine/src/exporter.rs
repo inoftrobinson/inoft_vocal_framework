@@ -52,7 +52,7 @@ pub async fn post_buffer_to_s3_with_presigned_url(buffer: Vec<u8>, presigned_url
     println!("{:?}", jsonified_data);
     let s3_target_url = jsonified_data.url;
     let s3_fields = jsonified_data.fields.unwrap();
-    let expected_file_url = format!("{}{}", s3_target_url, s3_fields.key);
+    let expected_file_url = format!("{}/{}", s3_target_url, s3_fields.key);
 
     let mp3_file_part = reqwest::multipart::Part::bytes(buffer)
         .mime_str("application/octet-stream").unwrap();

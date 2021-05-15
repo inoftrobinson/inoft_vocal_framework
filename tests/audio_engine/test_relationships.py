@@ -33,7 +33,7 @@ class TestRelationships(unittest.TestCase):
         track2.create_sound(
             local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_wav_16bit.wav"),
             player_start_time=track1.player_start_time,
-            player_end_time=track2.player_start_time + 20
+            player_end_time=track2.player_start_time + 21
         )
         file_url: Optional[str] = audio_block.manual_render(**ALEXA_MANUAL_RENDER_CLOUD_KWARGS, format_type=AudioBlock.FORMAT_TYPE_MP3)
         if click.confirm("Open file ?"):
