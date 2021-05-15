@@ -2,6 +2,7 @@ import os
 import time
 import unittest
 import webbrowser
+from typing import Optional
 
 import click
 
@@ -30,13 +31,13 @@ class TestRelationships(unittest.TestCase):
             player_end_time=track2.player_start_time + 20
         )
         track2.create_sound(
-            file_url="https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/Joe+Cocker+-+You+Can+Leave+Your+Hat+On+(Official+Video)+HD.mp3",
+            local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_wav_16bit.wav"),
             player_start_time=track1.player_start_time,
             player_end_time=track2.player_start_time + 20
         )
-        response_data: dict = audio_block.manual_render(**ALEXA_MANUAL_RENDER_CLOUD_KWARGS, format_type=AudioBlock.FORMAT_TYPE_MP3)
+        file_url: Optional[str] = audio_block.manual_render(**ALEXA_MANUAL_RENDER_CLOUD_KWARGS, format_type=AudioBlock.FORMAT_TYPE_MP3)
         if click.confirm("Open file ?"):
-            webbrowser.open(response_data['fileUrl'])
+            webbrowser.open(file_url)
             self.assertTrue(click.confirm(text="Everything's good ?"))
 
     def test_ambiguous(self):

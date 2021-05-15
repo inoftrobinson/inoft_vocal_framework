@@ -20,7 +20,7 @@ use std::borrow::Borrow;
 use crate::resampler::resample;
 use crate::tracer::TraceItem;
 use cpython::{PyResult, PyDict, Python, py_module_initializer, py_fn, PyObject};
-use crate::models::{ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData, ReceivedTargetSpec};
+use crate::models::{ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData, ReceivedTargetSpec, EngineApiData};
 use symphonia_core::codecs::CodecParameters;
 use std::error::Error;
 
@@ -35,10 +35,12 @@ py_module_initializer!(audio_engine, |py, m| {
 
 
 async fn execute_resample_save_file_from_vec(
-    trace: &mut TraceItem, samples: Vec<i16>, codec_params: CodecParameters, target_spec: &ReceivedTargetSpec
+    trace: &mut TraceItem,
+    target_spec: &ReceivedTargetSpec, engine_api_data: &EngineApiData,
+    samples: Vec<i16>, codec_params: CodecParameters
 ) -> Result<String, Box<dyn Error>> {
     let resamples = resample(trace, samples, codec_params, target_spec.to_wav_spec());
-    saver::save_samples(trace, resamples, target_spec, String::from("desired_filename_example")).await
+    saver::save_samples(trace, target_spec, engine_api_data, resamples, String::from("desired_filename_example")).await
 }
 
 async fn execute_resample_save_file_from_local_file(data: ResampleSaveFileFromLocalFileData) -> bool {
@@ -46,7 +48,7 @@ async fn execute_resample_save_file_from_local_file(data: ResampleSaveFileFromLo
     let (samples, codec_params) = decoder::decode_from_local_filepath(
         trace, &*data.source_filepath, 0.0, None
     );
-    execute_resample_save_file_from_vec(trace, samples.unwrap(), codec_params.unwrap(), &data.target_spec).await;
+    execute_resample_save_file_from_vec(trace, &data.target_spec, &data.engine_api_data, samples.unwrap(), codec_params.unwrap()).await;
     trace.close();
     true
 }
@@ -57,7 +59,7 @@ async fn execute_resample_save_file_from_url(data: ResampleSaveFileFromUrlData) 
         trace, &*data.file_url, 0.0, None
     ).await;
     let result = execute_resample_save_file_from_vec(
-        trace, samples.unwrap(), codec_params.unwrap(), &data.target_spec
+        trace, &data.target_spec, &data.engine_api_data, samples.unwrap(), codec_params.unwrap()
     ).await;
     trace.close();
     result
@@ -100,8 +102,8 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
     let expected_render_url = format!(
         "{}/{}/{}/files/{}.mp3",
         engine_base_s3_url,
-        parsed_data.engine_account_id.borrow().as_ref().unwrap(),
-        parsed_data.engine_project_id.borrow().as_ref().unwrap(),
+        parsed_data.engine_api_data.engine_account_id.borrow().as_ref().unwrap(),
+        parsed_data.engine_api_data.engine_project_id.borrow().as_ref().unwrap(),
         expected_render_file_hash
     );
     trace_initialization.close();

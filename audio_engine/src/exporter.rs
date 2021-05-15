@@ -3,7 +3,7 @@ use std::fs::File;
 use std::time::Instant;
 use std::path::Path;
 use std::io::{Write};
-use crate::models::ReceivedTargetSpec;
+use crate::models::{ReceivedTargetSpec, ReceivedParsedData, EngineApiData};
 
 use std::error::Error;
 
@@ -15,6 +15,7 @@ use hound::WavSpec;
 
 #[derive(Debug, Deserialize, Serialize)]
 struct GeneratePresignedUploadUrlRequestData {
+    accessToken: String,
     filename: String,
     filesize: usize,
 }
@@ -87,16 +88,30 @@ pub async fn post_buffer_to_s3_with_presigned_url(buffer: Vec<u8>, presigned_url
 }
 
 
-pub async fn get_upload_url(filename: String, filesize: usize) -> Result<Option<GeneratePresignedUploadUrlResponse>, Box<dyn Error + Send + Sync>> {
+pub async fn get_upload_url(
+    engine_api_data: &EngineApiData, filename: String, filesize: usize
+) -> Result<Option<GeneratePresignedUploadUrlResponse>, Box<dyn Error + Send + Sync>> {
+
     let mut jsonified_output_data: Option<GeneratePresignedUploadUrlResponse> = None;
     let client = reqwest::ClientBuilder::new().build().unwrap();
 
-    let request_data = GeneratePresignedUploadUrlRequestData { filename, filesize };
+    let request_data = GeneratePresignedUploadUrlRequestData {
+        filename, filesize,
+        accessToken: engine_api_data.access_token.clone()
+            .expect("Specifying an access_token is required in order to upload to the Inoft Vocal Engine")
+    };
     let request_jsonified_data = serde_json::to_string(&request_data).unwrap();
-    // todo: make account name/id and project name/id dynamic
-    // todo: add support for http://127.0.0.1:5000 and https://www.engine.inoft.com at the same time
+
+    let api_url = format!(
+        "{}/api/v1/{}/{}/resources/project-audio-files/generate-presigned-upload-url",
+        engine_api_data.engine_base_url,
+        engine_api_data.engine_account_id.as_ref()
+            .expect("Specifying an engine_account_id is required in order to upload to the Inoft Vocal Engine"),
+        engine_api_data.engine_project_id.as_ref()
+            .expect("Specifying an engine_project_id is required in order to upload to the Inoft Vocal Engine")
+    );
     let request = client
-        .post(Url::parse("https://www.engine.inoft.com/api/v1/@robinsonlabourdette/livetiktok/resources/project-audio-files/generate-presigned-upload-url").unwrap())
+        .post(Url::parse(&*api_url).unwrap())
         .header("content-type", "application/json")
         .body(reqwest::Body::from(request_jsonified_data));
 

@@ -42,13 +42,13 @@ class MyTestCase(unittest.TestCase):
 
         background_music_track.create_sound(
             engine_file_key="ambiance",
-            player_start_time=background_music_track.player_start,
-            player_end_time=background_music_track.player_start + 20
+            player_start_time=background_music_track.player_start_time,
+            player_end_time=background_music_track.player_start_time + 20
         )
 
         background_music = background_music_track.create_sound(
             engine_file_key="output_final",
-            player_start_time=background_music_track.player_start + 10
+            player_start_time=background_music_track.player_start_time + 10
         )
         background_music.volume = 45
 

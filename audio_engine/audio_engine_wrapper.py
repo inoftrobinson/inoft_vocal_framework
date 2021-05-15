@@ -16,8 +16,10 @@ def render(
 
     # todo: is the accountId and projectId's required ?
     data = {
+        'overrideEngineBaseUrl': "http://127.0.0.1:5000",
         'engineAccountId': "b1fe5939-032b-462d-92e0-a942cd445096",
-        'engineProjectId': "22ac1d08-292d-4f2e-a9e3-20d181f1f58f",
+        'engineProjectId': "4ede8b70-46f6-4ae2-b09c-05a549194c8e",
+        'engineAccessToken': "a2bf5ff8-bbd3-4d01-b695-04138ee19b42",
         'blocks': audio_blocks_data,
         'targetSpec': {
             'filepath': out_filepath,

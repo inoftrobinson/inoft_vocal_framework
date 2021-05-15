@@ -3,6 +3,14 @@ use serde::{Serialize, Deserialize};
 pub use crate::audio_clip::AudioClip;
 
 
+pub struct EngineApiData {
+    pub engine_base_url: String,
+    pub engine_account_id: Option<String>,
+    pub engine_project_id: Option<String>,
+    pub access_token: Option<String>
+}
+
+
 pub struct ReceivedTargetSpec {
     pub filepath: String,
     pub sample_rate: u32,
@@ -26,20 +34,21 @@ impl ReceivedTargetSpec {
 }
 
 pub struct ReceivedParsedData {
-    pub engine_account_id: Option<String>,
-    pub engine_project_id: Option<String>,
-    pub blocks: Vec<AudioBlock>,
+    pub engine_api_data: EngineApiData,
     pub target_spec: ReceivedTargetSpec,
+    pub blocks: Vec<AudioBlock>,
 }
 
 pub struct ResampleSaveFileFromUrlData {
+    pub engine_api_data: EngineApiData,
+    pub target_spec: ReceivedTargetSpec,
     pub file_url: String,
-    pub target_spec: ReceivedTargetSpec
 }
 
 pub struct ResampleSaveFileFromLocalFileData {
+    pub engine_api_data: EngineApiData,
     pub source_filepath: String,
-    pub target_spec: ReceivedTargetSpec
+    pub target_spec: ReceivedTargetSpec,
 }
 
 

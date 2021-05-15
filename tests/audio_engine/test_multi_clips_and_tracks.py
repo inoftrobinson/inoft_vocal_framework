@@ -21,21 +21,10 @@ class TestInputFormats(unittest.TestCase):
     def test_first_track_empty(self):
         audio_block = AudioBlock()
         empty_first_track = audio_block.create_track()
-        container_track = audio_block.create_track()
-        """music_1 = container_track.create_sound(
-            # engine_file_key="how_much_you_want_her_20s",
-            local_filepath="C:/Users/LABOURDETTE/Downloads/Isaac Delusion — How Much (You Want Her) 2017 (LYRICS VIDEO).mp3",
-            file_start_time=20,
-            file_end_time=25,
-            player_start_time=container_track.player_start_time,
-            player_end_time=container_track.player_start_time + 2,
-            volume=400
-        )"""
-
-        music_2 = audio_block.create_track().create_sound(
-            local_filepath="C:/Users/LABOURDETTE/Downloads/ANRI - I Can't Stop The Loneliness.mp3",
-            player_start_time=container_track.player_start_time + 2,
-            player_end_time=container_track.player_start_time + 20,
+        track_music = audio_block.create_track()
+        music = track_music.create_sound(
+            local_filepath=os.path.join(self.audio_samples_dirpath, "hop_short_wav_16bit.wav"),
+            player_start_time=track_music.player_start_time + 2,
             volume=100
         )
         from inoft_vocal_framework.audio_editing.audio_effects import EqualizerEffect

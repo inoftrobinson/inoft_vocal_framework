@@ -17,8 +17,8 @@ pub async fn main(trace: &mut TraceItem, data: ReceivedParsedData, expected_rend
 
     let trace_saving_samples = trace.create_child(String::from("Saving samples"));
     let file_url = saver::save_samples(
-        trace_saving_samples, rendered_samples,
-        &data.target_spec, expected_render_file_hash
+        trace_saving_samples, &data.target_spec, &data.engine_api_data,
+        rendered_samples, expected_render_file_hash
     ).await;
     trace_saving_samples.close();
 

@@ -1,10 +1,32 @@
 use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PythonObject, PyBytes};
-use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData};
+use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData, EngineApiData};
 use std::collections::HashMap;
 use std::cell::RefCell;
 use audio_effects::base_transformer::BaseTransformer;
 use audio_effects::tremolo::Tremolo;
 use audio_effects::equalizer::EqualizerTransformer;
+
+
+fn parse_engine_api_data(_py: Python, received_data: &PyObject) -> EngineApiData {
+    let override_engine_base_url: Option<String> = match received_data.get_item(_py, "overrideEngineBaseUrl") {
+        Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } }, Err(_) => { None }
+    };
+    EngineApiData {
+        engine_base_url: override_engine_base_url.unwrap_or(String::from("https://www.engine.inoft.com")),
+        engine_account_id: match received_data.get_item(_py, "engineAccountId") {
+            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+            Err(err) => { println!("{:?}", err); None }
+        },
+        engine_project_id: match received_data.get_item(_py, "engineProjectId") {
+            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+            Err(err) => { println!("{:?}", err); None }
+        },
+        access_token: match received_data.get_item(_py, "engineAccessToken") {
+            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+            Err(err) => { println!("{:?}", err); None }
+        },
+    }
+}
 
 
 fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
@@ -18,7 +40,7 @@ fn parse_time_object(_py: Python, object_item: PyObject) -> Time {
     Time { type_key, relationship_parent_id, offset }
 }
 
-fn parse_target_spec(_py: Python, received_data: PyObject) -> ReceivedTargetSpec {
+fn parse_target_spec(_py: Python, received_data: &PyObject) -> ReceivedTargetSpec {
     let target_spec_data = received_data.get_item(_py, "targetSpec").unwrap();
     ReceivedTargetSpec {
         filepath: target_spec_data.get_item(_py, "filepath").unwrap().to_string(),
@@ -33,7 +55,6 @@ fn parse_target_spec(_py: Python, received_data: PyObject) -> ReceivedTargetSpec
 
 pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> ReceivedParsedData {
     let mut flattened_tracks_refs: HashMap<String, &Track> = HashMap::new();
-    let mut flattened_audio_clips_refs: HashMap<String, &RefCell<AudioClip>> = HashMap::new();
     let mut audio_blocks_items: Vec<AudioBlock> = Vec::new();
     let audio_blocks_data: PyList = received_data.get_item(_py, "blocks").unwrap().extract::<PyList>(_py).unwrap();
 
@@ -138,18 +159,13 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
     }
 
     let output_parsed_data = ReceivedParsedData {
-        engine_account_id: match received_data.get_item(_py, "engineAccountId") {
-            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
-            Err(err) => { println!("{:?}", err); None }
-        },
-        engine_project_id: match received_data.get_item(_py, "engineProjectId") {
-            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
-            Err(err) => { println!("{:?}", err); None }
-        },
-        blocks: audio_blocks_items,
-        target_spec: parse_target_spec(_py, received_data)
+        engine_api_data: parse_engine_api_data(_py, &received_data),
+        target_spec: parse_target_spec(_py, &received_data),
+        blocks: audio_blocks_items
     };
 
+    /*
+    let mut flattened_audio_clips_refs: HashMap<String, &RefCell<AudioClip>> = HashMap::new();
     for audio_block in output_parsed_data.blocks.iter() {
         let tracks = &audio_block.tracks;
         for track in tracks.iter() {
@@ -165,6 +181,7 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
     for clip_ref in flattened_audio_clips_refs.iter() {
         println!("id:{} & filepath:{:?}", clip_ref.0, clip_ref.1.borrow().filepath);
     }
+     */
 
     output_parsed_data
 }
@@ -172,12 +189,14 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
 
 pub fn parse_python_resample_from_file_url_call(_py: Python, data: PyObject) -> ResampleSaveFileFromUrlData {
     let file_url: String = data.get_item(_py, "fileUrl").unwrap().to_string();
-    let target_spec = parse_target_spec(_py, data);
-    ResampleSaveFileFromUrlData { file_url, target_spec }
+    let target_spec = parse_target_spec(_py, &data);
+    let engine_api_data = parse_engine_api_data(_py, &data);
+    ResampleSaveFileFromUrlData { engine_api_data, target_spec, file_url }
 }
 
 pub fn parse_python_resample_from_local_file_call(_py: Python, data: PyObject) -> ResampleSaveFileFromLocalFileData {
     let source_filepath: String = data.get_item(_py, "sourceFilepath").unwrap().to_string();
-    let target_spec = parse_target_spec(_py, data);
-    ResampleSaveFileFromLocalFileData { source_filepath, target_spec }
+    let target_spec = parse_target_spec(_py, &data);
+    let engine_api_data = parse_engine_api_data(_py, &data);
+    ResampleSaveFileFromLocalFileData { engine_api_data, target_spec, source_filepath }
 }
