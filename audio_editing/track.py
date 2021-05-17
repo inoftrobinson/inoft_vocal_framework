@@ -81,12 +81,7 @@ class Track:
             player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
             volume: int = 50
     ) -> SpeechSound:
-        from inoft_vocal_framework.audio_editing import speech_synthesis
-        base_sound_kwargs = {
-            'player_start_time': player_start_time,
-            'player_end_time': player_end_time,
-            'volume_gain': volume
-        }
+
         created_sound = SpeechSound(
             text=text, voice_key=voice_key,
             player_start_time=player_start_time,
@@ -95,9 +90,3 @@ class Track:
         )
         self.add_sound(created_sound)
         return created_sound
-        """handler = speech_synthesis.get_handler()
-        created_sound: Optional[Sound] = handler(text, voice_key, base_sound_kwargs)
-        if created_sound is not None:
-            self.add_sound(created_sound)
-            return created_sound
-        return None  # todo: create a empty sound"""

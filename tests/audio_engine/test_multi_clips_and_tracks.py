@@ -56,13 +56,9 @@ class TestInputFormats(unittest.TestCase):
         )
 
         from inoft_vocal_engine.speech_synthesis.polly import VOICES
-        from inoft_vocal_engine.speech_synthesis.polly.client import SpeechSynthesisClient
-        response = SpeechSynthesisClient().synthesize(
+        voice_sound = track_1.create_speech(
             text="Je suis un test d'audio dynamique ?",
-            voice_id=VOICES.French_France_Female_CELINE.id
-        )
-        voice_sound = track_1.create_sound(
-            file_url=f"https://inoft-vocal-engine-web-test.s3.eu-west-3.amazonaws.com/{response[1]}",
+            voice_key=VOICES.French_France_Female_CELINE.id,
             player_start_time=track_1.player_start_time + 21,
         )
 
