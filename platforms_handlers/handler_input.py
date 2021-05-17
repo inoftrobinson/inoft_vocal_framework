@@ -9,6 +9,7 @@ from inoft_vocal_framework.platforms_handlers.notifications_subscribers import N
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
 from inoft_vocal_framework.user_data.user_data import UserData
+from inoft_vocal_framework.utils.formatters import normalize_intent_name
 
 
 class HandlerInput(CurrentUsedPlatformInfo):
@@ -306,8 +307,15 @@ class HandlerInput(CurrentUsedPlatformInfo):
             return self.bixbyHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
 
     def intent_name_switch(self, handlers: Dict[str, Callable], default_handler: Optional[Callable] = None) -> Optional[Any]:
+        handlers_with_formatted_keys: Dict[str, Callable] = {
+            normalize_intent_name(intent_name=intent_key_name): handler
+            for intent_key_name, handler in handlers.items()
+        }
         intent_name: Optional[str] = self.active_intent_name()
-        matching_handler: Optional[Callable] = handlers.get(intent_name, default_handler) if intent_name is not None else default_handler
+        matching_handler: Optional[Callable] = (
+            handlers_with_formatted_keys.get(intent_name, default_handler)
+            if intent_name is not None else default_handler
+        )
         return matching_handler() if matching_handler is not None else None
 
     def say(self, text_or_ssml: str) -> None:

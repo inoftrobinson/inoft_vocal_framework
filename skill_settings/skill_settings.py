@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 
 import click
 
@@ -28,13 +28,17 @@ class Settings:
     _INFRASTRUCTURE_TYPES_UNION = Union[INFRASTRUCTURE_ENGINE, INFRASTRUCTURE_NEXT_ENGINE, INFRASTRUCTURE_LOCAL_ENGINE, INFRASTRUCTURE_PROVIDED_AWS]
 
     def __init__(
-            self, infrastructure_speech_synthesis: _INFRASTRUCTURE_TYPES_UNION = INFRASTRUCTURE_ENGINE,
+            self, engine_account_id: Optional[str] = None, engine_project_id: Optional[str] = None, engine_api_key: Optional[str] = None,
+            infrastructure_speech_synthesis: _INFRASTRUCTURE_TYPES_UNION = INFRASTRUCTURE_ENGINE,
             characters_voices: Optional[dict] = None, deployment: Optional[Deployment] = None,
             database_sessions_users_data: DatabaseSessionsUsersData = DatabaseSessionsUsersData(),
             database_messages_content: DatabaseMessagesContent = DatabaseMessagesContent(),
             database_users_notifications_subscriptions: DatabaseUsersNotificationsSubscriptions = DatabaseUsersNotificationsSubscriptions(),
             plugins: Plugins = Plugins()
     ):
+        self.engine_account_id = engine_account_id
+        self.engine_project_id = engine_project_id
+        self.engine_api_key = engine_api_key
         self.infrastructure_speech_synthesis = infrastructure_speech_synthesis
         self.characters_voices = characters_voices
         self.deployment = deployment
@@ -120,12 +124,9 @@ def prompt_get_settings(root_folderpath: Optional[str] = None) -> Settings:
     # This code line is unreachable, no need for an additional exception
 
 
-if __name__ == "__main__":
-    Settings(characters_voices={})
-    """
-    "Léo": VOICES.French_France_Male_MATHIEU,
-    "Willie": VOICES.French_France_Female_CELINE,
-    "Luc": VOICES.Russian_Russia_Male_MAXIM,
-    "Menu": VOICES.Icelandic_Iceland_Male_KARL,
-    "default": VOICES.French_France_Female_CELINE
-    """
+INFRASTRUCTURE_TO_BASE_URL: Dict[str, str] = {
+    Settings.INFRASTRUCTURE_ENGINE: 'https://www.engine.inoft.com',
+    Settings.INFRASTRUCTURE_NEXT_ENGINE: 'https://www.next.engine.inoft.com',
+    Settings.INFRASTRUCTURE_LOCAL_ENGINE: 'http://127.0.0.1:5000',
+    Settings.INFRASTRUCTURE_PROVIDED_AWS: 'not yet implemented'  # todo: allow a method to use boto3 instead of the engine API
+}

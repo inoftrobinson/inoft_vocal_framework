@@ -2,6 +2,8 @@ from typing import Optional, List
 from pydantic import Field
 from pydantic.main import BaseModel
 
+from inoft_vocal_framework.utils.formatters import normalize_intent_name
+
 
 class Intent(BaseModel):
     name: str
@@ -131,14 +133,14 @@ class Request(BaseModel):
         return self.queryResult.queryText == "GOOGLE_ASSISTANT_WELCOME"
 
     def active_intent_name(self) -> str:
-        return self.queryResult.intent.displayName.lower()
+        return normalize_intent_name(intent_name=self.queryResult.intent.displayName)
 
     def is_in_intent_names(self, intent_names_list: List[str] or str) -> bool:
         intent_name: str = self.active_intent_name()
         if isinstance(intent_names_list, list):
-            return intent_name in [name.lower() for name in intent_names_list]
+            return intent_name in [normalize_intent_name(intent_name=name) for name in intent_names_list]
         elif isinstance(intent_names_list, str):
-            return intent_name == intent_names_list.lower()
+            return intent_name == normalize_intent_name(intent_name=intent_names_list)
         else:
             raise Exception(f"intent_names_list type not supported : {type(intent_names_list)}")
 

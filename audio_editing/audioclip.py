@@ -20,14 +20,16 @@ class AudioBlock:
         return {'tracks': serialized_tracks}
 
     def manual_render(
-            self, num_channels: int, sample_rate: int, bitrate: int, out_filepath: Optional[str] = None,
+            self, engine_account_id: str, engine_project_id: str, engine_api_key: str, override_engine_base_url: Optional[str],
+            num_channels: int, sample_rate: int, bitrate: int, out_filepath: Optional[str] = None,
             format_type: OUT_FORMATS_UNION = FORMAT_TYPE_MP3,
             export_target: EXPORT_TARGETS_UNION = EXPORT_TARGET_MANAGED_ENGINE
     ) -> str:
         from inoft_vocal_framework.audio_engine.audio_engine_wrapper import render
         return render(
-            audio_blocks=[self],
-            num_channels=num_channels, sample_rate=sample_rate, bitrate=bitrate,
+            engine_account_id=engine_account_id, engine_project_id=engine_project_id,
+            engine_api_key=engine_api_key, override_engine_base_url=override_engine_base_url,
+            audio_blocks=[self], num_channels=num_channels, sample_rate=sample_rate, bitrate=bitrate,
             out_filepath=out_filepath, out_format_type=format_type, export_target=export_target
         )
 

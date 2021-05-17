@@ -89,6 +89,8 @@ class Track:
             'volume_gain': volume
         }
         handler = speech_synthesis.get_handler()
-        created_sound = handler(text, voice_key, base_sound_kwargs)
-        self.add_sound(created_sound)
-        return created_sound
+        created_sound: Optional[Sound] = handler(text, voice_key, base_sound_kwargs)
+        if created_sound is not None:
+            self.add_sound(created_sound)
+            return created_sound
+        return None  # todo: create a empty sound

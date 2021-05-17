@@ -222,7 +222,12 @@ class DefaultFallback(InoftDefaultFallback):
 
 
 def lambda_handler(event, context):
-    skill_builder = InoftSkill(Settings())
+    skill_builder = InoftSkill(Settings(
+        engine_account_id="b1fe5939-032b-462d-92e0-a942cd445096",
+        engine_project_id="4ede8b70-46f6-4ae2-b09c-05a549194c8e",
+        engine_api_key="a2bf5ff8-bbd3-4d01-b695-04138ee19b42",
+        infrastructure_speech_synthesis=Settings.INFRASTRUCTURE_NEXT_ENGINE
+    ))
     skill_builder.add_request_handler(StartRequestHandler)
     skill_builder.add_state_handler(f4fbStateHandler)
     skill_builder.add_state_handler(d963StateHandler)

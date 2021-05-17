@@ -6,20 +6,21 @@ from inoft_vocal_framework.audio_editing.types import OUT_FORMATS_UNION, EXPORT_
 
 
 def render(
-    audio_blocks: List[AudioBlock], num_channels: int, sample_rate: int, bitrate: int,
-    out_format_type: OUT_FORMATS_UNION, export_target: EXPORT_TARGETS_UNION, out_filepath: Optional[str] = None
+        engine_account_id: str, engine_project_id: str, engine_api_key: str, override_engine_base_url: Optional[str],
+        audio_blocks: List[AudioBlock], num_channels: int, sample_rate: int, bitrate: int,
+        out_format_type: OUT_FORMATS_UNION, export_target: EXPORT_TARGETS_UNION, out_filepath: Optional[str] = None
 ) -> Optional[str]:
+
     from inoft_vocal_framework.audio_engine import audio_engine
     audio_blocks_data: List[dict] = list()
     for block in audio_blocks:
         audio_blocks_data.append(block.serialize())
 
-    # todo: is the accountId and projectId's required ?
     data = {
-        'overrideEngineBaseUrl': "http://127.0.0.1:5000",
-        'engineAccountId': "b1fe5939-032b-462d-92e0-a942cd445096",
-        'engineProjectId': "4ede8b70-46f6-4ae2-b09c-05a549194c8e",
-        'engineAccessToken': "a2bf5ff8-bbd3-4d01-b695-04138ee19b42",
+        'engineAccountId': engine_account_id,
+        'engineProjectId': engine_project_id,
+        'engineAccessToken': engine_api_key,
+        'overrideEngineBaseUrl': override_engine_base_url,
         'blocks': audio_blocks_data,
         'targetSpec': {
             'filepath': out_filepath,

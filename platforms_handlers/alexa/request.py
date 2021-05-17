@@ -1,6 +1,8 @@
 from typing import List, Dict, Optional
 from pydantic.main import BaseModel
 
+from inoft_vocal_framework.utils.formatters import normalize_intent_name
+
 
 class IntentSlot(BaseModel):
     value: str
@@ -29,8 +31,7 @@ class Request(BaseModel):
 
     def active_intent_name(self) -> Optional[str]:
         if self.type == self._IntentRequestKeyName:
-            formatted_intent_name = self.intent.name.lower()
-            return formatted_intent_name
+            return normalize_intent_name(intent_name=self.intent.name)
         return None
 
     def is_in_intent_names(self, intent_names_list: List[str] or str) -> bool:
@@ -39,14 +40,11 @@ class Request(BaseModel):
             return False
 
         if isinstance(intent_names_list, list):
-            return intent_name in [name.lower() for name in intent_names_list]
+            return intent_name in [normalize_intent_name(intent_name=name) for name in intent_names_list]
         elif isinstance(intent_names_list, str):
-            return intent_name == intent_names_list.lower()
+            return intent_name == normalize_intent_name(intent_name=intent_names_list)
         else:
-            raise Exception(
-                f"The intent_names_list must be a list or a str, but it was"
-                f" a {type(intent_names_list)} object : {intent_names_list}"
-            )
+            raise Exception(f"intent_names_list type not supported : {type(intent_names_list)}")
 
     def is_in_request_types(self, request_types_list: List[str] or str) -> bool:
         if isinstance(request_types_list, list):
