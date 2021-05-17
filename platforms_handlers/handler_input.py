@@ -1,6 +1,6 @@
 import logging
 from collections import Callable
-from typing import Optional, Any
+from typing import Optional, Any, List, Dict
 
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.dummy_object import DummyObject
@@ -289,6 +289,14 @@ class HandlerInput(CurrentUsedPlatformInfo):
         elif self.is_bixby is True:
             return self.bixbyHandlerInput.is_launch_request()
 
+    def active_intent_name(self) -> Optional[str]:
+        if self.is_alexa is True:
+            return self.alexaHandlerInput.active_intent_name()
+        elif self.is_dialogflow is True:
+            return self.dialogFlowHandlerInput.active_intent_name()
+        elif self.is_bixby is True:
+            return self.bixbyHandlerInput.active_intent_name()
+
     def is_in_intent_names(self, intent_names_list) -> bool:
         if self.is_alexa is True:
             return self.alexaHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
@@ -296,6 +304,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
             return self.dialogFlowHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
         elif self.is_bixby is True:
             return self.bixbyHandlerInput.is_in_intent_names(intent_names_list=intent_names_list)
+
+    def intent_name_switch(self, handlers: Dict[str, Callable], default_handler: Optional[Callable] = None) -> Optional[Any]:
+        intent_name: Optional[str] = self.active_intent_name()
+        matching_handler: Optional[Callable] = handlers.get(intent_name, default_handler) if intent_name is not None else default_handler
+        return matching_handler() if matching_handler is not None else None
 
     def say(self, text_or_ssml: str) -> None:
         if self.is_alexa is True:
@@ -595,8 +608,14 @@ class HandlerInputWrapper:
     def is_launch_request(self) -> bool:
         return self.handler_input.is_launch_request()
 
-    def is_in_intent_names(self, intent_names_list) -> bool:
+    def active_intent_name(self) -> Optional[str]:
+        return self.handler_input.active_intent_name()
+
+    def is_in_intent_names(self, intent_names_list: List[str] or str) -> bool:
         return self.handler_input.is_in_intent_names(intent_names_list=intent_names_list)
+
+    def intent_name_switch(self, handlers: Dict[str, Callable], default_handler: Optional[Callable] = None) -> Optional[Any]:
+        return self.handler_input.intent_name_switch(handlers=handlers, default_handler=default_handler)
 
     def say(self, text_or_ssml: str):
         self.handler_input.say(text_or_ssml=text_or_ssml)

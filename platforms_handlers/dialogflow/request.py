@@ -130,10 +130,17 @@ class Request(BaseModel):
     def is_launch_request(self) -> bool:
         return self.queryResult.queryText == "GOOGLE_ASSISTANT_WELCOME"
 
-    def is_in_intent_names(self, intent_names_list: list):
-        if self.queryResult.intent.displayName.lower() in [name.lower() for name in intent_names_list]:
-            return True
-        return False
+    def active_intent_name(self) -> str:
+        return self.queryResult.intent.displayName.lower()
+
+    def is_in_intent_names(self, intent_names_list: List[str] or str) -> bool:
+        intent_name: str = self.active_intent_name()
+        if isinstance(intent_names_list, list):
+            return intent_name in [name.lower() for name in intent_names_list]
+        elif isinstance(intent_names_list, str):
+            return intent_name == intent_names_list.lower()
+        else:
+            raise Exception(f"intent_names_list type not supported : {type(intent_names_list)}")
 
     def get_intent_parameter_value(self, parameter_key: str, default=None):
         return self.queryResult.parameters.get(dict_key=parameter_key).to_any(default=default)

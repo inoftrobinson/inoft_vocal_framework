@@ -1,5 +1,5 @@
 from collections import Callable
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import PrivateAttr, Field
 from pydantic.main import BaseModel
@@ -144,14 +144,7 @@ class DialogFlowHandlerInput(BaseModel, SurfaceCapabilities):
     def is_launch_request(self) -> bool:
         return self.request.is_launch_request()
 
-    def is_in_intent_names(self, intent_names_list) -> bool:
-        if not isinstance(intent_names_list, list):
-            if isinstance(intent_names_list, str):
-                intent_names_list = [intent_names_list]
-            else:
-                raise Exception(f"The intent_names_list must be a list or a str in order to be converted to a list,"
-                                f"but it was a {type(intent_names_list)} object : {intent_names_list}")
-
+    def is_in_intent_names(self, intent_names_list: List[str] or list) -> bool:
         return self.request.is_in_intent_names(intent_names_list=intent_names_list)
 
     def say(self, text_or_ssml: str) -> None:

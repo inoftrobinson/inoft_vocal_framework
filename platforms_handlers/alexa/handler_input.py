@@ -38,7 +38,10 @@ class AlexaHandlerInput(BaseModel):
     def is_launch_request(self) -> bool:
         return self.request.is_launch_request()
 
-    def is_in_intent_names(self, intent_names_list) -> bool:
+    def active_intent_name(self) -> Optional[str]:
+        return self.request.active_intent_name()
+
+    def is_in_intent_names(self, intent_names_list: List[str] or str) -> bool:
         return self.request.is_in_intent_names(intent_names_list=intent_names_list)
 
     def is_in_request_types(self, request_types_list: list):
