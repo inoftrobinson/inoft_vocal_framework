@@ -10,7 +10,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                         clips: vec![
                              AudioClip::new(
                                 String::from("clip-0"), String::from("file"),
-                                Some("F:/Sons utiles/Musics/Vintage (1940s) French Music/La Vie en Rose - Edith Piaf - Louiguy - Luypaerts.mp3".to_string()), None,
+                                None, Some("F:/Sons utiles/Musics/Vintage (1940s) French Music/La Vie en Rose - Edith Piaf - Louiguy - Luypaerts.mp3".to_string()), None,
                                 None, None,
                                 Some(100),
                                 vec![],
@@ -29,7 +29,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                             ),
                             AudioClip::new(
                                 String::from("clip-1"), String::from("file"),
-                                Some("F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string()), None,
+                                None, Some("F:/Sons utiles/Pour Vous J'Avais Fait Cette Chanson - Jean Sablon.wav".to_string()), None,
                                 None, None,
                                 Some(100),
                                 vec![],
@@ -48,7 +48,7 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
                             ),
                             AudioClip::new(
                                 String::from("clip-2"), String::from("file"),
-                                Some("F:/Sons utiles/70_Cm_ArpLoop_01_SP.wav".to_string()), None,
+                                None, Some("F:/Sons utiles/70_Cm_ArpLoop_01_SP.wav".to_string()), None,
                                 None, None,
                                 Some(100),
                                 vec![],
@@ -98,7 +98,7 @@ pub fn make_sample_project_data_2() -> ReceivedParsedData {
                         clips: vec![
                              AudioClip::new(
                                 String::from("clip-0"), String::from("file"),
-                                Some(String::from("../../samples/audio/hop_short_mp3.mp3")), None,
+                                None, Some(String::from("../../samples/audio/hop_short_mp3.mp3")), None,
                                 None, None,
                                 Some(50),
                                 vec![],

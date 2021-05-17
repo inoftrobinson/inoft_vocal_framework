@@ -15,6 +15,7 @@ pub struct TrackInfos {
 
 #[derive(Serialize, Deserialize)]
 pub struct ClipWithHashedChildren {
+    file_bytes: Option<Vec<u8>>,
     filepath: Option<String>,
     file_url: Option<String>,
     text: Option<String>,
@@ -122,6 +123,7 @@ impl<'a> AudioBlockHasher<'a> {
 
         let clip_with_hashed_children = serde_json::to_string(
             &ClipWithHashedChildren {
+                file_bytes: clip.file_bytes.clone(),
                 filepath: clip.filepath.clone(),
                 file_url: clip.file_url.clone(),
                 text: clip.text.clone(),

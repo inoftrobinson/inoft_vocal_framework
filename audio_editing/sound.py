@@ -159,7 +159,7 @@ class BaseSound(SoundProps):
 
 class Sound(BaseSound):
     def __init__(
-            self, local_filepath: Optional[str] = None, file_url: Optional[str] = None,
+            self, file_bytes: Optional[bytes] = None, local_filepath: Optional[str] = None, file_url: Optional[str] = None,
             volume_gain: Optional[float] = 0.0,
             player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
             player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
@@ -182,11 +182,13 @@ class Sound(BaseSound):
         if self.local_filepath is not None and not os.path.exists(self.local_filepath):
             raise Exception(f"No file has not been found at {self.local_filepath}")
         self.file_url = file_url
+        self.file_bytes = file_bytes
 
     def serialize(self) -> dict:
         return {
             **super().serialize(),
             'type': 'file',
+            'fileBytes': self.file_bytes,
             'localFilepath': self.local_filepath,
             'fileUrl': self.file_url,
         }

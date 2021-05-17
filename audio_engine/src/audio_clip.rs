@@ -11,17 +11,11 @@ use bytes::Bytes;
 // todo: do a benchmark comparison between WavHound and symphonia for opening WavFiles
 
 
-pub trait BaseClip<T> {
-    fn should_run(&mut self) -> bool;
-
-    fn alter_sample(&mut self, sample_value: T, sample_index: usize) -> T;
-}
-
-
 // todo: remove the passing and loading of clip ids ?
 pub struct AudioClip {
     pub clip_id: String,
     pub clip_type: String,
+    pub file_bytes: Option<Vec<u8>>,
     pub filepath: Option<String>,
     pub file_url: Option<String>,
     pub text: Option<String>,
@@ -41,14 +35,14 @@ pub struct AudioClip {
 impl AudioClip {
     pub fn new(
         clip_id: String, clip_type: String,
-        filepath: Option<String>, file_url: Option<String>,
+        file_bytes: Option<Vec<u8>>, filepath: Option<String>, file_url: Option<String>,
         text: Option<String>, voice_key: Option<String>,
         volume: Option<u16>, effects: Vec<Box<dyn BaseTransformer<i16>>>,
         player_start_time: Time, player_end_time: Time, file_start_time: f32, file_end_time: Option<f32>
     ) -> RefCell<AudioClip> {
         RefCell::new(AudioClip {
             clip_id, clip_type,
-            filepath, file_url,
+            file_bytes, filepath, file_url,
             text, voice_key,
             volume, effects: RefCell::new(effects),
             player_start_time, player_end_time,
@@ -60,13 +54,22 @@ impl AudioClip {
     }
 
     pub async fn resample(&mut self, trace: &mut TraceItem, engine_api_data: &EngineApiData, target_spec: WavSpec, limit_time_to_load: Option<f32>) {
-        // The order of the if statements below are not picked at random ! In case for some reasons multiple file data
-        // protocol have been passed to this audio clip (file_bytes, filepath or file_url), we will try to load the first
-        // cheapest protocol. The cheapest is loading from bytes, then loading from filepath, and finally loading from file url.
 
         let (samples, codec_params) = match self.clip_type.as_str() {
+            // The order of the if statements below are not picked at random ! In case for some reasons multiple file data
+            // protocol have been passed to this audio clip (file_bytes, filepath or file_url), we will try to load the first
+            // cheapest protocol. The cheapest is loading from bytes, then loading from filepath, and finally loading from file url.
             "file" => {
-                if self.filepath.is_none() != true {
+                if self.file_bytes.is_none() != true {
+                    let trace_decoding_from_bytes = trace.create_child(String::from("Decoding from bytes"));
+                    let boxed_file_bytes = self.file_bytes.as_ref().unwrap().clone().into_boxed_slice();
+                    let (samples, codec_params) = decoder::decode_from_bytes(
+                        trace_decoding_from_bytes, boxed_file_bytes, String::from("mp3"), self.file_start_time, limit_time_to_load
+                    );
+                    // todo: make file extension dynamic
+                    trace_decoding_from_bytes.close();
+                    (samples, codec_params)
+                } else if self.filepath.is_none() != true {
                     let trace_decoding_from_local_filepath = trace.create_child(String::from("Decoding from local filepath"));
                     let filepath = self.filepath.as_ref().unwrap();
                     let (samples, codec_params) = decoder::decode_from_local_filepath(
