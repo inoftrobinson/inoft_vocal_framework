@@ -1011,6 +1011,7 @@ name = "inoft_vocal_framework"
 version = "0.1.0"
 dependencies = [
  "audio_effects",
+ "base64 0.13.0",
  "bincode",
  "bytes 0.5.6",
  "claxon",

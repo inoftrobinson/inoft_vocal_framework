@@ -1,4 +1,4 @@
-use crate::models::{ReceivedParsedData, AudioBlock, Time};
+use crate::models::{ReceivedParsedData, AudioBlock, Time, EngineApiData};
 use std::num::Wrapping;
 use std::borrow::{BorrowMut};
 use crate::audio_clip::AudioClip;
@@ -56,7 +56,7 @@ impl Renderer {
             target_spec: target_wav_spec,
             rendered_clips_infos: HashMap::new(),
         };
-        renderer.render_to_vec(trace, &data.blocks).await;
+        renderer.render_to_vec(trace, &data.engine_api_data, &data.blocks).await;
         renderer.out_samples
     }
 
@@ -143,7 +143,7 @@ impl Renderer {
         } else { None }
     }
 
-    async fn render_to_vec(&mut self, trace: &mut TraceItem, audio_blocks: &Vec<AudioBlock>) {
+    async fn render_to_vec(&mut self, trace: &mut TraceItem, engine_api_data: &EngineApiData, audio_blocks: &Vec<AudioBlock>) {
         // todo: optimize the re-use of the multi file multiple times
         if audio_blocks.len() > 0 {
             // todo: fix that and support multiple audio blocks instead of just using the first one
@@ -176,7 +176,7 @@ impl Renderer {
                     trace_player_times_rendering.close();
 
                     let trace_resampling = trace_clip.create_child(String::from("resampling"));
-                    audio_clip.resample(trace_resampling, self.target_spec, limit_time_to_load).await;
+                    audio_clip.resample(trace_resampling, engine_api_data, self.target_spec, limit_time_to_load).await;
                     let audio_clip_resamples = audio_clip.resamples.as_ref().unwrap();
                     trace_resampling.close();
 

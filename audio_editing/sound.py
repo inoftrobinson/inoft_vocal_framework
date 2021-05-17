@@ -9,31 +9,16 @@ from inoft_vocal_framework.audio_editing.models import TrackStartTime, AudioStar
 class SoundProps:
     STRETCH_LOOP = 'loop'
 
-    def __init__(self):
-        pass
-
-class Sound(SoundProps):
+class BaseSound(SoundProps):
     def __init__(
-            self, file_bytes: Optional[bytes] = None, local_filepath: Optional[str] = None, file_url: Optional[str] = None,
-            volume_gain: Optional[float] = 0.0,
+            self, volume_gain: Optional[float] = 0.0,
             player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
             player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
             file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
             file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
-            stretch_method: SoundProps.STRETCH_LOOP = SoundProps.STRETCH_LOOP,
-            source_file_s3_bucket_name: Optional[str] = None, source_file_s3_bucket_region: Optional[str] = None,
-            source_file_s3_item_path: Optional[str] = None,
-            render_file_s3_bucket_name: Optional[str] = None, render_file_s3_bucket_region: Optional[str] = None,
-            render_file_s3_item_path: Optional[str] = None
+            stretch_method: SoundProps.STRETCH_LOOP = SoundProps.STRETCH_LOOP
     ):
-        super().__init__()
-
         self._id = str(uuid4())
-        self.local_filepath = local_filepath
-        if self.local_filepath is not None and not os.path.exists(self.local_filepath):
-            raise Exception(f"No file has not been found at {self.local_filepath}")
-        self.file_url = file_url
-        self.file_bytes = file_bytes
         self._volume = volume_gain
 
         self._player_start_time = player_start_time
@@ -50,9 +35,6 @@ class Sound(SoundProps):
     def serialize(self) -> dict:
         return {
             'id': self.id,
-            'fileBytes': self.file_bytes,
-            'localFilepath': self.local_filepath,
-            'fileUrl': self.file_url,
             'volume': self.volume,
             'playerStartTime': self._player_start_time.serialize(),
             'playerEndTime': self._player_end_time.serialize(),
@@ -173,3 +155,72 @@ class Sound(SoundProps):
         raise Exception("Not implemented")
         # self._audio_segment = self._audio_segment.reverse()
         return self
+
+
+class Sound(BaseSound):
+    def __init__(
+            self, local_filepath: Optional[str] = None, file_url: Optional[str] = None,
+            volume_gain: Optional[float] = 0.0,
+            player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
+            player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
+            file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
+            file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
+            stretch_method: SoundProps.STRETCH_LOOP = SoundProps.STRETCH_LOOP,
+            source_file_s3_bucket_name: Optional[str] = None, source_file_s3_bucket_region: Optional[str] = None,
+            source_file_s3_item_path: Optional[str] = None,
+            render_file_s3_bucket_name: Optional[str] = None, render_file_s3_bucket_region: Optional[str] = None,
+            render_file_s3_item_path: Optional[str] = None
+    ):
+        super().__init__(
+            volume_gain=volume_gain,
+            player_start_time=player_start_time, player_end_time=player_end_time,
+            file_start_time=file_start_time, file_end_time=file_end_time,
+            stretch_method=stretch_method
+        )
+
+        self.local_filepath = local_filepath
+        if self.local_filepath is not None and not os.path.exists(self.local_filepath):
+            raise Exception(f"No file has not been found at {self.local_filepath}")
+        self.file_url = file_url
+
+    def serialize(self) -> dict:
+        return {
+            **super().serialize(),
+            'type': 'file',
+            'localFilepath': self.local_filepath,
+            'fileUrl': self.file_url,
+        }
+
+
+class SpeechSound(BaseSound):
+    def __init__(
+            self, text: str, voice_key: str,
+            volume_gain: Optional[float] = 0.0,
+            player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
+            player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
+            file_start_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
+            file_end_time: Optional[int or float or AudioStartTime or TrackStartTime] = None,
+            stretch_method: SoundProps.STRETCH_LOOP = SoundProps.STRETCH_LOOP,
+            source_file_s3_bucket_name: Optional[str] = None, source_file_s3_bucket_region: Optional[str] = None,
+            source_file_s3_item_path: Optional[str] = None,
+            render_file_s3_bucket_name: Optional[str] = None, render_file_s3_bucket_region: Optional[str] = None,
+            render_file_s3_item_path: Optional[str] = None
+    ):
+        super().__init__(
+            volume_gain=volume_gain,
+            player_start_time=player_start_time, player_end_time=player_end_time,
+            file_start_time=file_start_time, file_end_time=file_end_time,
+            stretch_method=stretch_method
+        )
+
+        self.text = text
+        self.voice_key = voice_key
+        # todo: add check on voice_key
+
+    def serialize(self) -> dict:
+        return {
+            **super().serialize(),
+            'type': 'speech',
+            'text': self.text,
+            'voiceKey': self.voice_key,
+        }

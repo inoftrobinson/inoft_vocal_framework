@@ -1,7 +1,7 @@
 from typing import Optional, Dict, List
 from uuid import uuid4
 from inoft_vocal_framework.audio_editing.models import TrackStartTime
-from inoft_vocal_framework.audio_editing.sound import Sound, AudioStartTime
+from inoft_vocal_framework.audio_editing.sound import Sound, AudioStartTime, SpeechSound
 
 
 class Track:
@@ -30,13 +30,12 @@ class Track:
     def player_start_time(self) -> TrackStartTime:
         return TrackStartTime(track=self, offset=0)
 
-    def add_sound(self, sound: Sound):
-        if not isinstance(sound, Sound):
-            raise Exception(f"You can only add Sound objects to a Track but you tried to add {sound}")
-
+    def add_sound(self, sound: Sound or SpeechSound):
         if sound._in_use:
-            raise Exception(f"The same Sound object can be used only once. If you want, you can create a new "
-                            f"instance of the same Sound object, by doing   new_sound = my_sound.copy()")
+            raise Exception(
+                f"The same Sound object can be used only once. If you want, you can create a new "
+                f"instance of the same Sound object, by doing   new_sound = my_sound.copy()"
+            )
         sound._in_use = True
         sound.append_sound_after_last_one = True
         self._sounds[sound.id] = sound
@@ -81,16 +80,24 @@ class Track:
             player_start_time: Optional[AudioStartTime or TrackStartTime] = None,
             player_end_time: Optional[AudioStartTime or TrackStartTime] = None,
             volume: int = 50
-    ) -> Sound:
+    ) -> SpeechSound:
         from inoft_vocal_framework.audio_editing import speech_synthesis
         base_sound_kwargs = {
             'player_start_time': player_start_time,
             'player_end_time': player_end_time,
             'volume_gain': volume
         }
-        handler = speech_synthesis.get_handler()
+        created_sound = SpeechSound(
+            text=text, voice_key=voice_key,
+            player_start_time=player_start_time,
+            player_end_time=player_end_time,
+            volume_gain=volume
+        )
+        self.add_sound(created_sound)
+        return created_sound
+        """handler = speech_synthesis.get_handler()
         created_sound: Optional[Sound] = handler(text, voice_key, base_sound_kwargs)
         if created_sound is not None:
             self.add_sound(created_sound)
             return created_sound
-        return None  # todo: create a empty sound
+        return None  # todo: create a empty sound"""

@@ -17,6 +17,8 @@ pub struct TrackInfos {
 pub struct ClipWithHashedChildren {
     filepath: Option<String>,
     file_url: Option<String>,
+    text: Option<String>,
+    voice_key: Option<String>,
     volume: Option<u16>,
     player_start_time: Time,
     player_end_time: Time,
@@ -122,6 +124,8 @@ impl<'a> AudioBlockHasher<'a> {
             &ClipWithHashedChildren {
                 filepath: clip.filepath.clone(),
                 file_url: clip.file_url.clone(),
+                text: clip.text.clone(),
+                voice_key: clip.voice_key.clone(),
                 volume: clip.volume,
                 player_start_time: self.render_time(&clip.player_start_time),
                 player_end_time: self.render_time(&clip.player_end_time),

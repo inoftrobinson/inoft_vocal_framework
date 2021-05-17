@@ -1,5 +1,4 @@
-use symphonia::core::probe::ProbeResult;
-use symphonia::core::formats::{Cue, Stream};
+use symphonia::core::formats::{Stream};
 use symphonia::core::meta::{Tag, Visual, ColorMode};
 
 /*pub fn pretty_print_format(path: &str, probed: &ProbeResult) {

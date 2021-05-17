@@ -13,6 +13,7 @@ extern crate cpython;
 #[path="hasher.rs"] pub mod hasher;
 #[path="tracer.rs"] pub mod tracer;
 #[path="saver.rs"] pub mod saver;
+#[path="engine_api_client.rs"] pub mod engine_api_client;
 #[path="generators/mod.rs"] pub mod generators;
 #[path="tests/mod.rs"] pub mod tests;
 
@@ -23,6 +24,7 @@ use cpython::{PyResult, PyDict, Python, py_module_initializer, py_fn, PyObject};
 use crate::models::{ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData, ReceivedTargetSpec, EngineApiData};
 use symphonia_core::codecs::CodecParameters;
 use std::error::Error;
+use std::ptr::null;
 
 
 py_module_initializer!(audio_engine, |py, m| {
@@ -89,6 +91,8 @@ pub fn resample_save_file_from_url(_py: Python, data: PyObject) -> PyResult<PyDi
 }
 
 
+
+
 pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
     let mut trace = TraceItem::new(String::from("render"));
 
@@ -100,11 +104,12 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
 
     let engine_base_s3_url = "https://s3.eu-west-3.amazonaws.com/dist.engine.inoft.com";
     let expected_render_url = format!(
-        "{}/{}/{}/files/{}.mp3",
+        "{}/{}/{}/files/{}.{}",
         engine_base_s3_url,
         parsed_data.engine_api_data.engine_account_id.borrow().as_ref().unwrap(),
         parsed_data.engine_api_data.engine_project_id.borrow().as_ref().unwrap(),
-        expected_render_file_hash
+        expected_render_file_hash,
+        parsed_data.target_spec.format_type
     );
     trace_initialization.close();
 
