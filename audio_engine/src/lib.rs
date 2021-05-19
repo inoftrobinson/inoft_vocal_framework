@@ -122,21 +122,25 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
         trace.close();
         output_dict.set_item(_py, "success", true).unwrap();
         output_dict.set_item(_py, "fileUrl", expected_render_url).unwrap();
+        output_dict.set_item(_py, "trace", trace.to_pydict(_py)).unwrap();
     } else {
         let result = runtime.block_on(append::main(&mut trace, parsed_data, expected_render_file_hash));
         match result {
             Ok(file_url) => {
+                trace.close();
                 output_dict.set_item(_py, "success", true).unwrap();
                 output_dict.set_item(_py, "fileUrl", file_url).unwrap();
+                output_dict.set_item(_py, "trace", trace.to_pydict(_py)).unwrap();
             },
             Err(err) => {
+                trace.close();
                 output_dict.set_item(_py, "success", false).unwrap();
                 output_dict.set_item(_py, "error", err.to_string()).unwrap();
+                output_dict.set_item(_py, "trace", trace.to_pydict(_py)).unwrap();
                 // todo: re-add returning of errors
             }
         }
-        trace.close();
     }
-    trace.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/trace.json");
+    // trace.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/trace.json");
     Ok(output_dict)
 }

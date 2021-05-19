@@ -1,10 +1,12 @@
 use serde::Serialize;
 use std::time::Instant;
 use std::fs::File;
+use cpython::{PyDict, Python, PyList, PyObject, PythonObject, PyInt, PyLong, ToPyObject};
+
 
 pub struct TraceItem {
     pub name: String,
-    pub elapsed: u128,
+    pub elapsed: u64,
     pub child: Option<Vec<TraceItem>>,
     start_instant: Instant
 }
@@ -12,9 +14,10 @@ pub struct TraceItem {
 #[derive(Serialize)]
 pub struct SerializedTraceItemData {
     pub n: String,  // name
-    pub v: u128,  // value (elapsed)
+    pub v: u64,  // value (elapsed)
     pub c: Option<Vec<SerializedTraceItemData>>  // child
 }
+
 
 impl TraceItem {
     pub fn new(name: String) -> TraceItem {
@@ -29,7 +32,7 @@ impl TraceItem {
     }
 
     pub fn close(&mut self) {
-        self.elapsed = self.start_instant.elapsed().as_micros();
+        self.elapsed = self.start_instant.elapsed().as_micros() as u64;
         println!("{} took {}s", self.name, self.elapsed as f32 / 1000000.0);
     }
 
@@ -38,11 +41,10 @@ impl TraceItem {
         if self.child.is_none() {
             serialized_child = None;
         } else {
-            let mut active_child: Vec<SerializedTraceItemData> = Vec::new();
-            for children in self.child.as_ref().unwrap() {
-                active_child.push(children.serialize());
-            }
-            serialized_child = Some(active_child);
+            let children: Vec<SerializedTraceItemData> = self.child.as_ref().unwrap()
+                .iter().map(|c| c.serialize())
+                .collect();
+            serialized_child = Some(children);
         }
         SerializedTraceItemData {
             n: self.name.clone(),
@@ -53,6 +55,20 @@ impl TraceItem {
 
     pub fn to_string(&self) -> String {
         serde_json::to_string(&self.serialize()).unwrap()
+    }
+
+    pub fn to_pydict(&self, _py: Python) -> PyDict {
+        let output_dict = PyDict::new(_py);
+        output_dict.set_item(_py, "n", self.name.clone()).unwrap();
+        output_dict.set_item(_py, "v", self.elapsed).unwrap();
+
+        if !self.child.is_none() {
+            let child_items: Vec<PyObject> = self.child.as_ref().unwrap()
+                .iter().map(|c| c.to_pydict(_py).into_object())
+                .collect();
+            output_dict.set_item(_py, "c", PyList::new(_py, &child_items)).unwrap();
+        }
+        output_dict
     }
 
     pub fn to_file(&self, filepath: &str) {

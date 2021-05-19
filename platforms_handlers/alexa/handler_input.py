@@ -11,6 +11,7 @@ from inoft_vocal_framework.platforms_handlers.alexa.response import Response
 from inoft_vocal_framework.platforms_handlers.alexa.session import Session
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
+from inoft_vocal_framework.trace_item import TraceItem
 
 
 class AlexaHandlerInput(BaseModel):
@@ -63,7 +64,9 @@ class AlexaHandlerInput(BaseModel):
         # todo: stop using the infrastructure_speech_synthesis setting, and use a kind of 'audio_engine' setting ?
         override_engine_base_url = INFRASTRUCTURE_TO_BASE_URL.get(self._parent_handler_input.settings.infrastructure_speech_synthesis, '')
         # todo: only include if the engine is not INFRASTRUCTURE_ENGINE
-        file_url = audio_block.manual_render(
+
+        audio_block_rendering_trace: TraceItem = self._parent_handler_input.trace.create_child(name="Audio block rendering")
+        file_url, trace = audio_block.manual_render(
             engine_account_id=self._parent_handler_input.settings.engine_account_id,
             engine_project_id=self._parent_handler_input.settings.engine_project_id,
             engine_api_key=self._parent_handler_input.settings.engine_api_key,
@@ -71,6 +74,9 @@ class AlexaHandlerInput(BaseModel):
             num_channels=num_channels, sample_rate=sample_rate, bitrate=48,
             out_filepath="null", format_type="mp3"
         )
+        audio_block_rendering_trace.add_child(child_item=trace)
+        audio_block_rendering_trace.close()
+
         # todo: make out_filepath argument optional
         self.say_ssml(f'<audio src="{file_url}" />')
         return True  # todo: return False is rendering failed

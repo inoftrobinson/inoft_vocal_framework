@@ -8,6 +8,7 @@ from inoft_vocal_framework.platforms_handlers.current_used_platform_info import 
 from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
+from inoft_vocal_framework.trace_item import TraceItem
 from inoft_vocal_framework.user_data.user_data import UserData
 from inoft_vocal_framework.utils.formatters import normalize_intent_name
 
@@ -43,6 +44,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput, self._discordHandlerInput = None, None, None, None
 
         self._user_data = None
+        self.trace = TraceItem(name='__root__')
 
     @property
     def _settings(self) -> Settings:

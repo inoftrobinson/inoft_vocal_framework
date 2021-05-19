@@ -1,6 +1,6 @@
 import time
 from inoft_vocal_framework.audio_editing.track import Track
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 from inoft_vocal_framework.audio_editing.types import FORMAT_TYPE_WAV, FORMAT_TYPE_MP3, OUT_FORMATS_UNION, \
     EXPORT_TARGET_MANAGED_ENGINE, EXPORT_TARGET_LOCAL, EXPORT_TARGETS_UNION
 
@@ -24,7 +24,7 @@ class AudioBlock:
             num_channels: int, sample_rate: int, bitrate: int, out_filepath: Optional[str] = None,
             format_type: OUT_FORMATS_UNION = FORMAT_TYPE_MP3,
             export_target: EXPORT_TARGETS_UNION = EXPORT_TARGET_MANAGED_ENGINE
-    ) -> str:
+    ) -> Tuple[str, Optional[dict]]:
         from inoft_vocal_framework.audio_engine.audio_engine_wrapper import render
         return render(
             engine_account_id=engine_account_id, engine_project_id=engine_project_id,

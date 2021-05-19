@@ -1,6 +1,6 @@
 import os
 from enum import Enum
-from typing import List, Union, Any, Dict, Optional
+from typing import List, Union, Any, Dict, Optional, Tuple
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.audio_editing.types import OUT_FORMATS_UNION, EXPORT_TARGETS_UNION
 
@@ -9,7 +9,7 @@ def render(
         engine_account_id: str, engine_project_id: str, engine_api_key: str, override_engine_base_url: Optional[str],
         audio_blocks: List[AudioBlock], num_channels: int, sample_rate: int, bitrate: int,
         out_format_type: OUT_FORMATS_UNION, export_target: EXPORT_TARGETS_UNION, out_filepath: Optional[str] = None
-) -> Optional[str]:
+) -> Tuple[Optional[str], Optional[dict]]:
 
     from inoft_vocal_framework.audio_engine import audio_engine
     audio_blocks_data: List[dict] = list()
@@ -35,11 +35,12 @@ def render(
         audio_engine_response: Optional[dict] = audio_engine.render(data)
         if audio_engine_response is not None:
             success: bool = audio_engine_response.get('success', False)
-            return audio_engine_response.get('fileUrl', None) if success is True else None
-        return None
+            trace: Optional[dict] = audio_engine_response.get('trace', None)
+            return audio_engine_response.get('fileUrl', None) if success is True else None, trace
+        return None, None
     except Exception as e:
         print(e)
-        return None
+        return None, None
 
 def resample_save_file_from_url(
     file_url: str, out_filepath: str,

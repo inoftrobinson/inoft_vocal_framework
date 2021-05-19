@@ -7,6 +7,7 @@ from typing import List, Callable, Any, Optional
 
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_value_not_in_list, raise_if_variable_not_expected_type
+from inoft_vocal_framework.middlewares.base_middleware import BaseMiddleware
 from inoft_vocal_framework.platforms_handlers.endpoints_providers.providers import LambdaResponseWrapper
 from inoft_vocal_framework.platforms_handlers.handler_input import HandlerInput, HandlerInputWrapper
 from inoft_vocal_framework.plugins.loader import plugins_load
@@ -136,6 +137,11 @@ class InoftSkill:
         # todo: reactivate plugins
         InoftSkill.APP_SETTINGS = self.settings
 
+        from inoft_vocal_framework.middlewares.inoft_vocal_engine.analytics import InteractionLogger
+        self._middlewares: List[BaseMiddleware] = [
+            InteractionLogger(skill=self)
+        ]
+
         self._request_handlers_chain = dict()
         self._state_handlers_chain = dict()
         self._default_fallback_handler = None
@@ -149,6 +155,10 @@ class InoftSkill:
     def settings(self, settings: Settings) -> None:
         raise_if_variable_not_expected_type(value=settings, expected_type=Settings, variable_name="settings")
         self._settings = settings
+
+    @property
+    def middlewares(self) -> List[BaseMiddleware]:
+        return self._middlewares
 
     def add_request_handler(self, request_handler_instance_or_class) -> None:
         if request_handler_instance_or_class is not None:
@@ -248,8 +258,8 @@ class InoftSkill:
                 from inoft_vocal_framework.skill_builder import get_function_or_class_from_file_and_path
                 handler_to_use = get_function_or_class_from_file_and_path(
                     file_filepath=infos_callback_function_to_use.get("file_filepath_containing_callback").to_str(),
-                    path_qualname=infos_callback_function_to_use.get("callback_function_path").to_str())
-
+                    path_qualname=infos_callback_function_to_use.get("callback_function_path").to_str()
+                )
                 if handler_to_use is not None:
                     handler_is_an_alone_callback_function = True
 
@@ -352,6 +362,10 @@ class InoftSkill:
             output_event = self.default_fallback_handler.handle()
 
         self.handler_input.save_attributes_if_need_to()
+        self.handler_input.trace.close()
+
+        for middleware in self.middlewares:
+            middleware.on_interaction_end()
 
         if self.handler_input.is_discord is not True:
             print(f"output_event = {output_event}")

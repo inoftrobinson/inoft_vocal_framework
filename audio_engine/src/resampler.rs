@@ -75,7 +75,7 @@ fn print_resampling_starting(source_num_samples: usize, source_sample_rate: u32,
     );
 }
 
-fn print_resampling_completed(execution_time: u128, num_returned_samples: usize) {
+fn print_resampling_completed(execution_time: u64, num_returned_samples: usize) {
     println!(
         "\nResampling completed.\
         \n  --execution_time:{}ms\
