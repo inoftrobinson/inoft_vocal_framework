@@ -55,9 +55,10 @@ class InteractionLogger(BaseMiddleware):
             'userId': self.skill.handler_input.persistent_user_id,
             'platformType': self.skill.handler_input.platform,
             # 'deviceType': self.skill.handler_input.alexaHandlerInput.
-            # 'freeFields':
-
-
+            'latencyTime': self.skill.handler_input.trace.elapsed,
+            'responseTime': 0,
+            'tracingIsAvailable': True,
+            'fields': {}
         }
         serialized_trace: dict = self.skill.handler_input.trace.serialize()
 
@@ -71,8 +72,9 @@ class InteractionLogger(BaseMiddleware):
         base_project_api_url = f"http://127.0.0.1:5000/api/v1/{InoftSkill.APP_SETTINGS.engine_account_id}/{InoftSkill.APP_SETTINGS.engine_project_id}"
         response = requests.post(
             url=f"{base_project_api_url}/analytics/interactions/post-prepared",
-            json=data
+            json={**data, 'accessToken': InoftSkill.APP_SETTINGS.engine_api_key}
         )
+        print(response)
 
 if __name__ == '__main__':
     _skill = InoftSkill(Settings(
