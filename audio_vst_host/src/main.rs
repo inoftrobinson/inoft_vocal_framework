@@ -66,6 +66,23 @@ fn main() {
     instance.init();
     println!("Initialized instance!");
 
+    let preset_name = instance.get_parameter_object().get_preset_name(0);
+    println!("preset : {}", preset_name);
+
+    instance.get_parameter_object().set_parameter(0, 100.0);
+    instance.get_parameter_object().set_parameter(1, 100.0);
+    instance.get_parameter_object().string_to_parameter(2, 2.0.to_string());
+    instance.get_parameter_object().set_parameter(3, 60.0);
+    instance.get_parameter_object().set_parameter(4, 100.0);
+    instance.get_parameter_object().set_parameter(5, 60.0);
+    instance.get_parameter_object().set_parameter(6, 5000.0);
+    // instance.get_parameter_object().set_preset_name(preset_name);
+    for idx in 0..info.parameters {
+        println!("{}", instance.get_parameter_object().get_parameter_name(idx));
+        println!("{}", instance.get_parameter_object().get_parameter(idx));
+        // instance.get_parameter_object().set_parameter(idx, 100.0);
+    }
+
     let mut buffer = hound::WavReader::open("../samples/audio/hop_short_wav_16bit.wav").unwrap();
     // let samples = buffer.samples();
     // let mut audio_buffer: AudioBuffer<f64> = AudioBuffer::try_from(buffer.samples().buffer()).unwrap();
@@ -107,11 +124,11 @@ fn main() {
         )
     };
     println!("Buffer created");
-    // instance.process(audio_buffer.borrow_mut());
+    instance.process(audio_buffer.borrow_mut());
 
     let split = audio_buffer.split();
-    let channel = split.0.get(0);
-    let channel2 = split.0.get(1);
+    let channel = split.1.get(0);
+    let channel2 = split.1.get(1);
     let mut finale = channel.to_vec();
     finale.append(&mut channel2.to_vec());
     write_wav_samples_to_file(
