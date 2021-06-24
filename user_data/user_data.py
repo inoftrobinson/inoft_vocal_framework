@@ -1,5 +1,5 @@
 from typing import Optional, Any, List, Dict
-from StructNoSQL import CachingTable, PrimaryIndex, FieldSetter, FieldGetter, FieldRemover, TableDataModel, BaseField
+from StructNoSQL import InoftVocalEngineCachingTable, PrimaryIndex, FieldSetter, FieldGetter, FieldRemover, TableDataModel, BaseField
 
 
 class BaseDataModel(TableDataModel):
@@ -7,14 +7,14 @@ class BaseDataModel(TableDataModel):
     thenState = BaseField(name='thenState', field_type=str, required=False)
     lastIntentHandler = BaseField(name='lastIntentHandler', field_type=str, required=False)
 
-class UserDataTableClient(CachingTable):
+class UserDataTableClient(InoftVocalEngineCachingTable):
     def __init__(self, table_name: str, region_name: str):
         primary_index = PrimaryIndex(hash_key_name='userId', hash_key_variable_python_type=str)
         super().__init__(
-            table_name=table_name, region_name=region_name,
-            data_model=BaseDataModel(),
-            primary_index=primary_index,
-            auto_create_table=False
+            # table_name=table_name, region_name=region_name,
+            data_model=BaseDataModel,
+            # primary_index=primary_index,
+            # auto_create_table=False
             # We set auto_create_table to False, because in a deployment on the inoft-vocal-engine,
             # the application will not have the required permissions to create a table. Its better to
             # get a simple Error from StructNoSQL if the table is missing, than a ClientError from AWS.
