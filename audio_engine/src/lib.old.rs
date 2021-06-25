@@ -13,7 +13,7 @@ use models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, Time};
 #[path="audio_clip.rs"] mod audio_clip;
 #[path="loader.rs"] pub mod loader;
 #[path="hasher.rs"] pub mod hasher;
-#[path="tests/mod.rs"] pub mod tests;
+#[path="tests/vst_gui_rs"] pub mod tests;
 
 use audio_clip::AudioClip;
 

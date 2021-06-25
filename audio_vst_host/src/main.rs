@@ -1,6 +1,17 @@
 // mod window;
 
+#[macro_use]
 extern crate vst;
+extern crate libc;
+
+#[cfg(windows)]
+#[macro_use]
+extern crate memoffset;
+#[cfg(windows)]
+#[macro_use]
+extern crate winapi;
+
+mod windows_opengl_vst;
 
 use std::env;
 use std::path::Path;
@@ -16,6 +27,12 @@ use vst::buffer::AudioBuffer;
 use std::convert::TryFrom;
 use std::borrow::BorrowMut;
 
+use beryllium::*;
+use gl33::*;
+use ogl33::c_void;
+use std::any::Any;
+use std::ops::Deref;
+
 
 #[allow(dead_code)]
 struct SampleHost;
@@ -27,13 +44,29 @@ impl Host for SampleHost {
 }
 
 fn main() {
+    let sdl = SDL::init(InitFlags::Everything).expect("couldn't start SDL");
+    sdl.gl_set_attribute(SdlGlAttr::MajorVersion, 3).unwrap();
+    sdl.gl_set_attribute(SdlGlAttr::MinorVersion, 3).unwrap();
+    sdl.gl_set_attribute(SdlGlAttr::Profile, GlProfile::Core).unwrap();
+
+    let _win = sdl
+        .create_gl_window(
+            "Sample window",
+            WindowPosition::Centered,
+            800,
+            600,
+            WindowFlags::Shown,
+        )
+        .expect("couldn't make a window and context");
+
     /*let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
         println!("usage: simple_host path/to/vst");
         process::exit(1);
     }*/
 
-    let st_path = "C:/Users/LABOURDETTE/Downloads/DragonflyReverb-Windows-64bit-v3.2.5/DragonflyReverb-Windows-64bit-v3.2.5/DragonflyEarlyReflections-vst.dll";
+    // let st_path = "C:/Users/LABOURDETTE/Downloads/DragonflyReverb-Windows-64bit-v3.2.5/DragonflyReverb-Windows-64bit-v3.2.5/DragonflyEarlyReflections-vst.dll";
+    let st_path = "C:/Program Files/Steinberg/VSTPlugins/Brusfri.dll";
     let path = Path::new(st_path);  // &args[1]);
 
     // Create the host
@@ -69,6 +102,7 @@ fn main() {
     let preset_name = instance.get_parameter_object().get_preset_name(0);
     println!("preset : {}", preset_name);
 
+    // instance.get_parameter_object().
     instance.get_parameter_object().set_parameter(0, 100.0);
     instance.get_parameter_object().set_parameter(1, 100.0);
     instance.get_parameter_object().string_to_parameter(2, 2.0.to_string());
@@ -82,6 +116,26 @@ fn main() {
         println!("{}", instance.get_parameter_object().get_parameter(idx));
         // instance.get_parameter_object().set_parameter(idx, 100.0);
     }
+
+    // let window = windows_opengl_vst::
+
+    let win_ref: &GlWindow = &_win;
+    // win_ref.get_proc_address(b"window");
+    /*if my_num_ptr.is_null() {
+        panic!("failed to allocate memory");
+    }*/
+    // let win_pointer = win_ref as *mut libc::c_void;
+    // libc::free(my_num as *mut libc::c_void);
+
+    let mut bar: *mut GlWindow = std::ptr::null_mut();
+    // let mut_ref: &mut *mut GlWindow = &mut bar;
+    /*let raw_ptr: *mut *mut foo = mut_ref as *mut *mut _;
+    let void_cast: *mut *mut c_void = raw_ptr as *mut *mut c_void;*/
+    let raw_ptr: *mut GlWindow = bar as *mut _;
+    let void_cast: *mut c_void = raw_ptr as *mut c_void;
+    // unsafe { ffi(void_cast); }
+
+    instance.get_editor().unwrap().open(void_cast);
 
     let mut buffer = hound::WavReader::open("../samples/audio/hop_short_wav_16bit.wav").unwrap();
     // let samples = buffer.samples();
@@ -146,6 +200,26 @@ fn main() {
     // Close the instance. This is not necessary as the instance is shut down when
     // it is dropped as it goes out of scope.
     // drop(instance);
+
+    // vst_gui_rs::synth::main(_win);
+
+    'main_loop: loop {
+        // handle events this frame
+        while let Some(event) = sdl.poll_events().and_then(Result::ok) {
+          match event {
+            Event::Quit(_) => break 'main_loop,
+            _ => (),
+          }
+        }
+        // now the events are clear
+
+        // here's where we could change the world state and draw.
+      }
+    println!("ended things");
+}
+
+unsafe fn rar(mut win: GlWindow) {
+
 }
 
 pub fn write_wav_samples_to_file(wav_samples: Vec<f32>, wav_target_spec: WavSpec, filepath: &str) -> Result<String, Box<hound::Error>> {

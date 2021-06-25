@@ -10,3 +10,19 @@ edition = "2018"
 vst = "0.2.1"
 winapi = "0.2.8"
 hound = "3.4.0"
+log = "0.4"
+simplelog = "^0.5.0" # TODO: get exact version
+user32-sys = "0.2.*" # TODO: get exact version
+kernel32-sys = "0.2.*" # TODO: get exact version
+gdi32-sys = "0.2.0"
+opengl32-sys = "*" # TODO: get exact version
+gl = "*" # TODO: get exact version
+rand = "*" # TODO: get exact version
+
+libc = "0.2"
+gl33 = "0.2.1"
+ogl33 = { version = "0.2.0", features = ["debug_error_checks"]}
+beryllium = { version = "0.2.1" }
+
+[target.'cfg(windows)'.dependencies]
+memoffset = "0.2.1"
