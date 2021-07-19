@@ -135,8 +135,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._user_data
 
     @property
-    def smart_session_user_data(self) -> SafeDict:
-        return DummyObject()
+    def smart_session_user_data(self) -> dict:
         if self._smart_session_user_data is None:
             self._load_smart_session_user_data()
         return self._smart_session_user_data
@@ -161,7 +160,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     @property
     def persistent_user_id(self) -> str:
-        if not isinstance(self._persistent_user_id, str) or (self._persistent_user_id.replace(" ", "") == ""):
+        if not isinstance(self._persistent_user_id, str) or (not (len(self._persistent_user_id.replace(" ", "")) > 0)):
             user_id: Optional[str] = None
             if self.is_alexa is True:
                 user_id = SafeDict(self.alexaHandlerInput.session.user).get('userId').to_str(default=None)
@@ -185,9 +184,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._persistent_user_id
 
     @property
-    def interactivity_callback_functions(self) -> SafeDict:
+    def interactivity_callback_functions(self) -> dict:
         if self._interactivity_callback_functions is None:
-            self._interactivity_callback_functions = self.smart_session_user_data.get("interactivityCallbackFunctions").to_safedict()
+            self._interactivity_callback_functions: Optional[dict] = self.smart_session_user_data.get("interactivityCallbackFunctions")
         return self._interactivity_callback_functions
 
     def load_event(self, event: dict) -> None:
@@ -397,7 +396,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 self.data_for_database_has_been_modified = True
 
             for key_item, value_item in data_dict.items():
-                self.smart_session_user_data.put(dict_key=key_item, value_to_put=value_item)
+                self.smart_session_user_data[key_item] = value_item
 
     def session_remember(self, data_key: str, specific_object_type=None):
         # todo: re-activate that
@@ -411,7 +410,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def session_forget(self, data_key: str) -> None:
         self.data_for_database_has_been_modified = True
-        self.smart_session_user_data.pop(dict_key=data_key)
+        self.smart_session_user_data.pop(data_key)
 
     def memorize_session_then_state(self, state_handler_class_type_or_name) -> None:
         from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftStateHandler
@@ -497,8 +496,8 @@ class HandlerInput(CurrentUsedPlatformInfo):
             if self.settings.database_sessions_users_data.disable_database is not True:
                 self._attributes_dynamodb_adapter.save_attributes(
                     user_id=self.persistent_user_id, session_id=self.session_id,
-                    smart_session_attributes=self.smart_session_user_data.to_dict(),
-                    persistent_attributes=self.persistent_user_data.to_dict()
+                    smart_session_attributes=self.smart_session_user_data,
+                    persistent_attributes=self.persistent_user_data
                 )
 
     def _alexa_to_platform_dict(self) -> dict:

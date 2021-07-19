@@ -3,9 +3,9 @@ from StructNoSQL import InoftVocalEngineCachingTable, PrimaryIndex, FieldSetter,
 
 
 class BaseDataModel(TableDataModel):
-    userId = BaseField(name='userId', field_type=str, required=True)
-    thenState = BaseField(name='thenState', field_type=str, required=False)
-    lastIntentHandler = BaseField(name='lastIntentHandler', field_type=str, required=False)
+    userId = BaseField(field_type=str, required=True)
+    thenState = BaseField(field_type=str, required=False)
+    lastIntentHandler = BaseField(field_type=str, required=False)
 
 class UserDataTableClient(InoftVocalEngineCachingTable):
     def __init__(self, table_name: str, region_name: str):

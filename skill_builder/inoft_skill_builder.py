@@ -366,7 +366,6 @@ class InoftSkill:
 
     @staticmethod
     def _get_alexa_application_id_from_event(event: dict) -> Optional[str]:
-        # return SafeDict(event).get("context").get("System").get("application").get("applicationId").to_str()
         context: Optional[dict] = event.get('context', None)
         if context is not None:
             system: Optional[dict] = context.get('System', None)

@@ -1,8 +1,10 @@
 import logging
+from typing import Optional
+
+from pydantic import BaseModel
 
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type, raise_if_value_not_in_list, raise_if_variable_not_expected_type_and_not_none
-from inoft_vocal_framework.safe_dict import SafeDict
 
 
 # todo: refactor to Pydantic
@@ -103,23 +105,27 @@ class AudioPlayer:
         self._clearBehavior = clearBehavior
 
 
-class AudioItemObject(object):
+class AudioItemObject:
     # This object is not used for parsing, but for data manipulation
     def __init__(self, identifier: str, audio_item_dict: dict = None):
         self.identifier = identifier
 
         if audio_item_dict is not None:
-            if isinstance(audio_item_dict, dict):
-                audio_item_dict = SafeDict(audio_item_dict)
-            if not isinstance(audio_item_dict, SafeDict):
-                raise Exception(f"The audio_item_dict must be of type dict or SafeDict but was {type(audio_item_dict)}: {audio_item_dict}")
+            class DataModel(BaseModel):
+                url: Optional[str] = None
+                title: Optional[str] = None
+                subtitle: Optional[str] = None
+                offsetInMilliseconds: Optional[int] = None
+                iconImageUrl: Optional[str] = None
+                backgroundImageUrl: Optional[str] = None
+            audio_item_data = DataModel(**audio_item_dict)
 
-            self.mp3_file_url = audio_item_dict.get("url").to_str()
-            self.title = audio_item_dict.get("title").to_str()
-            self.subtitle = audio_item_dict.get("subtitle").to_str()
-            self.offset_in_milliseconds = audio_item_dict.get("offsetInMilliseconds").to_int()
-            self.icon_image_url = audio_item_dict.get("iconImageUrl").to_str()
-            self.background_image_url = audio_item_dict.get("backgroundImageUrl").to_str()
+            self.mp3_file_url = audio_item_data.url
+            self.title = audio_item_data.title
+            self.subtitle = audio_item_data.subtitle
+            self.offset_in_milliseconds = audio_item_data.offsetInMilliseconds
+            self.icon_image_url = audio_item_data.iconImageUrl
+            self.background_image_url = audio_item_data.backgroundImageUrl
 
     def to_dict(self):
         return {
@@ -282,18 +288,17 @@ class AudioPlayerWrapper:
         return self.parent_handler_input.alexa.context.audioPlayer.offsetInMilliseconds
 
     @property
-    def history(self) -> SafeDict:
+    def history(self) -> dict:
         if self._history is None:
-            self._history = self.parent_handler_input.persistent_remember(data_key="audioPlayerHistory", specific_object_type=SafeDict)
+            self._history = self.parent_handler_input.persistent_remember(data_key="audioPlayerHistory", specific_object_type=dict)
         return self._history
 
-    def get_last_played_item(self) -> AudioItemObject:
+    def get_last_played_item(self) -> Optional[AudioItemObject]:
         id_last_played_item = self.id_last_played_item
         if id_last_played_item is not None:
             audio_item_dict = self.history.get("items").get(id_last_played_item).to_dict(default=None)
             if audio_item_dict is not None:
-                audio_item_object = AudioItemObject(identifier=id_last_played_item, audio_item_dict=audio_item_dict)
-                return audio_item_object
+                return AudioItemObject(identifier=id_last_played_item, audio_item_dict=audio_item_dict)
         return None
 
     @property

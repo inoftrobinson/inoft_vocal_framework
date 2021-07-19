@@ -7,7 +7,6 @@ from pydantic.main import BaseModel
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.dialogflow.request import Request
 from inoft_vocal_framework.platforms_handlers.dialogflow.response import Response, Image, ImageDisplayOptions
-from inoft_vocal_framework.safe_dict import SafeDict
 from json import loads as json_loads
 
 

@@ -130,7 +130,7 @@ class DynamoDbMessagesAdapter(DynamoDbCoreAdapter):
     def _speech_dicts_to_speech_items(self, speech_dicts: list) -> list:
         output_list = list()
         for speech_dict in speech_dicts:
-            output_list.append(Speech().from_dict(speech_safedict=SafeDict(speech_dict)))
+            output_list.append(Speech.from_dict(speech_safedict=SafeDict(speech_dict)))
         return output_list
 
     def get_fetched_messages_list(self, messages_list_id: str) -> list:

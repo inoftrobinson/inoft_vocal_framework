@@ -25,7 +25,7 @@ use winapi::HWND__;
 use hound::{WavReader, WavSpec};
 use vst::buffer::AudioBuffer;
 use std::convert::TryFrom;
-use std::borrow::BorrowMut;
+use std::borrow::{BorrowMut, Borrow};
 
 use beryllium::*;
 use gl33::*;
@@ -65,7 +65,7 @@ fn main() {
         process::exit(1);
     }*/
 
-    // let st_path = "C:/Users/LABOURDETTE/Downloads/DragonflyReverb-Windows-64bit-v3.2.5/DragonflyReverb-Windows-64bit-v3.2.5/DragonflyEarlyReflections-vst.dll";
+    // let st_path = "C:/Users/LABOURDETTE/Downloads/DragonflyReverb-Windows-64bit-v3.2.5/DragonflyReverb-Windows-64bit-v3.2.5/DragonflyHallReverb-vst.dll";
     let st_path = "C:/Program Files/Steinberg/VSTPlugins/Brusfri.dll";
     let path = Path::new(st_path);  // &args[1]);
 
@@ -103,13 +103,13 @@ fn main() {
     println!("preset : {}", preset_name);
 
     // instance.get_parameter_object().
-    instance.get_parameter_object().set_parameter(0, 100.0);
+    /*instance.get_parameter_object().set_parameter(0, 100.0);
     instance.get_parameter_object().set_parameter(1, 100.0);
     instance.get_parameter_object().string_to_parameter(2, 2.0.to_string());
     instance.get_parameter_object().set_parameter(3, 60.0);
     instance.get_parameter_object().set_parameter(4, 100.0);
     instance.get_parameter_object().set_parameter(5, 60.0);
-    instance.get_parameter_object().set_parameter(6, 5000.0);
+    instance.get_parameter_object().set_parameter(6, 5000.0);*/
     // instance.get_parameter_object().set_preset_name(preset_name);
     for idx in 0..info.parameters {
         println!("{}", instance.get_parameter_object().get_parameter_name(idx));
@@ -127,13 +127,21 @@ fn main() {
     // let win_pointer = win_ref as *mut libc::c_void;
     // libc::free(my_num as *mut libc::c_void);
 
-    let mut bar: *mut GlWindow = std::ptr::null_mut();
+
+    let bar1: *const GlWindow = win_ref as *const GlWindow;
+    let mut bar: *mut GlWindow = bar1 as *mut GlWindow;
+    // let mut bar: *mut GlWindow = win_ref as *mut GlWindow;
     // let mut_ref: &mut *mut GlWindow = &mut bar;
     /*let raw_ptr: *mut *mut foo = mut_ref as *mut *mut _;
     let void_cast: *mut *mut c_void = raw_ptr as *mut *mut c_void;*/
-    let raw_ptr: *mut GlWindow = bar as *mut _;
-    let void_cast: *mut c_void = raw_ptr as *mut c_void;
+    // let raw_ptr: *mut GlWindow = bar as *mut _;
+
+    let mut bar: *mut GlWindow = std::ptr::null_mut();
+    let void_cast: *mut c_void = bar as *mut c_void;
     // unsafe { ffi(void_cast); }
+
+    // let void_cast = &_win as *const GlWindow as *mut GlWindow as *mut c_void;
+    println!("void_cast: {:?}", void_cast);
 
     instance.get_editor().unwrap().open(void_cast);
 

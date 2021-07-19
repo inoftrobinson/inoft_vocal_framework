@@ -20,6 +20,6 @@ MSGS_NEW_FACT = SpeechsList(id="newFactCallToAction", speechs=[
 
 MSGS_FACTS = SpeechsList(id="mainFacts", speechs=[
     Speech().add_text("that the Inoft Vocal Framework was the first package from Robinson Labourdette ? He did not even knew how to publish it !").set_prob(1),
-    Speech().add_text("that for simpler use of the framework and the processing of the requests, a new object type, the SafeDict, has been created ?").set_prob(1),
+    Speech().add_text("that for simpler use of the framework and the processing of the requests, a new object type, has been created ?").set_prob(1),
     Speech().add_text("that i'm starting to be out of inspiration ?").set_prob(0.1)
 ])

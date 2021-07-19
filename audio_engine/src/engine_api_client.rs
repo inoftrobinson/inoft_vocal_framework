@@ -40,7 +40,7 @@ pub async fn synthesise_get_dialogue(
     let request_jsonified_data = serde_json::to_string(&request_data).unwrap();
 
     let api_url = format!(
-        "{}/api/v1/{}/{}/resources/project-audio-files/synthesise-get-dialogue",
+        "{}/api/v1/{}/{}/resources/synthesise-get-dialogue",
         engine_api_data.engine_base_url,
         engine_api_data.engine_account_id.as_ref()
             .expect("Specifying an engine_account_id is required in order to synthesise dialogues with the Inoft Vocal Engine"),

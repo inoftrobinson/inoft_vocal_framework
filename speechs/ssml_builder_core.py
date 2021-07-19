@@ -3,7 +3,8 @@
 import re
 from typing import Optional
 
-from inoft_vocal_framework.safe_dict import SafeDict
+from pydantic import BaseModel
+
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
 from inoft_vocal_framework.session_utils import add_new_played_category  # todo: remove this dependance
 from inoft_vocal_framework.general_utils import pick_msg  # todo: and remove this dependance too
@@ -71,15 +72,17 @@ class Speech:
 
     VALID_EMPHASIS_LEVELS = ('strong', 'moderate', 'reduced')
 
-    def __init__(self):
-        self.probability_value = None
+    def __init__(self, speech: str = "", probability: Optional[float] = None):
         self.text = ""
-        self.speech = ""
+        self.speech = speech
+        self.probability_value = probability
 
-    def from_dict(self, speech_safedict: SafeDict):
-        self.probability_value = speech_safedict.get("probability").to_float(default=None)
-        self.speech = speech_safedict.get("speech").to_str()
-        return self
+    @staticmethod
+    def from_dict(data: dict):
+        class DictModel(BaseModel):
+            speech: str = None
+            probability: Optional[float] = None
+        return Speech(**DictModel(**data).dict())
 
     def set_prob(self, probability_value: float):
         self.probability_value = probability_value
