@@ -30,6 +30,32 @@ class AlexaHandlerInput(BaseModel):
         super().__init__(**kwargs)
         self._parent_handler_input = parent_handler_input
 
+    @staticmethod
+    def create_dummy(parent_handler_input: HandlerInput):
+        return AlexaHandlerInput(
+            parent_handler_input=parent_handler_input,
+            session=Session(new=False, sessionId="", application={}, user={}),
+            context=Context(
+                System=Context.SystemModel(
+                    application=Context.SystemModel.ApplicationModel(),
+                    user=Context.SystemModel.UserModel(),
+                    device=Context.SystemModel.DeviceModel(
+                        supportedInterfaces=Context.SystemModel.DeviceModel.SupportedInterfacesModel()
+                    )
+                )
+            ),
+            request=Request(
+                type='dummyRequestType',
+                requestId='dummyRequestId',
+                timestamp=1000000,
+                locale='fr-FR'
+            )
+        )
+
+    @property
+    def response(self) -> Response:
+        return self._response
+
     @property
     def is_new_session(self) -> bool:
         if self._is_new_session is None:

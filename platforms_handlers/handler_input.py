@@ -2,13 +2,15 @@ import logging
 from collections import Callable
 from typing import Optional, Any, List, Dict
 
+from StructNoSQL import FieldSetter
+
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
 from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
-from inoft_vocal_framework.user_data.user_data import UserData
+from inoft_vocal_framework.user_data.user_data import UserDataClient
 from inoft_vocal_framework.utils.formatters import normalize_intent_name
 
 
@@ -43,6 +45,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput, self._discordHandlerInput = None, None, None, None
 
         self._user_data = None
+        self._scheduled_user_data_field_setter: List[FieldSetter] = []
 
     @property
     def _settings(self) -> Settings:
@@ -131,7 +134,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._simple_session_user_data
 
     @property
-    def user_data(self) -> UserData:
+    def user_data(self) -> UserDataClient:
         return self._user_data
 
     @property
@@ -176,7 +179,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 self._persistent_user_id = generate_uuid4()
                 # We need to set the persistent_user_id before memorizing it, because the memorize function will access the
                 # persistent_user_data, and if the user_id is not set, we will get stuck in an infinite recursion loop
-                self.persistent_memorize("userId", user_id)
+                # account_project_table_user_id = None  # todo: implement
+                # self._scheduled_user_data_field_setter.append(FieldSetter(field_path='userId', value_to_set=user_id))
+                # self.persistent_memorize('userId', user_id)
                 print(f"user_id {self._persistent_user_id} has been memorized in the database.")
             else:
                 self._persistent_user_id = user_id
@@ -221,10 +226,30 @@ class HandlerInput(CurrentUsedPlatformInfo):
             event: Message
             self._discordHandlerInput = DiscordHandlerInput(parent_handler_input=self, request=event)
 
+    def initialize_user_data_client(self):
+        from inoft_vocal_framework.user_data.user_data import UserDataClient, BaseUserTableDataModel
+        self._user_data = UserDataClient(
+            user_id=self.persistent_user_id,
+            engine_account_id=self.settings.engine_account_id,
+            engine_project_id=self.settings.engine_project_id,
+            engine_api_key=self.settings.engine_api_key,
+            region_name="eu-west-3", table_id="sampleUserDataTableId",
+            data_model=BaseUserTableDataModel  # todo: allow to set custom table model
+        )
+        if len(self._scheduled_user_data_field_setter) > 0:
+            update_success: bool = self._user_data.update_multiple_fields(
+                setters=self._scheduled_user_data_field_setter
+            )
+            if update_success is not True:
+                logging.warning("Error in update of scheduled_user_data_field_setter")
+            self._scheduled_user_data_field_setter.clear()
+
     def _force_load_alexa(self):
         self.set_platform_to_alexa()
         from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
-        self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self)
+        # self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self, session={}, context={}, request={})
+        self._alexaHandlerInput = AlexaHandlerInput.create_dummy(parent_handler_input=self)
+        self.initialize_user_data_client()
 
     def _force_load_dialogflow(self):
         self.set_platform_to_dialogflow()
