@@ -141,6 +141,12 @@ class InoftSkill:
         self._default_fallback_handler = None
         self._handler_input = HandlerInput(settings_instance=settings_instance)
 
+        self.on_interaction_start: List[Callable[[], Any]] = []
+        self.on_interaction_end: List[Callable[[], Any]] = []
+
+        self.settings.user_data_plugin.register_plugin(skill=self)
+        # todo: add better plugin registration system
+
     @property
     def settings(self) -> Settings:
         return self._settings
@@ -351,7 +357,8 @@ class InoftSkill:
             logging.debug(f"Handler by default fallback : {self.default_fallback_handler}")
             output_event = self.default_fallback_handler.handle()
 
-        self.handler_input.save_attributes_if_need_to()
+        for callback in self.on_interaction_end:
+            callback()
 
         if self.handler_input.is_discord is not True:
             print(f"output_event = {output_event}")
@@ -421,7 +428,6 @@ class InoftSkill:
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)
 
         self.handler_input.load_event(event=event)
-        self.handler_input.initialize_user_data_client()
 
         return self.process_request()
 

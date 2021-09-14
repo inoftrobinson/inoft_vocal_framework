@@ -12,7 +12,8 @@ from inoft_vocal_framework.audio_engine import audio_engine_wrapper
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.audio_editing import audio_effects
 
-from inoft_vocal_framework.middlewares.inoft_vocal_engine.database_clients import InoftVocalEngineBasicTable, InoftVocalEngineCachingTable
+from inoft_vocal_framework.user_data_plugins.base_plugin import UserDataBasePlugin
+from inoft_vocal_framework.user_data_plugins import inoft_vocal_engine_structnosql_plugin
 
 # todo: if the framework do not find the AWS credentials, ask with a dialog
 #  if the developer want to run the app with the database disabled

@@ -2,15 +2,12 @@ import logging
 from collections import Callable
 from typing import Optional, Any, List, Dict
 
-from StructNoSQL import FieldSetter
-
 from inoft_vocal_framework.audio_editing.audioclip import AudioBlock
 from inoft_vocal_framework.dummy_object import DummyObject
 from inoft_vocal_framework.platforms_handlers.current_used_platform_info import CurrentUsedPlatformInfo
 from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
-from inoft_vocal_framework.user_data.user_data import UserDataClient
 from inoft_vocal_framework.utils.formatters import normalize_intent_name
 
 
@@ -45,7 +42,6 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput, self._discordHandlerInput = None, None, None, None
 
         self._user_data = None
-        self._scheduled_user_data_field_setter: List[FieldSetter] = []
 
     @property
     def _settings(self) -> Settings:
@@ -134,10 +130,6 @@ class HandlerInput(CurrentUsedPlatformInfo):
         return self._simple_session_user_data
 
     @property
-    def user_data(self) -> UserDataClient:
-        return self._user_data
-
-    @property
     def smart_session_user_data(self) -> dict:
         if self._smart_session_user_data is None:
             self._load_smart_session_user_data()
@@ -174,15 +166,8 @@ class HandlerInput(CurrentUsedPlatformInfo):
             elif self.is_discord is True:
                 user_id = self.discordHandlerInput.request.author.id
 
-            if user_id is None or not isinstance(user_id, str) or user_id.replace(" ", "") == "":
-                from inoft_vocal_framework.utils.general import generate_uuid4
-                self._persistent_user_id = generate_uuid4()
-                # We need to set the persistent_user_id before memorizing it, because the memorize function will access the
-                # persistent_user_data, and if the user_id is not set, we will get stuck in an infinite recursion loop
-                # account_project_table_user_id = None  # todo: implement
-                # self._scheduled_user_data_field_setter.append(FieldSetter(field_path='userId', value_to_set=user_id))
-                # self.persistent_memorize('userId', user_id)
-                print(f"user_id {self._persistent_user_id} has been memorized in the database.")
+            if user_id is None or not isinstance(user_id, str) or not (len(user_id.replace(" ", "")) > 0):
+                self._persistent_user_id = self.settings.user_data_plugin.register_new_user()
             else:
                 self._persistent_user_id = user_id
             logging.debug(f"_persistent_user_id = {self._persistent_user_id}")
@@ -226,30 +211,11 @@ class HandlerInput(CurrentUsedPlatformInfo):
             event: Message
             self._discordHandlerInput = DiscordHandlerInput(parent_handler_input=self, request=event)
 
-    def initialize_user_data_client(self):
-        from inoft_vocal_framework.user_data.user_data import UserDataClient, BaseUserTableDataModel
-        self._user_data = UserDataClient(
-            user_id=self.persistent_user_id,
-            engine_account_id=self.settings.engine_account_id,
-            engine_project_id=self.settings.engine_project_id,
-            engine_api_key=self.settings.engine_api_key,
-            region_name="eu-west-3", table_id="sampleUserDataTableId",
-            data_model=BaseUserTableDataModel  # todo: allow to set custom table model
-        )
-        if len(self._scheduled_user_data_field_setter) > 0:
-            update_success: bool = self._user_data.update_multiple_fields(
-                setters=self._scheduled_user_data_field_setter
-            )
-            if update_success is not True:
-                logging.warning("Error in update of scheduled_user_data_field_setter")
-            self._scheduled_user_data_field_setter.clear()
-
     def _force_load_alexa(self):
         self.set_platform_to_alexa()
         from inoft_vocal_framework.platforms_handlers.alexa.handler_input import AlexaHandlerInput
         # self._alexaHandlerInput = AlexaHandlerInput(parent_handler_input=self, session={}, context={}, request={})
         self._alexaHandlerInput = AlexaHandlerInput.create_dummy(parent_handler_input=self)
-        self.initialize_user_data_client()
 
     def _force_load_dialogflow(self):
         self.set_platform_to_dialogflow()
@@ -463,14 +429,23 @@ class HandlerInput(CurrentUsedPlatformInfo):
             raise Exception(f"state_handler_class_type_or_name must be an class type or str but was {state_handler_class_type_or_name}")
 
     def remember_session_then_state(self):
-        last_session_then_state: Optional[str] = self.user_data.get_field(field_path='thenState')
-        if last_session_then_state is not None and last_session_then_state.replace(" ", "") != "":
+        retrieved_attributes: Dict[str, Any] = self.settings.user_data_plugin.get_attributes(
+            user_id=self._persistent_user_id, attributes_keys=['thenState']
+        )
+        last_session_then_state: Optional[str] = retrieved_attributes.get('thenState', None)
+        if last_session_then_state is not None and not (len(last_session_then_state.replace(" ", "")) > 0):
             return last_session_then_state
         else:
             return None
 
     def forget_session_then_state(self) -> bool:
-        return self.user_data.delete_field(field_path='thenState')
+        deletion_successes: Dict[str, bool] = self.settings.user_data_plugin.delete_attributes(
+            user_id=self._persistent_user_id, attributes_keys=['thenState']
+        )
+        then_state_deletion_success: Optional[bool] = deletion_successes.get('thenState', None)
+        if then_state_deletion_success is None:
+            raise Exception("Missing thenState deletion success")
+        return then_state_deletion_success
 
     def play_audio_block(self, audio_block: AudioBlock) -> bool:
         if self.is_alexa is True:
@@ -498,7 +473,10 @@ class HandlerInput(CurrentUsedPlatformInfo):
                                     f"No checks are being made on the class, only a try and except that returned : {e}")
 
             if handler_class_name is not None:
-                self.session_memorize(data_key="lastIntentHandler", data_value=handler_class_name)
+                # self.session_memorize(data_key="lastIntentHandler", data_value=handler_class_name)
+                self.settings.user_data_plugin.set_attributes(
+                    user_id=self._persistent_user_id, attributes_items={'lastIntentHandler': handler_class_name}
+                )
                 print("SAVED")
         else:
             raise Exception(f"handler_class_type_or_name must be an class type or str but was {handler_class_type_instance_name}")
@@ -512,18 +490,6 @@ class HandlerInput(CurrentUsedPlatformInfo):
 
     def forget_session_last_intent_handler(self) -> None:
         self.session_forget("lastIntentHandler")
-
-    def save_attributes_if_need_to(self):
-        self.user_data.table.commit_operations()
-
-        # todo: deprecate code bellow and the entire attributes_dynamodb_adapter
-        if self.data_for_database_has_been_modified is True:
-            if self.settings.database_sessions_users_data.disable_database is not True:
-                self._attributes_dynamodb_adapter.save_attributes(
-                    user_id=self.persistent_user_id, session_id=self.session_id,
-                    smart_session_attributes=self.smart_session_user_data,
-                    persistent_attributes=self.persistent_user_data
-                )
 
     def _alexa_to_platform_dict(self) -> dict:
         return {

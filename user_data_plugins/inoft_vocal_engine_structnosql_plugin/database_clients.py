@@ -7,6 +7,7 @@ class InoftVocalEngineBasicTable(ExternalDynamoDBApiBasicTable):
             self, data_model: Type[TableDataModel], table_id: str, region_name: str,
             engine_account_id: str, engine_project_id: str, engine_api_key: str,
     ):
+        self.engine_table_id = table_id
         self.engine_account_id = engine_account_id
         self.engine_project_id = engine_project_id
         super().__init__(
@@ -20,6 +21,7 @@ class InoftVocalEngineCachingTable(ExternalDynamoDBApiCachingTable):
             self, data_model: Type[TableDataModel], table_id: str, region_name: str,
             engine_account_id: str, engine_project_id: str, engine_api_key: str,
     ):
+        self.engine_table_id = table_id
         self.engine_account_id = engine_account_id
         self.engine_project_id = engine_project_id
         super().__init__(

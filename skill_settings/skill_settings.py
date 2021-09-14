@@ -10,6 +10,7 @@ from inoft_vocal_framework.skill_settings.settings_components.dynamodb_databases
 from inoft_vocal_framework.skill_settings.settings_components.plugins import Plugins
 # from inoft_vocal_engine.speech_synthesis.polly import VOICES
 # todo: currently, the voices setting is deprecated since the split between the inoft_vocal_framework and the inoft_vocal_engine
+from inoft_vocal_framework.user_data_plugins.base_plugin import UserDataBasePlugin
 
 
 def prompt_database_warning_message(variable_name: str, instance_type: type):
@@ -28,14 +29,17 @@ class Settings:
     _INFRASTRUCTURE_TYPES_UNION = Union[INFRASTRUCTURE_ENGINE, INFRASTRUCTURE_NEXT_ENGINE, INFRASTRUCTURE_LOCAL_ENGINE, INFRASTRUCTURE_PROVIDED_AWS]
 
     def __init__(
-            self, engine_account_id: Optional[str] = None, engine_project_id: Optional[str] = None, engine_api_key: Optional[str] = None,
+            self,
+            user_data_plugin: UserDataBasePlugin,
+            engine_account_id: Optional[str] = None, engine_project_id: Optional[str] = None, engine_api_key: Optional[str] = None,
             infrastructure_speech_synthesis: _INFRASTRUCTURE_TYPES_UNION = INFRASTRUCTURE_ENGINE,
             characters_voices: Optional[dict] = None, deployment: Optional[Deployment] = None,
             database_sessions_users_data: DatabaseSessionsUsersData = DatabaseSessionsUsersData(),
             database_messages_content: DatabaseMessagesContent = DatabaseMessagesContent(),
             database_users_notifications_subscriptions: DatabaseUsersNotificationsSubscriptions = DatabaseUsersNotificationsSubscriptions(),
-            plugins: Plugins = Plugins()
+            plugins: Plugins = Plugins(),
     ):
+        self.user_data_plugin = user_data_plugin
         self.engine_account_id = engine_account_id
         self.engine_project_id = engine_project_id
         self.engine_api_key = engine_api_key

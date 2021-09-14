@@ -32,6 +32,7 @@ class UserDataClient:
         return self._table.clear_cached_data()
     
     def clear_cached_data_for_record(self, record_primary_key: str):
+        # todo: should this be allowed ?
         return self._table.clear_cached_data_for_record(record_primary_key=record_primary_key)
     
     def clear_pending_update_operations(self):
@@ -70,6 +71,7 @@ class UserDataClient:
             pagination_records_limit: Optional[int] = None,
             filter_expression: Optional[Any] = None, data_validation: bool = True, **additional_kwargs
     ) -> Tuple[Optional[dict], QueryMetadata]:
+        # todo: should this be allowed ?
         return self._table.query_field(
             key_value=self.account_project_table_user_id, 
             field_path=field_path, query_kwargs=query_kwargs,
@@ -83,6 +85,7 @@ class UserDataClient:
             self, getters: Dict[str, FieldGetter], pagination_records_limit: Optional[int] = None,
             filter_expression: Optional[Any] = None, data_validation: bool = True, **additional_kwargs
     ) -> Tuple[Optional[dict], QueryMetadata]:
+        # todo: should this be allowed ?
         return self._table.query_multiple_fields(
             key_value=self.account_project_table_user_id,
             getters=getters,
