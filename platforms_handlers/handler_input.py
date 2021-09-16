@@ -374,12 +374,14 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self.simple_session_user_data.pop(dict_key=data_key)
 
     def session_memorize(self, data_key: str, data_value: Any, query_kwargs: Optional[dict] = None) -> bool:
+        raise Exception("deprecated")
         if data_value is not None and isinstance(data_key, str) and data_key != "":
             self.data_for_database_has_been_modified = True
             return self.user_data.update_field(field_path=data_key, value_to_set=data_value, query_kwargs=query_kwargs)
         return False
 
     def session_batch_memorize(self, data_dict: dict) -> None:
+        raise Exception("deprecated")
         if not isinstance(data_dict, dict):
             raise Exception(f"The data_dict must be of type dict but was of type {type(data_dict)}")
         else:
@@ -390,6 +392,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 self.smart_session_user_data[key_item] = value_item
 
     def session_remember(self, data_key: str, specific_object_type=None):
+        raise Exception("deprecated")
         # todo: re-activate that
         return DummyObject()
 
@@ -400,6 +403,7 @@ class HandlerInput(CurrentUsedPlatformInfo):
             return data_object.to_specific_type(type_to_return=specific_object_type)
 
     def session_forget(self, data_key: str) -> None:
+        raise Exception("deprecated")
         self.data_for_database_has_been_modified = True
         self.smart_session_user_data.pop(data_key)
 
@@ -424,7 +428,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 then_state_class_name = state_handler_class_type_or_name
 
             if then_state_class_name is not None:
-                self.session_memorize(data_key='thenState', data_value=then_state_class_name)
+                self.settings.user_data_plugin.set_attributes(
+                    user_id=self._persistent_user_id, attributes_items={'thenState': then_state_class_name}
+                )
         else:
             raise Exception(f"state_handler_class_type_or_name must be an class type or str but was {state_handler_class_type_or_name}")
 
@@ -655,13 +661,6 @@ class HandlerInputWrapper:
 
     def session_batch_memorize(self, data_dict: dict):
         self.handler_input.session_batch_memorize(data_dict=data_dict)
-        return self
-
-    def session_remember(self, data_key: str, specific_object_type=None):
-        return self.handler_input.session_remember(data_key=data_key, specific_object_type=specific_object_type)
-
-    def session_forget(self, data_key: str):
-        self.handler_input.session_forget(data_key=data_key)
         return self
 
     def persistent_memorize(self, data_key: str, data_value=None):
