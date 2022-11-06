@@ -5,7 +5,7 @@ from inoft_vocal_framework.middlewares.inoft_vocal_engine.database_clients impor
 
 
 class BaseUserTableDataModel(TableDataModel):
-    # userId = BaseField(field_type=str, required=True)
+    # userId = BaseStore(field_type=str, required=True)
     accountProjectTableKeyId = BaseField(field_type=str, required=True)
     thenState = BaseField(field_type=str, required=False)
     lastIntentHandler = BaseField(field_type=str, required=False)

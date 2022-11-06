@@ -55,10 +55,9 @@ class TestInputFormats(unittest.TestCase):
             player_end_time=track_1.player_start_time + 20
         )
 
-        from inoft_vocal_engine.speech_synthesis.polly import VOICES
         voice_sound = track_1.create_speech(
             text="Je suis un test d'audio dynamique ?",
-            voice_key=VOICES.French_France_Female_CELINE.id,
+            voice_key='celine',
             player_start_time=track_1.player_start_time + 21,
         )
 

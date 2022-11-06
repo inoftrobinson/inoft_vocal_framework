@@ -1,8 +1,8 @@
-from .skill_builder.inoft_skill_builder import InoftSkill, InoftCondition, InoftHandler, \
+from inoft_vocal_framework.skill_builder.inoft_skill_builder import InoftSkill, InoftCondition, InoftHandler, \
     InoftRequestHandler, InoftStateHandler, InoftDefaultFallback, InoftHandlersGroup, canProcessIntentNames
 
-from .platforms_handlers.simulator.simulator_core import Simulator
-from .speechs.ssml_builder_core import Speech, SpeechsList
+from inoft_vocal_framework.platforms_handlers.simulator.simulator_core import Simulator
+from inoft_vocal_framework.speechs.ssml_builder_core import Speech, SpeechsList
 
 # from .platforms_handlers.discord.handler_input import start_discord_listening
 # todo: re-implement discord integration without requiring its dependencies to use other platforms

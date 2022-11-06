@@ -1,5 +1,4 @@
-import os
-from inoft_vocal_engine import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
+from inoft_vocal_framework import InoftSkill, InoftRequestHandler, InoftStateHandler, InoftDefaultFallback
 
 
 class StartRequestHandler(InoftRequestHandler):
@@ -64,7 +63,7 @@ def lambda_handler(event, context):
     return skill.handle_any_platform(event=event, context=context)
 
 if __name__ == "__main__":
-    from inoft_vocal_engine import Simulator
+    from inoft_vocal_framework import Simulator
     event_, context_ = Simulator(platform=Simulator.PLATFORM_GOOGLE, event_type="launch").get_event_and_context()
     # event_, context_ = Simulator(platform=Simulator.PLATFORM_GOOGLE, event_type="grant_update_permissions").get_event_and_context()
     print(f"\n\nFinal Output : {lambda_handler(event=event_, context=context_)}")

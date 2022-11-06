@@ -53,13 +53,7 @@ class DefaultFallback(InoftDefaultFallback):
 
 
 def lambda_handler(event, context):
-    user_data_inoft_vocal_engine_table_client = InoftVocalEngineCachingTable(
-        engine_account_id="b1fe5939-032b-462d-92e0-a942cd445096",
-        engine_project_id="4ede8b70-46f6-4ae2-b09c-05a549194c8e",
-        engine_api_key="a2bf5ff8-bbd3-4d01-b695-04138ee19b42",
-        region_name='eu-west-3', table_id='sampleUserDataTableId',
-        data_model=BaseUserTableDataModel
-    )
+    from table_clients.sampleUserDataTableId import user_data_inoft_vocal_engine_table_client
     skill_builder = InoftSkill(Settings(
         infrastructure_speech_synthesis=Settings.INFRASTRUCTURE_LOCAL_ENGINE,
         engine_account_id="b1fe5939-032b-462d-92e0-a942cd445096",

@@ -1,7 +1,5 @@
 from typing import Optional, Union, Dict
 
-import click
-
 from inoft_vocal_framework.dummy_object import dummy_object
 from inoft_vocal_framework.exceptions import raise_if_variable_not_expected_type_and_not_none
 from inoft_vocal_framework.skill_settings.settings_components.deployment import Deployment
@@ -14,11 +12,10 @@ from inoft_vocal_framework.user_data_plugins.base_plugin import UserDataBasePlug
 
 
 def prompt_database_warning_message(variable_name: str, instance_type: type):
-    click.echo(click.style(
+    print(
         f"\nWarning ! The variable {variable_name} for the {instance_type.__name__} instance was not properly set.\n"
         f"If you do not need this database client, please set the disable_database variable to True on this instance.",
-        fg='yellow'
-    ))
+    )
 
 
 class Settings:
