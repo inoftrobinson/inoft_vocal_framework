@@ -383,7 +383,7 @@ class InoftSkill:
         return None
 
     def handle_any_platform(self, event: dict, context: dict):
-        from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
+        # from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
 
         print(f"Crude event = {event if not isinstance(event, dict) else json_dumps(event)}\nCrude context = {context}")
         self.check_everything_implemented()
@@ -419,7 +419,7 @@ class InoftSkill:
             self.handler_input.set_platform_to_alexa()
             print(f"Event body do not need processing for Alexa : {event}")
 
-        elif DiscordHandlerInput.SHOULD_BE_USED is True:
+        elif False:  # Discord client is currently deprecated    DiscordHandlerInput.SHOULD_BE_USED is True:
             self.handler_input.set_platform_to_discord()
             print(f"Event body do not need processing for Discord : {event}")
 

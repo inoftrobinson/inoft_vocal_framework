@@ -1,6 +1,9 @@
 root_file: __init__.py
-project_root_dir: ./
-type: "layer"
+package_type: "code"
+python_path_exclusions:
+  excluded_folders_names: ["dist", "build"]
+global_exclusions:
+  excluded_folders_names: ["venv/lib/site-packages"]
 folders_includes:
   audio_engine/libs:
     additional_linux:

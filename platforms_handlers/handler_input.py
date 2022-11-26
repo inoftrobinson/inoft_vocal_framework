@@ -206,10 +206,13 @@ class HandlerInput(CurrentUsedPlatformInfo):
             raise Exception("Bixby integration temporarily deactivated")
 
         elif self.is_discord is True:
+            raise Exception("Discord client is currently deprecated")
+            """
             from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
             from discord import Message
             event: Message
             self._discordHandlerInput = DiscordHandlerInput(parent_handler_input=self, request=event)
+            """
 
     def _force_load_alexa(self):
         self.set_platform_to_alexa()
@@ -228,9 +231,12 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._bixbyHandlerInput = BixbyHandlerInput(parent_handler_input=self)
 
     def _force_load_discord(self):
+        raise Exception("Discord client is currently deprecated")
+        """
         self.set_platform_to_discord()
         from inoft_vocal_framework.platforms_handlers.discord.handler_input import DiscordHandlerInput
         self._discordHandlerInput = DiscordHandlerInput(parent_handler_input=self)
+        """
 
     def save_callback_function_to_database(self, callback_functions_key_name: str, callback_function: Callable, identifier_key: Optional[str] = None):
         # todo: fix bug where the identifier_key is not the right now if it has been modified because there were only 1 element

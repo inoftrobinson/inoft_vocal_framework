@@ -1,10 +1,9 @@
 from collections import Callable
-
-import click
 from discord import Message
 
 
 def start_discord_listening(token: str, lambda_handler_function: Callable, command_prefix: str = "."):
+    import click
     if click.confirm("Are you sure you want to trigger a Discord listening event ?"
                      "Never do that on a serverless app, since the app will keep running until closed."):
         DiscordHandlerInput.SHOULD_BE_USED = True
