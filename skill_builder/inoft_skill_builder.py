@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 from abc import abstractmethod
@@ -390,34 +391,37 @@ class InoftSkill:
 
         # The 'rawPath' is for ApiGatewayV2, use the key 'resource' (without the comma) if using ApiGatewayV1
         event_raw_path: Optional[str] = event.get('rawPath', None)
+        event_body_is_base64_encoded: Optional[bool] = event.get('isBase64Encoded', None)
+        raw_event_body: Optional[Any] = event.get('body', None)
+        event_body: Optional[Any] = (
+            json.loads(base64.b64decode(raw_event_body))
+            if raw_event_body is not None and event_body_is_base64_encoded is True
+            else raw_event_body
+        )
+        formatted_event: Any
 
         if event_raw_path == '/googleAssistantDialogflowV1':
             # A google-assistant or dialogflow request always pass trough an API gateway
             self.handler_input.set_platform_to_dialogflow()
-            event_body: Optional[dict or str] = event.get('body', None)
-            if event_body is None:
-                raise Exception("Event body not found")
-            event: dict = event_body if isinstance(event_body, dict) else json.loads(event_body)
-            print(f"Event body for Google Assistant = {json_dumps(event)}")
+            formatted_event: dict = event_body if isinstance(event_body, dict) else json.loads(event_body)
+            print(f"Event body for Google Assistant = {json_dumps(formatted_event)}")
 
         elif event_raw_path == "/samsungBixbyV1":
             # A samsung bixby request always pass trough an API gateway
             self.handler_input.set_platform_to_bixby()
-            event_body: Optional[dict] = event.get('body', None)
-            if event_body is None:
-                raise Exception("Event body not found")
 
             from urllib import parse
             event_raw_query_string: Optional[str] = event.get('rawQueryString', None)
             parameters: dict = dict(parse.parse_qsl(event_raw_query_string)) if event_raw_query_string is not None else {}
 
-            event = {'context': event_body.get('$vivContext'), 'parameters': parameters}
-            print(f"Event body for Samsung Bixby = {json_dumps(event)}")
+            formatted_event = {'context': event_body.get('$vivContext'), 'parameters': parameters}
+            print(f"Event body for Samsung Bixby = {json_dumps(formatted_event)}")
 
-        elif "amzn1." in (self._get_alexa_application_id_from_event(event=event) or ""):
+        elif "amzn1." in (self._get_alexa_application_id_from_event(event=event_body) or ""):
             # Alexa always go last, since it do not pass trough an api resource, its a less robust identification than the other platforms.
             self.handler_input.set_platform_to_alexa()
-            print(f"Event body do not need processing for Alexa : {event}")
+            formatted_event: dict = event_body if isinstance(event_body, dict) else json.loads(event_body)
+            print(f"Event body do not need processing for Alexa : {event_body}")
 
         elif False:  # Discord client is currently deprecated    DiscordHandlerInput.SHOULD_BE_USED is True:
             self.handler_input.set_platform_to_discord()
@@ -427,7 +431,7 @@ class InoftSkill:
             from inoft_vocal_framework.messages import ERROR_PLATFORM_NOT_SUPPORTED
             raise Exception(ERROR_PLATFORM_NOT_SUPPORTED)
 
-        self.handler_input.load_event(event=event)
+        self.handler_input.load_event(event=formatted_event)
 
         return self.process_request()
 
