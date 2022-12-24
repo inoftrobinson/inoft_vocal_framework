@@ -1,9 +1,9 @@
 root_file: __init__.py
 package_type: "code"
 python_path_exclusions:
-  excluded_folders_names: ["dist", "build"]
+  excluded_folders_names: ["dist", "build", "StructNoSQL", "platforms_handlers/discord"]
 global_exclusions:
-  excluded_folders_names: ["venv/lib/site-packages"]
+  excluded_folders_names: ["venv/lib/site-packages", "StructNoSQL"]
 folders_includes:
   audio_engine/libs:
     additional_linux:
