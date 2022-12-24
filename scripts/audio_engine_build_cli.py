@@ -1,4 +1,6 @@
 import os
+from typing import Optional, Dict, Any
+
 import click
 import platform
 import shutil
@@ -17,19 +19,31 @@ from pathlib import Path
 )
 def build(os_key: str, python_version: str):
     active_platform = platform.system()
+    # build_target: str = "x86_64-unknown-linux-musl"
+    build_target = None
 
     if os_key == 'windows':
         if active_platform != "Windows":
             raise Exception(f"To compile for Windows, please run this script on a Windows computer or virtual machine (tested with Windows 10)")
-        build_windows(python_version=python_version)
+        build_windows(python_version=python_version, target=build_target)
     elif os_key == 'linux':
         if active_platform != "Linux":
             raise Exception(f"To compile for Linux, please run this script on a Linux computer or virtual machine (tested with Ubuntu desktop)")
-        build_linux(python_version=python_version)
+        build_linux(python_version=python_version, target=build_target)
     else:
         raise Exception(f"OS {os_key} not supported")
 
-def build_windows(python_version: str):
+def _construct_cargo_build_command(value_args: Dict[str, Optional[Any]]) -> str:
+    value_args_statement: str = " ".join([
+        f"--{key} {value}"
+        for key, value in value_args.items()
+        if value is not None
+    ])
+    build_command: str = f"cargo build --release {value_args_statement}"
+    return build_command
+
+
+def build_windows(python_version: str, target: Optional[str]):
     audio_engine_dirpath = os.path.join(Path(os.path.dirname(os.path.realpath(__file__))).parent, "audio_engine")
     os.chdir(audio_engine_dirpath)
 
@@ -39,7 +53,10 @@ def build_windows(python_version: str):
         os.remove(audio_engine_dll_relative_filepath)
         click.echo(f"Removed existing dll file at {audio_engine_dll_absolute_filepath}")
 
-    compilation_result = subprocess.run(f"cargo build --release --features {python_version}")
+    cargo_build_command: str = _construct_cargo_build_command(
+        value_args={'target': target, 'features': python_version}
+    )
+    compilation_result = subprocess.run(cargo_build_command, shell=True)
     if not os.path.isfile(audio_engine_dll_relative_filepath):
         raise Exception(f"No file found at {audio_engine_dll_absolute_filepath} after compilation. The compilation must have encountered a problem.")
 
@@ -52,7 +69,7 @@ def build_windows(python_version: str):
     shutil.copyfile(audio_engine_dll_relative_filepath, audio_engine_pyd_relative_filepath)
     click.echo(f"Finished copy of dll file from {audio_engine_dll_absolute_filepath} to {audio_engine_pyd_absolute_filepath}")
 
-def build_linux(python_version: str):
+def build_linux(python_version: str, target: Optional[str]):
     audio_engine_dirpath = os.path.join(Path(os.path.dirname(os.path.realpath(__file__))).parent, "audio_engine")
     os.chdir(audio_engine_dirpath)
 
@@ -62,7 +79,10 @@ def build_linux(python_version: str):
         os.remove(audio_engine_lib_relative_filepath)
         click.echo(f"Removed existing lib file at {audio_engine_lib_absolute_filepath}")
 
-    compilation_result = subprocess.run(f"cargo build --release --features {python_version}", shell=True)
+    cargo_build_command: str = _construct_cargo_build_command(
+        value_args={'target': target, 'features': python_version}
+    )
+    compilation_result = subprocess.run(cargo_build_command, shell=True)
     if not os.path.isfile(audio_engine_lib_relative_filepath):
         raise Exception(f"No file found at {audio_engine_lib_absolute_filepath} after compilation. The compilation must have encountered a problem.")
 
