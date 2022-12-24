@@ -8,6 +8,7 @@ from inoft_vocal_framework.platforms_handlers.current_used_platform_info import 
 from inoft_vocal_framework.platforms_handlers.notifications_subscribers import NotificationsSubscribers
 from inoft_vocal_framework.safe_dict import SafeDict
 from inoft_vocal_framework.skill_settings.skill_settings import Settings
+from inoft_vocal_framework.user_data.user_data import UserDataClient
 from inoft_vocal_framework.utils.formatters import normalize_intent_name
 
 
@@ -41,7 +42,14 @@ class HandlerInput(CurrentUsedPlatformInfo):
         self._notifications_subscribers = None
         self._alexaHandlerInput, self._dialogFlowHandlerInput, self._bixbyHandlerInput, self._discordHandlerInput = None, None, None, None
 
-        self._user_data = None
+    @property
+    def user_data(self) -> UserDataClient:
+        # todo: should user_data be required ? Would giving the option to the
+        #  user to manipulate the user data trough the framework be confusing ?
+        return UserDataClient(
+            user_data_plugin=self.settings.user_data_plugin,
+            user_id=self.persistent_user_id
+        )
 
     @property
     def _settings(self) -> Settings:
@@ -243,7 +251,9 @@ class HandlerInput(CurrentUsedPlatformInfo):
         # No matter if we already have functions for the different ids in the same key name, we remember the dict of all the
         # callback functions of the key name (will be an empty dict if was not present), then we add the callback for the
         # current specified identifier. Finally, we can memorize this new updated list.
-        callback_functions_dict: Optional[dict] = self.user_data.get_field(field_path=callback_functions_key_name)
+        callback_functions_dict: Optional[dict] = self.settings.user_data_plugin.get_attribute(
+            user_id=self.persistent_user_id, attribute_key=callback_functions_key_name
+        )
         from inspect import getfile
 
         item_dict = {
@@ -434,27 +444,25 @@ class HandlerInput(CurrentUsedPlatformInfo):
                 then_state_class_name = state_handler_class_type_or_name
 
             if then_state_class_name is not None:
-                self.settings.user_data_plugin.set_attributes(
-                    user_id=self._persistent_user_id, attributes_items={'thenState': then_state_class_name}
+                self.settings.user_data_plugin.set_attribute(
+                    user_id=self._persistent_user_id, attribute_key='thenState', attribute_value=then_state_class_name
                 )
         else:
             raise Exception(f"state_handler_class_type_or_name must be an class type or str but was {state_handler_class_type_or_name}")
 
     def remember_session_then_state(self):
-        retrieved_attributes: Dict[str, Any] = self.settings.user_data_plugin.get_attributes(
-            user_id=self._persistent_user_id, attributes_keys=['thenState']
+        last_session_then_state: Optional[str] = self.settings.user_data_plugin.get_attribute(
+            user_id=self._persistent_user_id, attribute_key='thenState'
         )
-        last_session_then_state: Optional[str] = retrieved_attributes.get('thenState', None)
         if last_session_then_state is not None and not (len(last_session_then_state.replace(" ", "")) > 0):
             return last_session_then_state
         else:
             return None
 
     def forget_session_then_state(self) -> bool:
-        deletion_successes: Dict[str, bool] = self.settings.user_data_plugin.delete_attributes(
-            user_id=self._persistent_user_id, attributes_keys=['thenState']
+        then_state_deletion_success: bool = self.settings.user_data_plugin.delete_attribute(
+            user_id=self._persistent_user_id, attribute_key='thenState'
         )
-        then_state_deletion_success: Optional[bool] = deletion_successes.get('thenState', None)
         if then_state_deletion_success is None:
             raise Exception("Missing thenState deletion success")
         return then_state_deletion_success

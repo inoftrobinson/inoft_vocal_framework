@@ -52,3 +52,9 @@ class UserDataInoftVocalEngineStructNoSQLPlugin(UserDataBasePlugin):
             key_value=user_id, removers={key: FieldRemover(field_path=key) for key in attributes_keys}
         )
         return deletion_successes
+
+    def remove_attributes(self, user_id: str, attributes_keys: List[str]) -> Dict[str, Any]:
+        removed_values: Dict[str, Any] = self.table_client.remove_multiple_fields(
+            key_value=user_id, removers={key: FieldRemover(field_path=key) for key in attributes_keys}
+        )
+        return removed_values
