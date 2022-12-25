@@ -13,8 +13,6 @@ use audio_effects::tremolo::Tremolo;
 // use rustfft::{FftPlanner, num_complex::Complex};
 use ndarray::{Array, Axis, OwnedRepr, ArrayBase};
 use ndarray_stats::QuantileExt;
-use plotters::prelude::{BitMapBackend, RGBColor};
-use plotters::drawing::IntoDrawingArea;
 // use rustfft::num_traits::ToPrimitive;
 use realfft::RealFftPlanner;
 use realfft::num_traits::real::Real;

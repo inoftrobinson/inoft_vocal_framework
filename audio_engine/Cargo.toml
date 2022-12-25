@@ -15,7 +15,6 @@ crate-type = ["cdylib"]
 audio_effects = { path = "../audio_effects" }
 # rustfft = "6.0.0"
 realfft = "2.0.0"
-plotters = "0.3.0"
 ndarray = "0.14.0"
 ndarray-stats = "0.4.0"
 colorous = "1.0.3"
