@@ -1,5 +1,5 @@
 from typing import Any, List, Dict
-from inoft_vocal_framework import UserDataBasePlugin
+from inoft_vocal_framework.user_data_plugins.base_plugin import UserDataBasePlugin
 
 
 class UserDataClient:
