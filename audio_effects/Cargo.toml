@@ -10,7 +10,7 @@ crate-type = ["lib"]
 
 [dependencies]
 hound = { version = "3.4.0" }
-nalgebra = "0.20.0"
+nalgebra = "0.27.1"
 # rustfft = "6.0.0"
 serde = { version = "1.0.104", features = ["derive"] }
 serde_json = "1.0.48"
