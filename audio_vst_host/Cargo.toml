@@ -25,4 +25,4 @@ ogl33 = { version = "0.2.0", features = ["debug_error_checks"]}
 beryllium = { version = "0.2.1" }
 
 [target.'cfg(windows)'.dependencies]
-memoffset = "0.2.1"
+memoffset = "0.5.0"
