@@ -92,7 +92,6 @@ pub fn resample_save_file_from_url(_py: Python, data: PyObject) -> PyResult<PyDi
 
 
 
-
 pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
     let mut trace = TraceItem::new(String::from("render"));
 
@@ -117,13 +116,18 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
     let file_exist = runtime.block_on(loader::file_exist_at_url(&*expected_render_url));
     trace_check_matching_file_exist.close();
 
+    let tracing_output_filepath = parsed_data.tracing.output_url.clone();
+    // Need to be cloned because parsed_data will be moved in the below block
+
     let output_dict = PyDict::new(_py);
     if file_exist == true {
         trace.close();
         output_dict.set_item(_py, "success", true).unwrap();
         output_dict.set_item(_py, "fileUrl", expected_render_url).unwrap();
     } else {
-        let result = runtime.block_on(append::main(&mut trace, parsed_data, expected_render_file_hash));
+        let result = runtime.block_on(
+            append::main(&mut trace, parsed_data, expected_render_file_hash)
+        );
         match result {
             Ok(file_url) => {
                 output_dict.set_item(_py, "success", true).unwrap();
@@ -137,6 +141,8 @@ pub fn render(_py: Python, data: PyObject) -> PyResult<PyDict> {
         }
         trace.close();
     }
-    trace.to_file("F:/Inoft/anvers_1944_project/inoft_vocal_framework/dist/trace.json");
+    if tracing_output_filepath.is_none() != true {
+        trace.to_file(&tracing_output_filepath.unwrap());
+    }
     Ok(output_dict)
 }

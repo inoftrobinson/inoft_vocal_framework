@@ -1,11 +1,24 @@
 use super::cpython::{Python, PyObject, ObjectProtocol, PyList, PyDict, PythonObject, PyBytes};
-use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData, EngineApiData};
+use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, ResampleSaveFileFromUrlData, ResampleSaveFileFromLocalFileData, EngineApiData, TracingData};
 use std::collections::HashMap;
 use std::cell::RefCell;
 use audio_effects::base_transformer::BaseTransformer;
 use audio_effects::tremolo::Tremolo;
 use audio_effects::equalizer::EqualizerTransformer;
 
+
+fn parse_tracing_data(_py: Python, received_data: &PyObject) -> TracingData {
+    TracingData {
+        output_filepath: match received_data.get_item(_py, "tracingOutputFilepath") {
+            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+            Err(err) => { println!("{:?}", err); None }
+        },
+        output_url: match received_data.get_item(_py, "tracingOutputUrl") {
+            Ok(item) => { if item != _py.None() { Some(item.to_string()) } else { None } },
+            Err(err) => { println!("{:?}", err); None }
+        }
+    }
+}
 
 fn parse_engine_api_data(_py: Python, received_data: &PyObject) -> EngineApiData {
     let override_engine_base_url: Option<String> = match received_data.get_item(_py, "overrideEngineBaseUrl") {
@@ -176,7 +189,8 @@ pub fn parse_python_render_call(_py: Python, received_data: PyObject) -> Receive
     ReceivedParsedData {
         engine_api_data: parse_engine_api_data(_py, &received_data),
         target_spec: parse_target_spec(_py, &received_data),
-        blocks: audio_blocks_items
+        blocks: audio_blocks_items,
+        tracing: parse_tracing_data(_py, &received_data)
     }
     /*
     let mut flattened_audio_clips_refs: HashMap<String, &RefCell<AudioClip>> = HashMap::new();

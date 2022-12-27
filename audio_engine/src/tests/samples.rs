@@ -1,4 +1,4 @@
-use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, EngineApiData};
+use crate::models::{ReceivedParsedData, ReceivedTargetSpec, AudioBlock, Track, AudioClip, Time, EngineApiData, TracingData};
 
 pub fn make_sample_project_data() -> ReceivedParsedData {
     ReceivedParsedData {
@@ -84,7 +84,11 @@ pub fn make_sample_project_data() -> ReceivedParsedData {
             engine_account_id: Some(String::from("b1fe5939-032b-462d-92e0-a942cd445096")),
             engine_project_id: Some(String::from("22ac1d08-292d-4f2e-a9e3-20d181f1f58f")),
             access_token: Some(String::from("a2bf5ff8-bbd3-4d01-b695-04138ee19b42")),
-        }
+        },
+        tracing: TracingData {
+            output_filepath: None,
+            output_url: None
+        },
     }
 }
 
@@ -134,6 +138,10 @@ pub fn make_sample_project_data_2() -> ReceivedParsedData {
             engine_account_id: Some(String::from("b1fe5939-032b-462d-92e0-a942cd445096")),
             engine_project_id: Some(String::from("22ac1d08-292d-4f2e-a9e3-20d181f1f58f")),
             access_token: Some(String::from("a2bf5ff8-bbd3-4d01-b695-04138ee19b42")),
-        }
+        },
+        tracing: TracingData {
+            output_filepath: None,
+            output_url: None
+        },
     }
 }

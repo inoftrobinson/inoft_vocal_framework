@@ -33,10 +33,16 @@ impl ReceivedTargetSpec {
     }
 }
 
+pub struct TracingData {
+    pub output_filepath: Option<String>,
+    pub output_url: Option<String>,
+}
+
 pub struct ReceivedParsedData {
     pub engine_api_data: EngineApiData,
     pub target_spec: ReceivedTargetSpec,
     pub blocks: Vec<AudioBlock>,
+    pub tracing: TracingData,
 }
 
 pub struct ResampleSaveFileFromUrlData {
